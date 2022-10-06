@@ -22,11 +22,6 @@
         "publish": "npm publish --access public"
     },
     "dependencies": {
-        "@phala/sdk": "^0.3.3",
-        "@phala/typedefs": "^0.2.31",
-        "@polkadot/api": "^9.4.3",
-        "@polkadot/api-contract": "^9.4.2",
-        "@polkadot/keyring": "^10.1.9",
         "@types/mocha": "^10.0.0",
         "@types/chai": "^4.3.3",
         "ts-mocha": "^10.0.0",
@@ -37,7 +32,19 @@
         "chai-as-promised": "^7.1.1",
         "axios": "^0.27.2"
     },
+    "peerDependencies": {
+        "@phala/sdk": "^0.3.3",
+        "@phala/typedefs": "^0.2.31",
+        "@polkadot/api": "^9.4.3",
+        "@polkadot/api-contract": "^9.4.3",
+        "@polkadot/keyring": "^10.1.9"
+    },
     "devDependencies": {
+        "@phala/sdk": "^0.3.3",
+        "@phala/typedefs": "^0.2.31",
+        "@polkadot/api": "^9.4.3",
+        "@polkadot/api-contract": "^9.4.3",
+        "@polkadot/keyring": "^10.1.9",
         "@swc/core": "^1.3.4",
         "@types/jest": "^29.1.1",
         "@types/node": "^16.11.64",

@@ -654,7 +654,7 @@
     "@polkadot/util" "^10.1.9"
     rxjs "^7.5.7"
 
-"@polkadot/api-contract@^9.4.2":
+"@polkadot/api-contract@^9.4.3":
   version "9.4.3"
   resolved "https://registry.yarnpkg.com/@polkadot/api-contract/-/api-contract-9.4.3.tgz#082382bef964f4a88583e931208d355a2e9e5a5a"
   integrity sha512-PnBZyUgaLf7DGHkfrRrYISGRXLpZXykJj3L6KKcMrZL7MgiPvyhYzNVXCTmhGOjPQxhaYUDk8VPWmArLf8qT2Q==

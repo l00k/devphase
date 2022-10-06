@@ -4,7 +4,7 @@ import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
-import type { khalaDev as KhalaTypes } from '@phala/typedefs';
+import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { ContractPromise, Abi } from '@polkadot/api-contract';
 import type { ApiOptions } from '@polkadot/api/types';
@@ -13,6 +13,7 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import type { IEvent } from '@polkadot/types/types';
 import axios, { AxiosInstance } from 'axios';
 import colors from 'colors';
+import { types as PhalaSDKTypes } from '@phala/sdk';
 
 export type SetupOptions = {
     nodeUrl? : string,
@@ -93,11 +94,18 @@ export class DevPhase
     protected _workerInfo : WorkerInfo;
     
     
-    public async setup (options : SetupOptions)
+    private constructor () {}
+    
+    public static async setup (options : SetupOptions) : Promise<DevPhase>
     {
         options = {
             nodeUrl: 'ws://localhost:9944',
-            nodeApiOptions: {},
+            nodeApiOptions: {
+                types: {
+                    ...KhalaTypes,
+                    ...PhalaSDKTypes,
+                }
+            },
             workerUrl: 'http://localhost:8000',
             accountsMnemonic: '',
             accountsPaths: {
@@ -114,37 +122,42 @@ export class DevPhase
             ...options,
         };
         
-        this._apiProvider = new WsProvider(options.nodeUrl);
-        this.api = await ApiPromise.create({
-            provider: this._apiProvider,
+        const instance = new DevPhase();
+        
+        instance._apiProvider = new WsProvider(options.nodeUrl);
+        
+        const api = await ApiPromise.create({
+            provider: instance._apiProvider,
             ...options.nodeApiOptions
         });
-        await this._eventQueue.init(this.api);
+        instance.api = api;
+        
+        await instance._eventQueue.init(api);
         
         // get accounts
         const keyring = new Keyring.Keyring();
         keyring.setSS58Format(options.ss58Prefix);
         
         for (const [ name, path ] of Object.entries(options.accountsPaths)) {
-            this.accounts[name] = keyring.createFromUri(
+            instance.accounts[name] = keyring.createFromUri(
                 options.accountsMnemonic + path,
                 undefined,
                 'sr25519'
             );
         }
         
-        this.sudoAccount = this.accounts[options.sudoAccount];
+        instance.sudoAccount = instance.accounts[options.sudoAccount];
         
         // check worker
-        await this._prepareWorker(options.workerUrl);
+        await instance._prepareWorker(options.workerUrl);
         
         // wait for gatekeeper
-        await this._waitForGatekeeper();
+        await instance._waitForGatekeeper();
         
         // create cluster if needed
         if (options.clusterId === undefined) {
             const clustersNum : number = <any>(
-                await this.api.query
+                await api.query
                     .phalaFatContracts.clusterCounter()
             ).toJSON();
             
@@ -157,14 +170,16 @@ export class DevPhase
         }
         
         if (options.clusterId === null) {
-            this.mainClusterId = await this._createCluster();
+            instance.mainClusterId = await instance._createCluster();
         }
         else {
-            this.mainClusterId = options.clusterId;
+            instance.mainClusterId = options.clusterId;
         }
         
         // wait for cluster
-        await this._waitForClusterReady();
+        await instance._waitForClusterReady();
+        
+        return instance;
     }
     
     /**
