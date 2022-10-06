@@ -1,0 +1,36 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "moduleResolution": "node",
+        
+        "esModuleInterop": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        
+        "importHelpers": true,
+        "allowSyntheticDefaultImports": true,
+
+        "strict": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        
+        "rootDir": "src",
+        "outDir": "dist",
+        
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [ "./src/*" ]
+        }
+    },
+    "include": [
+        "src",
+        "tests"
+    ]
+}
