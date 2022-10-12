@@ -22,14 +22,8 @@
         "publish": "npm publish --access public"
     },
     "dependencies": {
-        "@types/mocha": "^10.0.0",
-        "@types/chai": "^4.3.3",
-        "ts-mocha": "^10.0.0",
         "tslib": "^2.4.0",
         "colors": "^1.4.0",
-        "mocha": "^10.0.0",
-        "chai": "^4.3.6",
-        "chai-as-promised": "^7.1.1",
         "axios": "^0.27.2"
     },
     "peerDependencies": {
