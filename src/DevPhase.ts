@@ -1,45 +1,20 @@
-import { EventQueue } from './EventQueue';
+import { ContractFactory } from '@/ContractFactory';
+import { ContractAbi, ContractType } from '@/def';
+import { EventQueue } from '@/EventQueue';
 import { TxHandler } from '@/TxHandler';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
-import * as PhalaSdk from '@phala/sdk';
+import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { ContractPromise, Abi } from '@polkadot/api-contract';
 import type { ApiOptions } from '@polkadot/api/types';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
-import type { IEvent } from '@polkadot/types/types';
 import axios, { AxiosInstance } from 'axios';
 import colors from 'colors';
-import { types as PhalaSDKTypes } from '@phala/sdk';
+import fs from 'fs';
 
-export type SetupOptions = {
-    nodeUrl? : string,
-    nodeApiOptions? : ApiOptions,
-    workerUrl? : string,
-    accountsMnemonic? : string,
-    accountsPaths? : Record<string, string>,
-    sudoAccount? : string,
-    ss58Prefix? : number,
-    clusterId? : string,
-}
-
-export type ContractAbi = {
-    source : {
-        hash : string,
-        language : string,
-        compiler : string,
-        wasm : string,
-    },
-    contract : {
-        name : string,
-        version : string,
-        authors : string[],
-    },
-    [other : string] : any,
-}
 
 export type Accounts = {
     alice? : KeyringPair,
@@ -57,38 +32,35 @@ export type WorkerInfo = {
     ecdhPublicKey : string,
 }
 
-export enum ContractType
-{
-    InkCode = 'InkCode',
-    SidevmCode = 'SidevmCode',
-}
-
-export type DeployOptions = {
+export type SetupOptions = {
+    nodeUrl? : string,
+    nodeApiOptions? : ApiOptions,
+    workerUrl? : string,
+    accountsMnemonic? : string,
+    accountsPaths? : Record<string, string>,
+    sudoAccount? : string,
+    ss58Prefix? : number,
     clusterId? : string,
-    asAccount? : AccountKey,
 }
 
-export type InstantiateOptions = {
-    salt? : number,
-    asAccount? : AccountKey,
+export type GetFactoryOptions = {
+    clusterId? : string
 }
-
-export type AttachOptions = {}
 
 
 export class DevPhase
 {
     
-    public api : ApiPromise;
-    public workerUrl : string;
-    public workerApi : AxiosInstance;
+    public readonly api : ApiPromise;
+    public readonly workerUrl : string;
+    public readonly workerApi : AxiosInstance;
     
-    public accounts : Accounts = {};
-    public sudoAccount : KeyringPair;
+    public readonly accounts : Accounts = {};
+    public readonly sudoAccount : KeyringPair;
     
-    public mainClusterId : string;
+    public readonly mainClusterId : string;
     
-    protected _logger : Logger = new Logger('pDeployer', false);
+    protected _logger : Logger = new Logger('devPhase', false);
     protected _apiProvider : WsProvider;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
@@ -96,7 +68,7 @@ export class DevPhase
     
     private constructor () {}
     
-    public static async setup (options : SetupOptions) : Promise<DevPhase>
+    public static async setup (options : SetupOptions = {}) : Promise<DevPhase>
     {
         options = {
             nodeUrl: 'ws://localhost:9944',
@@ -130,7 +102,6 @@ export class DevPhase
             provider: instance._apiProvider,
             ...options.nodeApiOptions
         });
-        instance.api = api;
         
         await instance._eventQueue.init(api);
         
@@ -146,7 +117,10 @@ export class DevPhase
             );
         }
         
-        instance.sudoAccount = instance.accounts[options.sudoAccount];
+        Object.assign(instance, {
+            api,
+            sudoAccount: instance.accounts[options.sudoAccount],
+        });
         
         // check worker
         await instance._prepareWorker(options.workerUrl);
@@ -169,12 +143,12 @@ export class DevPhase
             }
         }
         
-        if (options.clusterId === null) {
-            instance.mainClusterId = await instance._createCluster();
-        }
-        else {
-            instance.mainClusterId = options.clusterId;
-        }
+        let mainClusterId = options.clusterId === null
+            ? await instance._createCluster()
+            : options.clusterId
+        ;
+        
+        Object.assign(instance, { mainClusterId });
         
         // wait for cluster
         await instance._waitForClusterReady();
@@ -187,8 +161,10 @@ export class DevPhase
      */
     protected async _prepareWorker (workerUrl : string)
     {
-        this.workerUrl = workerUrl;
-        this.workerApi = axios.create({ baseURL: workerUrl });
+        Object.assign(this, {
+            workerUrl,
+            workerApi: axios.create({ baseURL: workerUrl })
+        });
         
         this._workerInfo = await this._waitFor(
             async() => {
@@ -371,142 +347,46 @@ export class DevPhase
     }
     
     
-    /**
-     * Deploying contract to network
-     */
-    public async deploy (
-        contractAbi : ContractAbi,
+    public async getFactory<T> (
         type : ContractType,
-        options : DeployOptions = {}
-    ) : Promise<void>
+        artifactPath : string,
+        options : GetFactoryOptions = {}
+    ) : Promise<ContractFactory<T>>
     {
         options = {
             clusterId: this.mainClusterId,
-            asAccount: 'alice',
-        };
-        
-        const result = await TxHandler.handle(
-            this.api.tx.phalaFatContracts.clusterUploadResource(
-                options.clusterId,
-                type,
-                contractAbi.source.wasm
-            ),
-            this.accounts[options.asAccount],
-            'phalaFatContracts.clusterUploadResource'
-        );
-    }
-    
-    
-    /**
-     * Creating contract instance
-     */
-    public async instantiate (
-        contractAbi : ContractAbi,
-        constructor : string,
-        params : any[] = [],
-        options : InstantiateOptions = {}
-    ) : Promise<string>
-    {
-        options = {
-            salt: 1000000000 + Math.round(Math.random() * 8999999999),
-            asAccount: 'alice',
             ...options
         };
         
-        const abi = new Abi(contractAbi);
-        const callData = abi.findConstructor(constructor).toU8a(params);
-        
-        const result = await TxHandler.handle(
-            this.api.tx.phalaFatContracts.instantiateContract(
-                { WasmCode: contractAbi.source.hash },
-                callData,
-                '0x' + options.salt.toString(16),
-                this.mainClusterId,
-            ),
-            this.accounts[options.asAccount],
-            'phalaFatContracts.instantiateContract'
-        );
-        
-        const instantiateEvent = result.events.find(({ event }) => {
-            return event.section === 'phalaFatContracts'
-                && event.method === 'Instantiating';
-        });
-        if (!instantiateEvent) {
-            throw 'Error while instantiating contract';
+        if (!fs.existsSync(artifactPath)) {
+            throw new Exception(
+                'Contract artifact file not found',
+                1665238985042
+            );
         }
         
-        const contractId = instantiateEvent.event.data[0].toString();
-        this._logger.log('Contract ID: ', contractId);
-        
-        // wait for instantation
-        let instantiated : boolean = false;
-        let publicKey : string = null;
-        
-        this._eventQueue.registerHandler(
-            'phalaFatContracts.Instantiated',
-            { 0: contractId },
-            async(event : IEvent<any>) => {
-                instantiated = true;
-            }
-        );
-        this._eventQueue.registerHandler(
-            'phalaFatContracts.ContractPubkeyAvailable',
-            { 0: contractId },
-            async(event : IEvent<any>) => {
-                const eventData = event.data.toJSON();
-                publicKey = eventData[2];
-            }
+        const contractRaw : string = fs.readFileSync(
+            artifactPath,
+            { encoding: 'utf-8' }
         );
         
         try {
-            await this._waitFor(
-                async() => {
-                    return instantiated && !!publicKey;
-                },
-                20 * 1000,
-                { message: 'Contract instantiation' }
+            const contractAbi : ContractAbi = JSON.parse(contractRaw);
+            
+            return ContractFactory.create(
+                this,
+                type,
+                contractAbi,
+                options.clusterId
             );
         }
         catch (e) {
             throw new Exception(
-                'Could not get contract public key',
-                1663952347291,
-                e
+                'Failed to parse contract artifiact JSON',
+                1665238941553
             );
         }
-        
-        const clusterKey = (
-            await this.api.query.phalaRegistry.clusterKeys(this.mainClusterId)
-        ).toJSON();
-        this._logger.log('Cluster Key: ', clusterKey);
-        
-        const contractKey = (
-            await this.api.query.phalaRegistry.contractKeys(contractId)
-        ).toJSON();
-        this._logger.log('Contract Key:', contractKey);
-        
-        return contractId;
     }
-    
-    public async attach (
-        contractId : string,
-        contractAbi : ContractAbi,
-        options : AttachOptions = {}
-    ) : Promise<ContractPromise>
-    {
-        const workerApi = await PhalaSdk.create({
-            api: this.api,
-            baseURL: this.workerUrl,
-            contractId
-        });
-        
-        return new ContractPromise(
-            workerApi,
-            contractAbi,
-            contractId,
-        );
-    }
-    
     
     
     protected async _waitFor (
