@@ -7,13 +7,12 @@ Development tool for Phala Phat contracts.
 
 ### How to use:
 1. First step is building local Phala stack (node, pruntime and pherry). Check [official guide](https://wiki.phala.network/en-us/build/archived/run-a-local-development-network/).
-2. Start the local stack.  
-You may also try using `/assets/dev-node/run.sh` which will prepare all components with proper configuration.
-3. Build your contract
+2. Build your contract
+3. Start the local stack.  
+You may also try using `/dev-node/run.sh` from sandbox (check below) which will prepare all components with proper configuration.
 4. Use devPHAse to deploy / test
 
-### Sandbox
-Check [sandbox repo](https://github.com/l00k/devphase-sandbox)  
+### Try:
 
 Install
 ```shell
@@ -29,3 +28,7 @@ or tests
 ```shell
 yarn test
 ```
+
+
+### Sandbox
+Check [sandbox repo](https://github.com/l00k/devphase-sandbox)  
