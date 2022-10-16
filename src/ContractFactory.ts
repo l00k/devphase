@@ -134,7 +134,6 @@ export class ContractFactory<T>
         }
         
         const contractId = instantiateEvent.event.data[0].toString();
-        this._logger.log('Contract ID: ', contractId);
         
         // wait for instantation
         let instantiated : boolean = false;
@@ -176,12 +175,10 @@ export class ContractFactory<T>
         const clusterKey = (
             await this.api.query.phalaRegistry.clusterKeys(this.clusterId)
         ).toJSON();
-        this._logger.log('Cluster Key: ', clusterKey);
         
         const contractKey = (
             await this.api.query.phalaRegistry.contractKeys(contractId)
         ).toJSON();
-        this._logger.log('Contract Key:', contractKey);
         
         return this.attach(contractId);
     }

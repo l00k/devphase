@@ -1,3 +1,9 @@
+import { MochaOptions } from 'mocha';
+
+export type Config = {
+    mocha?: MochaOptions
+}
+
 export enum ContractType
 {
     InkCode = 'InkCode',
