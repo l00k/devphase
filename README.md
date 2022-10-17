@@ -12,7 +12,7 @@ Development tool for Phala Phat contracts.
 You may also try using `/dev-node/run.sh` from sandbox (check below) which will prepare all components with proper configuration.
 4. Use devPHAse to deploy / test
 
-### Try:
+### Try
 
 Install
 ```shell
@@ -29,6 +29,8 @@ or tests
 yarn test
 ```
 
-
 ### Sandbox
 Check [sandbox repo](https://github.com/l00k/devphase-sandbox)  
+
+### TODO
+[check here](./TODO.md)
