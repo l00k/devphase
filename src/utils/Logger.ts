@@ -48,6 +48,16 @@ export class Logger
         console.dir(object, options);
     }
     
+    public time (arg : any)
+    {
+        const serviceName = colors.white(`[${this.serviceName}]`);
+        
+        if (this.showServiceName) {
+            console.log(serviceName);
+        }
+        console.time(arg);
+    }
+    
     
     public debug (...args : any[])
     {

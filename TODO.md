@@ -2,8 +2,9 @@
 ### TODO
 
 - ✅ create CLI script
-- ⬜ build and include dev-node
-- ⬜ start dev node for tests
+- ✅ include standalone stack
+- ✅ prepare tmux config
+- ✅ stack command
 - ⬜ compile command
 - ⬜ typings binding
 
