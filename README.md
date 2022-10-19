@@ -5,7 +5,15 @@ Development tool for Phala Phat contracts.
 ![](https://img.shields.io/badge/Coverage-97%25-83A603.svg?prefix=$coverage$)
 -->
 
-## Commands
+## Install
+
+Add to your projects using package manager (yarn / npm)
+
+```shell
+yarn add devphase
+```
+
+## Features
 
 #### Start local Phala stack
 ```shell
