@@ -5,28 +5,16 @@ Development tool for Phala Phat contracts.
 ![](https://img.shields.io/badge/Coverage-97%25-83A603.svg?prefix=$coverage$)
 -->
 
-### How to use:
-1. First step is building local Phala stack (node, pruntime and pherry). Check [official guide](https://wiki.phala.network/en-us/build/archived/run-a-local-development-network/).
-2. Build your contract
-3. Start the local stack.  
-You may also try using `/dev-node/run.sh` from sandbox (check below) which will prepare all components with proper configuration.
-4. Use devPHAse to deploy / test
+## Commands
 
-### Try
-
-Install
+#### Start local Phala stack
 ```shell
-yarn install
+yarn devphase stack
 ```
 
-Try script (deploy)
+#### Test with mocha
 ```shell
-yarn deploy
-```
-
-or tests
-```shell
-yarn test
+yarn devphase test
 ```
 
 ### Sandbox
