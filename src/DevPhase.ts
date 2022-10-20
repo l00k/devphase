@@ -12,7 +12,7 @@ import type { ApiOptions } from '@polkadot/api/types';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import axios, { AxiosInstance } from 'axios';
-import colors from 'colors';
+import chalk from 'chalk';
 import fs from 'fs';
 
 
@@ -60,7 +60,7 @@ export class DevPhase
     
     public readonly mainClusterId : string;
     
-    protected _logger : Logger = new Logger('devPhase', false);
+    protected _logger : Logger = new Logger('devPhase', true);
     protected _apiProvider : WsProvider;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
@@ -303,7 +303,7 @@ export class DevPhase
         
         const clusterId = clusterCreatedEvent.event.data[0].toString();
         
-        this._logger.log(colors.green('Cluster created'));
+        this._logger.log(chalk.green('Cluster created'));
         this._logger.log(clusterId);
         
         return clusterId;
@@ -401,7 +401,7 @@ export class DevPhase
         }
         
         if (options.message) {
-            this._logger.debug('Waiting for', colors.cyan(options.message));
+            this._logger.debug('Waiting for', chalk.cyan(options.message));
         }
         
         const result = waitFor(
@@ -410,7 +410,7 @@ export class DevPhase
             options
         );
         
-        this._logger.debug(colors.green('Ready'));
+        this._logger.debug(chalk.green('Ready'));
         
         return result;
     }

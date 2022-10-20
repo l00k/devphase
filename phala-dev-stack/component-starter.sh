@@ -10,7 +10,7 @@ case $1 in
         mkdir -p ./.data/node
         cd ./.data/node
 
-        ../../bin/phala-node \
+        ../../bin/node \
             --dev \
             --rpc-methods=Unsafe \
             --block-millisecs=$BLOCK_TIME

@@ -1,4 +1,4 @@
-import colors from 'colors';
+import chalk from 'chalk';
 
 export enum LoggerLevel
 {
@@ -32,7 +32,7 @@ export class Logger
         
         const logArgs = [ ...args ];
         if (this.showServiceName) {
-            logArgs.unshift(colors.white(`[${this.serviceName}]`));
+            logArgs.unshift(chalk.white(`[${this.serviceName}]`));
         }
         
         console.log(...logArgs);
@@ -40,22 +40,12 @@ export class Logger
     
     public dir (object : any, options? : any)
     {
-        const serviceName = colors.white(`[${this.serviceName}]`);
+        const serviceName = chalk.white(`[${this.serviceName}]`);
         
         if (this.showServiceName) {
             console.log(serviceName);
         }
         console.dir(object, options);
-    }
-    
-    public time (arg : any)
-    {
-        const serviceName = colors.white(`[${this.serviceName}]`);
-        
-        if (this.showServiceName) {
-            console.log(serviceName);
-        }
-        console.time(arg);
     }
     
     
@@ -67,7 +57,7 @@ export class Logger
         
         const logArgs = [ ...args ];
         if (this.showServiceName) {
-            logArgs.unshift(colors.grey(`[${this.serviceName}]`));
+            logArgs.unshift(chalk.grey(`[${this.serviceName}]`));
         }
         
         console.debug(...logArgs);
@@ -81,7 +71,7 @@ export class Logger
         
         const logArgs = [ ...args ];
         if (this.showServiceName) {
-            logArgs.unshift(colors.cyan(`[${this.serviceName}]`));
+            logArgs.unshift(chalk.cyan(`[${this.serviceName}]`));
         }
         
         console.info(...logArgs);
@@ -95,7 +85,7 @@ export class Logger
         
         const logArgs = [ ...args ];
         if (this.showServiceName) {
-            logArgs.unshift(colors.yellow(`[${this.serviceName}]`));
+            logArgs.unshift(chalk.yellow(`[${this.serviceName}]`));
         }
         
         console.warn(...logArgs);
@@ -109,7 +99,7 @@ export class Logger
         
         const logArgs = [ ...args ];
         if (this.showServiceName) {
-            logArgs.unshift(colors.red(`[${this.serviceName}]`));
+            logArgs.unshift(chalk.red(`[${this.serviceName}]`));
         }
         
         console.error(...logArgs);

@@ -30,10 +30,11 @@
     },
     "dependencies": {
         "axios": "^0.27.2",
-        "colors": "^1.4.0",
+        "chalk": "^4.1.2",
         "commander": "^9.4.1",
         "glob": "^8.0.3",
-        "find-up": "^5.0.0"
+        "find-up": "^5.0.0",
+        "lodash": "^4.17.21"
     },
     "peerDependencies": {
         "@phala/sdk": "^0.3.3",

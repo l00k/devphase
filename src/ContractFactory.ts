@@ -1,4 +1,4 @@
-import { PhatContract } from '@/./PhatContract';
+import { PhatContract } from '@/PhatContract';
 import { ContractAbi, ContractType } from '@/def';
 import { AccountKey, DevPhase } from '@/DevPhase';
 import { EventQueue } from '@/EventQueue';
@@ -10,7 +10,7 @@ import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import type { IEvent } from '@polkadot/types/types';
-import colors from 'colors';
+import chalk from 'chalk';
 
 
 
@@ -220,7 +220,7 @@ export class ContractFactory<T>
         }
         
         if (options.message) {
-            this._logger.debug('Waiting for', colors.cyan(options.message));
+            this._logger.debug('Waiting for', chalk.cyan(options.message));
         }
         
         const result = waitFor(
@@ -229,7 +229,7 @@ export class ContractFactory<T>
             options
         );
         
-        this._logger.debug(colors.green('Ready'));
+        this._logger.debug(chalk.green('Ready'));
         
         return result;
     }

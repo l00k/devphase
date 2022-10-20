@@ -1,5 +1,6 @@
 #! /usr/bin/env ts-node-script
 import { Context } from '@/Context';
+import childProcess from 'child_process';
 import { Command } from 'commander';
 
 (async() => {
