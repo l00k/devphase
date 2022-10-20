@@ -1,5 +1,5 @@
-import { Context } from '@/cli/Context';
-import { startPherry, startPruntime, startStack, StartStackMode } from '@/cli/stack';
+import { Context } from '@/Context';
+import { StartStackMode } from '@/def';
 import { Command } from 'commander';
 
 
@@ -7,27 +7,20 @@ async function command (context : Context)
 {
     context.logger.log('Starting stack');
     
-    const processes = await startStack(context, StartStackMode.Foreground);
+    const processes = await context.startStack(StartStackMode.Foreground);
     
-    process.on('SIGINT', () => {
+    process.on('SIGINT', async() => {
         context.logger.log('Got SIGINT - shutting down');
         
-        if (!processes.node.killed) {
-            processes.node.kill('SIGINT');
-        }
-        if (!processes.pruntime.killed) {
-            processes.pruntime.kill('SIGINT');
-        }
-        if (!processes.pherry.killed) {
-            processes.pherry.kill('SIGINT');
-        }
-    })
+        await context.stopStack();
+    });
 }
 
 export function stackCommand (
     program : Command,
     context : Context
-) {
+)
+{
     program.command('stack')
         .description('Start Phala stack')
         .action(async() => command(context));

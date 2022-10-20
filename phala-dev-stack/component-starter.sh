@@ -43,7 +43,7 @@ case $1 in
             sleep 1
         done
 
-        sleep 1
+        sleep 3
 
         echo -e "\nStarting pherry"
 

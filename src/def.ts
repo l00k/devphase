@@ -1,7 +1,13 @@
 import { MochaOptions } from 'mocha';
 
 export type Config = {
-    mocha?: MochaOptions
+    mocha? : MochaOptions
+}
+
+export enum StartStackMode
+{
+    Foreground = 'Foreground',
+    Background = 'Background',
 }
 
 export enum ContractType

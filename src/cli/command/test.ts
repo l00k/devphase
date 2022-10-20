@@ -1,14 +1,14 @@
-import { Context } from '@/cli/Context';
+import { Context } from '@/Context';
 import { Command } from 'commander';
-import { MochaOptions } from 'mocha';
 import glob from 'glob';
+import { MochaOptions } from 'mocha';
 import path from 'path';
 
 
 async function command (context : Context)
 {
     context.logger.log('Running tests');
-
+    
     const { default: Mocha } = await import('mocha');
     
     const mochaConfig : MochaOptions = {
@@ -18,7 +18,7 @@ async function command (context : Context)
     const mocha = new Mocha(mochaConfig);
     
     // add internals
-    mocha.addFile(path.join(context.libPath, '/etc/mocha.global.ts'))
+    mocha.addFile(path.join(context.libPath, '/etc/mocha.global.ts'));
     
     // grep test files
     const patterns = [
@@ -39,7 +39,8 @@ async function command (context : Context)
 export function testCommand (
     program : Command,
     context : Context
-) {
+)
+{
     program.command('test')
         .description('Start tests')
         .action(async() => command(context));

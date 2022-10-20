@@ -1,7 +1,6 @@
 #! /usr/bin/env ts-node-script
-import { Context } from '@/cli/Context';
+import { Context } from '@/Context';
 import { Command } from 'commander';
-import path from 'path';
 
 (async() => {
     const program = new Command();
@@ -12,7 +11,7 @@ import path from 'path';
         .version('0.0.1');
     
     // create context
-    const context = await Context.create();
+    const context = await Context.getSingleton();
     
     // register commands
     const builtInCommands : any = await import('./command');
