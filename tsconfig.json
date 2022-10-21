@@ -32,7 +32,8 @@
     "include": [
         "etc",
         "src",
-        "tests"
+        "tests",
+        "typings"
     ],
     "ts-node": {
         "transpileOnly": true,

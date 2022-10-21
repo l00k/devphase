@@ -14,8 +14,8 @@
 ### TODO
 
 - ⬜ verify & export mocha + chai and devphase global typing
-- ⬜ create chai helpers for Phala contracts testing (waitFor like)
 - ⬜ compile command
+- ⬜ create chai helpers for Phala contracts testing (waitFor like)
 
 ### NEXT
 
