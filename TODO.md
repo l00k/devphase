@@ -9,16 +9,13 @@
 - ✅ prepare a stack before tests running
 - ✅ options for testing stack (reduce time to 100ms)
 - ✅ ensure component is running by analyzing output
-
+- ✅ verify & export mocha + chai and devphase global typing
 
 ### TODO
 
-- ⬜ verify & export mocha + chai and devphase global typing
 - ⬜ compile command
 - ⬜ create chai helpers for Phala contracts testing (waitFor like)
+- ⬜ create typings binding using ABI exported while compiling contracts
 
-### NEXT
-
-- ⬜ typings binding
 
 
