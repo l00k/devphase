@@ -1,17 +1,18 @@
+import { DevPhase } from '@/service/DevPhase';
+import { RuntimeContext } from '@/service/RuntimeContext';
+import { StackManager } from '@/service/StackManager';
 import { ApiPromise } from '@polkadot/api';
-import { DevPhase } from '@/DevPhase';
-import { Context } from '@/Context';
-
-type devPhaseContext = Context;
 
 declare module 'mocha'
 {
     export interface Context
     {
         // @ts-ignore
-        context : devPhaseContext;
+        runtimeContext : RuntimeContext;
         // @ts-ignore
         devPhase : DevPhase;
+        // @ts-ignore
+        stackManager : StackManager;
         api : ApiPromise;
     }
 }

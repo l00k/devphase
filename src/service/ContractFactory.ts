@@ -1,10 +1,10 @@
-import { PhatContract } from '@/PhatContract';
 import { ContractAbi, ContractType } from '@/def';
-import { AccountKey, DevPhase } from '@/DevPhase';
-import { EventQueue } from '@/EventQueue';
-import { TxHandler } from '@/TxHandler';
+import { PhatContract } from '@/PhatContract';
+import { AccountKey, DevPhase } from '@/service/DevPhase';
+import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
+import { TxHandler } from '@/utils/TxHandler';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
@@ -28,12 +28,12 @@ export type AttachOptions = {}
 
 export class ContractFactory<T>
 {
-
+    
     public readonly contractType : string;
     public readonly contractAbi : ContractAbi;
     public readonly clusterId : string;
     
-    protected _logger : Logger = new Logger('ContractFactory', false);
+    protected _logger : Logger = new Logger('ContractFactory');
     protected _devPhase : DevPhase;
     protected _eventQueue : EventQueue = new EventQueue();
     
@@ -44,7 +44,7 @@ export class ContractFactory<T>
         return this._devPhase.api;
     }
     
-    protected async init(api : ApiPromise)
+    protected async init (api : ApiPromise)
     {
         await this._eventQueue.init(api);
     }
@@ -204,7 +204,7 @@ export class ContractFactory<T>
             contractId
         });
         
-        return <any> instance;
+        return <any>instance;
     }
     
     

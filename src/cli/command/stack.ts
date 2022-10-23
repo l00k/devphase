@@ -1,31 +1,37 @@
-import { Context } from '@/Context';
-import { StartStackMode } from '@/def';
+import { SpawnMode } from '@/def';
+import { RuntimeContext } from '@/service/RuntimeContext';
+import { StackManager } from '@/service/StackManager';
+import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
 
-async function command (context : Context)
+async function command (context : RuntimeContext)
 {
-    context.logger.log('Starting stack');
+    const logger = new Logger('Stack');
+    
+    logger.log('Starting');
+    
+    const stackManager = new StackManager(context);
     
     try {
-        const processes = await context.startStack(StartStackMode.Foreground);
+        const processes = await stackManager.startStack(SpawnMode.Foreground);
     }
     catch (e) {
-        await context.stopStack();
+        await stackManager.stopStack();
         
         throw e;
     }
     
     process.on('SIGINT', async() => {
-        context.logger.log('Got SIGINT - shutting down');
+        logger.log('Got SIGINT - shutting down');
         
-        await context.stopStack();
+        await stackManager.stopStack();
     });
 }
 
 export function stackCommand (
     program : Command,
-    context : Context
+    context : RuntimeContext
 )
 {
     program.command('stack')

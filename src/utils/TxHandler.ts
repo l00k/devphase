@@ -6,7 +6,7 @@ import type { ISubmittableResult } from '@polkadot/types/types';
 import chalk from 'chalk';
 
 
-const logger : Logger = new Logger('TxHandler', true);
+const logger : Logger = new Logger('TxHandler');
 
 export class TxHandler
 {

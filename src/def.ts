@@ -9,15 +9,16 @@ type RecursivePartial<T> = {
 };
 
 
-export enum StartStackMode
+
+export type ComponentName = 'node' | 'pruntime' | 'pherry';
+
+export enum SpawnMode
 {
     Foreground = 'Foreground',
     Background = 'Background',
 }
 
-export type ComponentName = 'node' | 'pruntime' | 'pherry';
-
-export type StartComponentOptions = {
+export type BinarySpawnOptions = {
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
     timeout : number
@@ -28,7 +29,7 @@ export type Config = {
         contracts : string,
         tests : string,
     },
-    stack : Record<ComponentName, StartComponentOptions>,
+    stack : Record<ComponentName, BinarySpawnOptions>,
     mocha : MochaOptions
 }
 

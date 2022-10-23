@@ -1,5 +1,5 @@
 #! /usr/bin/env ts-node-script
-import { Context } from '@/Context';
+import { RuntimeContext } from '@/service/RuntimeContext';
 import childProcess from 'child_process';
 import { Command } from 'commander';
 
@@ -12,12 +12,12 @@ import { Command } from 'commander';
         .version('0.0.1');
     
     // create context
-    const context = await Context.getSingleton();
+    const runtimeContext = await RuntimeContext.getSingleton();
     
     // register commands
     const builtInCommands : any = await import('./command');
     for (const commandRegisterFn of Object.values<any>(builtInCommands)) {
-        await commandRegisterFn(program, context);
+        await commandRegisterFn(program, runtimeContext);
     }
     
     program.parse();

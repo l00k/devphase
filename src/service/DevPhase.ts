@@ -1,9 +1,9 @@
-import { ContractFactory } from '@/ContractFactory';
 import { ContractAbi, ContractType } from '@/def';
-import { EventQueue } from '@/EventQueue';
-import { TxHandler } from '@/TxHandler';
+import { ContractFactory } from '@/service/ContractFactory';
+import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
+import { TxHandler } from '@/utils/TxHandler';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
@@ -60,7 +60,7 @@ export class DevPhase
     
     public readonly mainClusterId : string;
     
-    protected _logger : Logger = new Logger('devPhase', true);
+    protected _logger : Logger = new Logger('devPhase');
     protected _apiProvider : WsProvider;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;

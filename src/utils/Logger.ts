@@ -19,8 +19,7 @@ export class Logger
     
     
     public constructor (
-        public serviceName : string,
-        public showServiceName : boolean
+        public serviceName : string
     )
     {}
     
@@ -31,9 +30,7 @@ export class Logger
         }
         
         const logArgs = [ ...args ];
-        if (this.showServiceName) {
-            logArgs.unshift(chalk.white(`[${this.serviceName}]`));
-        }
+        logArgs.unshift(chalk.white(`[${this.serviceName}]`));
         
         console.log(...logArgs);
     }
@@ -42,9 +39,7 @@ export class Logger
     {
         const serviceName = chalk.white(`[${this.serviceName}]`);
         
-        if (this.showServiceName) {
-            console.log(serviceName);
-        }
+        console.log(serviceName);
         console.dir(object, options);
     }
     
@@ -56,9 +51,7 @@ export class Logger
         }
         
         const logArgs = [ ...args ];
-        if (this.showServiceName) {
-            logArgs.unshift(chalk.grey(`[${this.serviceName}]`));
-        }
+        logArgs.unshift(chalk.grey(`[${this.serviceName}]`));
         
         console.debug(...logArgs);
     }
@@ -70,9 +63,7 @@ export class Logger
         }
         
         const logArgs = [ ...args ];
-        if (this.showServiceName) {
-            logArgs.unshift(chalk.cyan(`[${this.serviceName}]`));
-        }
+        logArgs.unshift(chalk.cyan(`[${this.serviceName}]`));
         
         console.info(...logArgs);
     }
@@ -84,9 +75,7 @@ export class Logger
         }
         
         const logArgs = [ ...args ];
-        if (this.showServiceName) {
-            logArgs.unshift(chalk.yellow(`[${this.serviceName}]`));
-        }
+        logArgs.unshift(chalk.yellow(`[${this.serviceName}]`));
         
         console.warn(...logArgs);
     }
@@ -98,9 +87,7 @@ export class Logger
         }
         
         const logArgs = [ ...args ];
-        if (this.showServiceName) {
-            logArgs.unshift(chalk.red(`[${this.serviceName}]`));
-        }
+        logArgs.unshift(chalk.red(`[${this.serviceName}]`));
         
         console.error(...logArgs);
     }

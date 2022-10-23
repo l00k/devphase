@@ -1,13 +1,16 @@
-import { Context } from '@/Context';
+import { RuntimeContext } from '@/service/RuntimeContext';
+import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 import glob from 'glob';
 import { MochaOptions } from 'mocha';
 import path from 'path';
 
 
-async function command (context : Context)
+async function command (context : RuntimeContext)
 {
-    context.logger.log('Running tests');
+    const logger = new Logger('Test');
+    
+    logger.log('Running tests');
     
     const { default: Mocha } = await import('mocha');
     
@@ -38,7 +41,7 @@ async function command (context : Context)
 
 export function testCommand (
     program : Command,
-    context : Context
+    context : RuntimeContext
 )
 {
     program.command('test')
