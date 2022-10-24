@@ -8,6 +8,13 @@ import * as fs from 'fs';
 import glob from 'glob';
 import path from 'path';
 
+
+export type CompileOptions = {
+    watch : boolean,
+    release : boolean
+}
+
+
 export class ContractCompiler
 {
     
@@ -28,7 +35,7 @@ export class ContractCompiler
     
     public async compileAll (
         contractName : string,
-        watch : boolean = false
+        options : CompileOptions = { watch: false, release: false },
     )
     {
         if (contractName) {
@@ -47,7 +54,7 @@ export class ContractCompiler
         }
         
         for (const contract of matchedContracts) {
-            const result = await this.compileContract(contract);
+            const result = await this.compileContract(contract, options.release);
             if (!result) {
                 throw new Exception(
                     `Unable to compile ${contract} contract`,
@@ -56,14 +63,14 @@ export class ContractCompiler
             }
         }
         
-        if (watch) {
+        if (options.watch) {
             const patternsToWatch = matchedContracts.map(contract => {
                 return path.join(this.contractsBasePath, contract);
             });
             const patternsToIgnore = matchedContracts.map(contract => {
                 return path.join(this.contractsBasePath, contract, 'target');
             });
-        
+            
             const watcher = chokidar.watch(patternsToWatch, {
                 ignored: patternsToIgnore
             });
@@ -73,8 +80,8 @@ export class ContractCompiler
                 const contractName = relPath.split('/')[0];
                 
                 this._logger.log('Change detected in', chalk.blueBright(contractName));
-            
-                this.compileContract(contractName);
+                
+                this.compileContract(contractName, options.release);
             });
         }
     }
@@ -91,24 +98,40 @@ export class ContractCompiler
         }
     }
     
-    public async compileContract (contractName : string) : Promise<boolean>
+    public async compileContract (
+        contractName : string,
+        releaseMode : boolean
+    ) : Promise<boolean>
     {
         const contractPath = path.join(this.contractsBasePath, contractName);
         
         this._logger.log('Building:', chalk.blueBright(contractName));
         
-        const result = await childProcess.spawnSync(
+        const args = [ '+nightly', 'contract', 'build' ];
+        if (releaseMode) {
+            args.push('--release');
+        }
+        
+        const child = await childProcess.spawn(
             'cargo',
-            [ '+nightly', 'contract', 'build' ],
+            args,
             {
                 cwd: contractPath,
             }
         );
         
-        if (result.status !== 0) {
-            this._logger.error('Could not build contract:');
-            this._logger.error(result.stdout);
-            this._logger.error(result.stderr);
+        child.stdout.setEncoding('utf-8');
+        child.stderr.setEncoding('utf-8');
+        
+        child.stdout.on('data', text => process.stdout.write(text));
+        child.stderr.on('data', text => process.stdout.write(text));
+        
+        const resultCode = await new Promise(resolve => {
+            child.on('exit', code => resolve(code));
+        });
+        
+        if (resultCode !== 0) {
+            this._logger.error('Failed building contract');
             return false;
         }
         

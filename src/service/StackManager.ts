@@ -207,7 +207,7 @@ export class StackManager
                     
                     if (spawnMode === SpawnMode.Foreground) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
-                        console.log(text);
+                        process.stdout.write(text);
                     }
                     
                     if (!settled) {
