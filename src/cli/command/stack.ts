@@ -5,13 +5,13 @@ import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
 
-async function command (context : RuntimeContext)
+async function command (runtimeContext : RuntimeContext)
 {
     const logger = new Logger('Stack');
     
     logger.log('Starting');
     
-    const stackManager = new StackManager(context);
+    const stackManager = new StackManager(runtimeContext);
     
     try {
         const processes = await stackManager.startStack(SpawnMode.Foreground);

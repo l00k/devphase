@@ -6,7 +6,7 @@ import { MochaOptions } from 'mocha';
 import path from 'path';
 
 
-async function command (context : RuntimeContext)
+async function command (runtimeContext : RuntimeContext)
 {
     const logger = new Logger('Test');
     
@@ -16,19 +16,20 @@ async function command (context : RuntimeContext)
     
     const mochaConfig : MochaOptions = {
         timeout: 10000,
-        ...context.config.mocha
+        ...runtimeContext.config.mocha
     };
     const mocha = new Mocha(mochaConfig);
     
     // add internals
-    mocha.addFile(path.join(context.libPath, '/etc/mocha.global.ts'));
+    mocha.addFile(path.join(runtimeContext.libPath, '/etc/mocha.global.ts'));
     
     // grep test files
     const patterns = [
-        'test?(s)/**/*.@(test|spec).@(ts|js)',
+        `${runtimeContext.config.directories.tests}/**/*.@(test|spec).@(ts|js)`,
     ];
+    
     for (const pattern of patterns) {
-        const files = glob.sync(pattern, { cwd: context.projectDir });
+        const files = glob.sync(pattern, { cwd: runtimeContext.projectDir });
         files.forEach(file => mocha.addFile(file));
     }
     

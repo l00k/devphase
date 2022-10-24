@@ -1,6 +1,6 @@
+import { ContractCompiler } from '@/service/ContractCompiler';
 import { RuntimeContext } from '@/service/RuntimeContext';
 import { Logger } from '@/utils/Logger';
-import chalk from 'chalk';
 import { Command } from 'commander';
 
 
@@ -9,19 +9,13 @@ async function command (
     contractName? : string
 )
 {
-    const logger = new Logger('Compile')
+    const logger = new Logger('Compile');
     
     logger.log('Contracts compilation');
     
-    if (contractName) {
-        logger.log('Criteria:', chalk.cyan(contractName));
-    }
-    else {
-        logger.log('Criteria:', chalk.yellow('any'));
-    }
+    const contractCompiler = new ContractCompiler(runtimeContext);
     
-    // match contracts
-    const matchedContracts : string[] = [];
+    return contractCompiler.compileAll(contractName);
 }
 
 export function compileCommand (
