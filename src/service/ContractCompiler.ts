@@ -1,14 +1,12 @@
-import { SpawnMode } from '@/def';
 import { RuntimeContext } from '@/service/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
-import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import chalk from 'chalk';
 import childProcess from 'child_process';
+import chokidar from 'chokidar';
 import * as fs from 'fs';
 import glob from 'glob';
 import path from 'path';
-
 
 export class ContractCompiler
 {
@@ -28,7 +26,10 @@ export class ContractCompiler
     }
     
     
-    public async compileAll (contractName? : string)
+    public async compileAll (
+        contractName : string,
+        watch : boolean = false
+    )
     {
         if (contractName) {
             this._logger.log('Criteria:', chalk.cyan(contractName));
@@ -54,9 +55,31 @@ export class ContractCompiler
                 );
             }
         }
+        
+        if (watch) {
+            const patternsToWatch = matchedContracts.map(contract => {
+                return path.join(this.contractsBasePath, contract);
+            });
+            const patternsToIgnore = matchedContracts.map(contract => {
+                return path.join(this.contractsBasePath, contract, 'target');
+            });
+        
+            const watcher = chokidar.watch(patternsToWatch, {
+                ignored: patternsToIgnore
+            });
+            
+            watcher.on('change', (_path, stats) => {
+                const relPath = path.relative(this.contractsBasePath, _path);
+                const contractName = relPath.split('/')[0];
+                
+                this._logger.log('Change detected in', chalk.blueBright(contractName));
+            
+                this.compileContract(contractName);
+            });
+        }
     }
     
-    public matchContracts(contractName? : string) : string[]
+    public matchContracts (contractName? : string) : string[]
     {
         const allContracts = glob.sync(`*`, { cwd: this.contractsBasePath });
         
@@ -68,7 +91,7 @@ export class ContractCompiler
         }
     }
     
-    public async compileContract(contractName : string) : Promise<boolean>
+    public async compileContract (contractName : string) : Promise<boolean>
     {
         const contractPath = path.join(this.contractsBasePath, contractName);
         

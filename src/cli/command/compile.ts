@@ -4,9 +4,15 @@ import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
 
+type CompileCommandOptions = {
+    watch: boolean,
+}
+
+
 async function command (
     runtimeContext : RuntimeContext,
-    contractName? : string
+    contractName? : string,
+    options? : CompileCommandOptions
 )
 {
     const logger = new Logger('Compile');
@@ -15,7 +21,10 @@ async function command (
     
     const contractCompiler = new ContractCompiler(runtimeContext);
     
-    return contractCompiler.compileAll(contractName);
+    return contractCompiler.compileAll(
+        contractName,
+        options.watch
+    );
 }
 
 export function compileCommand (
@@ -26,5 +35,6 @@ export function compileCommand (
     program.command('compile')
         .description('Compile contract(s)')
         .argument('[contractName]', 'Optional name of contract to compile', null)
+        .option('-w, --watch', 'Watch for changes', false)
         .action(async(...args : any[]) => command(context, ...args));
 }

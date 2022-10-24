@@ -20,9 +20,9 @@ yarn add devphase
 yarn devphase stack
 ```
 
-- Contracts compilation (wip)
+- Contracts compilation
 ```shell
-yarn devphase compile [contractName]
+yarn devphase compile [contractName] [--watch]
 ```
 
 - Contracts TS bindings creation (wip)
