@@ -17,5 +17,7 @@
 - ⬜ create chai helpers for Phala contracts testing (waitFor like)
 - ⬜ create typings binding using ABI exported while compiling contracts
 
+- ⬜ create tests
+
 
 
