@@ -1,4 +1,5 @@
 import { ContractCompiler } from '@/service/ContractCompiler';
+import { ContractTypeBinder } from '@/service/ContractTypeBinder';
 import { MultiContractExecutor } from '@/service/MultiContractExecutor';
 import { RuntimeContext } from '@/service/RuntimeContext';
 import { Logger } from '@/utils/Logger';
@@ -21,16 +22,24 @@ async function command (
     logger.log('Contracts compilation');
     
     const contractCompiler = new ContractCompiler(runtimeContext);
+    const binder = new ContractTypeBinder(runtimeContext);
     const multiContractExecutor = new MultiContractExecutor(runtimeContext);
     
     return multiContractExecutor.exec(
         contractName,
         options.watch,
-        (contractName) => {
-            return contractCompiler.compile(
+        async(contractName) => {
+            // compile
+            const result = await contractCompiler.compile(
                 contractName,
                 options.release
             );
+            if (!result) {
+                return false;
+            }
+            
+            // generate typing binding
+            return binder.createBindings(contractName);
         }
     );
 }

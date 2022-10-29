@@ -62,6 +62,7 @@ export class DevPhase
     
     protected _logger : Logger = new Logger('devPhase');
     protected _apiProvider : WsProvider;
+    protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
     
@@ -96,13 +97,10 @@ export class DevPhase
         
         const instance = new DevPhase();
         
+        instance._apiOptions = options.nodeApiOptions;
         instance._apiProvider = new WsProvider(options.nodeUrl);
         
-        const api = await ApiPromise.create({
-            provider: instance._apiProvider,
-            ...options.nodeApiOptions
-        });
-        
+        const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
         // get accounts
@@ -154,6 +152,14 @@ export class DevPhase
         await instance._waitForClusterReady();
         
         return instance;
+    }
+    
+    public async createApiPromise () : Promise<ApiPromise>
+    {
+        return ApiPromise.create({
+            provider: this._apiProvider,
+            ...this._apiOptions
+        });
     }
     
     /**

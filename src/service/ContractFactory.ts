@@ -7,7 +7,7 @@ import { Logger } from '@/utils/Logger';
 import { TxHandler } from '@/utils/TxHandler';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
-import { ApiPromise } from '@polkadot/api';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import type { IEvent } from '@polkadot/types/types';
 import chalk from 'chalk';
@@ -46,7 +46,7 @@ export class ContractFactory
     
     protected async init (api : ApiPromise)
     {
-        await this._eventQueue.init(api);
+        await this._eventQueue.init(this._devPhase.api);
     }
     
     
@@ -188,8 +188,10 @@ export class ContractFactory
         options : AttachOptions = {}
     ) : Promise<T>
     {
+        const api = await this._devPhase.createApiPromise();
+    
         const workerApi : ApiPromise = await PhalaSdk.create({
-            api: this.api,
+            api,
             baseURL: this._devPhase.workerUrl,
             contractId
         });
