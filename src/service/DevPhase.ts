@@ -347,11 +347,11 @@ export class DevPhase
     }
     
     
-    public async getFactory<T> (
+    public async getFactory<T extends ContractFactory> (
         type : ContractType,
         artifactPath : string,
         options : GetFactoryOptions = {}
-    ) : Promise<ContractFactory<T>>
+    ) : Promise<T>
     {
         options = {
             clusterId: this.mainClusterId,

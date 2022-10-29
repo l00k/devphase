@@ -1,6 +1,6 @@
 import { ContractMetadata, ContractType } from '@/def';
-import { PhatContract } from '@/PhatContract';
 import { AccountKey, DevPhase } from '@/service/DevPhase';
+import { Contract } from '@/typings';
 import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -26,7 +26,7 @@ export type InstantiateOptions = {
 export type AttachOptions = {}
 
 
-export class ContractFactory<T>
+export class ContractFactory
 {
     
     public readonly contractType : string;
@@ -50,12 +50,12 @@ export class ContractFactory<T>
     }
     
     
-    public static async create<T> (
+    public static async create<T extends ContractFactory> (
         devPhase : DevPhase,
         contractType : ContractType,
         metadata : ContractMetadata.Metadata,
         clusterId : string
-    ) : Promise<ContractFactory<T>>
+    ) : Promise<T>
     {
         const instance = new ContractFactory();
         
@@ -69,7 +69,7 @@ export class ContractFactory<T>
         
         await instance.init(devPhase.api);
         
-        return instance;
+        return <any> instance;
     }
     
     
@@ -99,7 +99,7 @@ export class ContractFactory<T>
     /**
      * Creating contract instance
      */
-    public async instantiate<T extends PhatContract> (
+    public async instantiate<T extends Contract> (
         constructor : string,
         params : any[] = [],
         options : InstantiateOptions = {}
@@ -183,7 +183,7 @@ export class ContractFactory<T>
         return this.attach(contractId);
     }
     
-    public async attach<T extends PhatContract> (
+    public async attach<T extends Contract> (
         contractId : string,
         options : AttachOptions = {}
     ) : Promise<T>

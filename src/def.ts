@@ -1,6 +1,6 @@
 import { MochaOptions } from 'mocha';
 
-type RecursivePartial<T> = {
+export type RecursivePartial<T> = {
     [P in keyof T]? : T[P] extends (infer U)[]
         ? RecursivePartial<U>[]
         : T[P] extends object
@@ -8,7 +8,11 @@ type RecursivePartial<T> = {
             : T[P];
 };
 
-
+export interface FixedArray<L extends number, T>
+    extends ArrayLike<T>
+{
+    length : L
+}
 
 export type ComponentName = 'node' | 'pruntime' | 'pherry';
 
@@ -44,85 +48,87 @@ export enum ContractType
 
 
 
-export namespace ContractMetadata {
+export namespace ContractMetadata
+{
     export type TypeRef = {
-        displayName: string[],
-        type: number,
+        displayName : string[],
+        type : number,
     };
     
     export type Argument = {
-        label: string,
-        type: TypeRef,
-        docs: string[],
+        label : string,
+        type : TypeRef,
+        docs : string[],
     };
     
     export type IndexedArgument = Argument & {
-        indexed: boolean,
+        indexed : boolean,
     };
     
     export type Constructor = {
-        label: string,
-        args: Argument[],
-        selector: string,
-        payable: boolean,
-        docs: string[],
+        label : string,
+        args : Argument[],
+        selector : string,
+        payable : boolean,
+        docs : string[],
     };
     
     export type Message = {
-        label: string,
-        args: Argument[],
-        selector: string,
-        payable: boolean,
-        mutates: boolean,
-        returnType: TypeRef,
-        docs: string[],
+        label : string,
+        args : Argument[],
+        selector : string,
+        payable : boolean,
+        mutates : boolean,
+        returnType : TypeRef,
+        docs : string[],
     };
     
     export type Spec = {
-        constructors: Constructor[],
-        events: IndexedArgument[],
-        messages: Message[],
-        docs: string[],
+        constructors : Constructor[],
+        events : IndexedArgument[],
+        messages : Message[],
+        docs : string[],
     };
     
     export type Storage = {
-        struct: {
-            fields: Array<{
-                name: string,
-                layout: {
-                    cell: {
-                        key: string,
-                        ty: number,
+        struct : {
+            fields : Array<{
+                name : string,
+                layout : {
+                    cell : {
+                        key : string,
+                        ty : number,
                     }
                 }
             }>
         }
     };
     
-    export namespace Type {
+    export namespace Type
+    {
         export type Primitive = {
-            def: {
-                primitive: string,
+            def : {
+                primitive : string,
             }
         };
         
         export type Composite = {
-            def: {
-                composite: {
-                    fields: Array<{
-                        type: number,
-                        typeName: string,
+            def : {
+                composite : {
+                    fields : Array<{
+                        type : number,
+                        typeName : string,
                     }>
                 }
             },
-            path: string[],
+            path : string[],
         };
         
         export type ArrayType = {
-            def: {
-                array: {
-                    len: string,
-                    type: number,
+            def : {
+                array : {
+                    len : string,
+                    type : number,
                 }
             },
         };
@@ -131,14 +137,14 @@ export namespace ContractMetadata {
     export type TypeDefType = Type.Primitive | Type.Composite | Type.ArrayType;
     
     export type TypeDef = {
-        id: number,
-        type: TypeDefType,
+        id : number,
+        type : TypeDefType,
     };
     
     export type ABI = {
-        spec: Spec,
-        storage: Storage,
-        types: TypeDef[],
+        spec : Spec,
+        storage : Storage,
+        types : TypeDef[],
     };
     
     export type Metadata = {
@@ -153,7 +159,7 @@ export namespace ContractMetadata {
             version : string,
             authors : string[],
         },
-        V3: ABI,
+        V3 : ABI,
     }
     
 }

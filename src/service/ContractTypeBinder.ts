@@ -14,7 +14,6 @@ type Type = {
     meta : ContractMetadata.TypeDefType,
 };
 
-
 export class ContractTypeBinder
 {
     
@@ -154,7 +153,7 @@ export class ContractTypeBinder
             hasDeclareKeyword: true,
             kind: TsMorph.StructureKind.Class,
             name: 'Contract',
-            extends: 'DevPhase.PhatContract',
+            extends: 'DevPhase.Contract',
             getAccessors: [
                 {
                     name: 'query',
@@ -175,7 +174,75 @@ export class ContractTypeBinder
             hasDeclareKeyword: true,
             kind: TsMorph.StructureKind.Class,
             name: 'Factory',
+            extends: 'DevPhase.ContractFactory',
+            methods: abi.spec.constructors.map(constructor => ({
+                name: 'instantiate',
+                typeParameters: [
+                    {
+                        name: 'T',
+                        default: 'Contract',
+                    }
+                ],
+                parameters: [
+                    {
+                        name: 'constructor',
+                        type: `"${constructor.label}"`,
+                    },
+                    {
+                        name: 'params',
+                        type: this.buildArgsString(constructor.args),
+                    },
+                    {
+                        name: 'options',
+                        hasQuestionToken: true,
+                        type: 'DevPhase.InstantiateOptions'
+                    },
+                ],
+                returnType: 'Promise<T>'
+            })),
         };
+    }
+    
+    public buildArgsString (args : ContractMetadata.Argument[]) : string
+    {
+        if (args.length === 0) {
+            return 'never[]';
+        }
+        else {
+            const argTypes : string[] = args.map(arg => this.buildType(arg.type));
+            return '[' + argTypes.join(', ') + ']';
+        }
+    }
+    
+    public buildType (typeRef : Partial<ContractMetadata.TypeRef>) : string
+    {
+        const typeDef = this._types[typeRef.type];
+        
+        if (typeDef.kind === 'primitive') {
+            const primitive = (<ContractMetadata.Type.Primitive> typeDef.meta).def.primitive;
+            
+            switch (primitive) {
+                case 'bool':
+                    return 'boolean';
+                default:
+                    return 'any';
+            }
+        }
+        else if (typeDef.kind === 'composite') {
+            return 'any';
+        }
+        else if (typeDef.kind === 'array') {
+            const { type, len } = (<ContractMetadata.Type.ArrayType> typeDef.meta).def.array;
+        
+            const innerType = this.buildType({ type })
+            return `DevPhase.FixedArray<${innerType}, ${len}>`;
+        }
+        else {
+            throw new Exception(
+                'Unknown type',
+                1667028692024
+            )
+        }
     }
     
 }

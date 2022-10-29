@@ -1,2 +1,4 @@
-export * from './chai';
-export * from './mocha';
+export * from './ext/chai';
+export * from './ext/mocha';
+
+export * from './Contract';

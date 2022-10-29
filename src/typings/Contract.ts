@@ -31,7 +31,7 @@ export interface MapMessageTx
     [message : string] : ContractTx;
 }
 
-export declare class PhatContract
+export declare class Contract
     extends ContractPromise
 {
     

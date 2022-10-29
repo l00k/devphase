@@ -4,8 +4,6 @@ export * from '@/def';
 export * from '@/utils/Logger';
 export * from '@/utils/TxHandler';
 
-export * from '@/PhatContract';
-
 export * from '@/service/RuntimeContext';
 export * from '@/service/StackManager';
 export * from '@/service/DevPhase';
