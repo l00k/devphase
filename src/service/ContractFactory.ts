@@ -1,4 +1,4 @@
-import { ContractAbi, ContractType } from '@/def';
+import { ContractMetadata, ContractType } from '@/def';
 import { PhatContract } from '@/PhatContract';
 import { AccountKey, DevPhase } from '@/service/DevPhase';
 import { EventQueue } from '@/utils/EventQueue';
@@ -30,7 +30,7 @@ export class ContractFactory<T>
 {
     
     public readonly contractType : string;
-    public readonly contractAbi : ContractAbi;
+    public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
     
     protected _logger : Logger = new Logger('ContractFactory');
@@ -53,7 +53,7 @@ export class ContractFactory<T>
     public static async create<T> (
         devPhase : DevPhase,
         contractType : ContractType,
-        contractAbi : ContractAbi,
+        metadata : ContractMetadata.Metadata,
         clusterId : string
     ) : Promise<ContractFactory<T>>
     {
@@ -63,7 +63,7 @@ export class ContractFactory<T>
         
         Object.assign(instance, {
             contractType,
-            contractAbi,
+            metadata,
             clusterId,
         });
         
@@ -88,7 +88,7 @@ export class ContractFactory<T>
             this.api.tx.phalaFatContracts.clusterUploadResource(
                 this.clusterId,
                 this.contractType,
-                this.contractAbi.source.wasm
+                this.metadata.source.wasm
             ),
             this._devPhase.accounts[options.asAccount],
             'phalaFatContracts.clusterUploadResource'
@@ -111,12 +111,12 @@ export class ContractFactory<T>
             ...options
         };
         
-        const abi = new Abi(this.contractAbi);
+        const abi = new Abi(this.metadata);
         const callData = abi.findConstructor(constructor).toU8a(params);
         
         const result = await TxHandler.handle(
             this.api.tx.phalaFatContracts.instantiateContract(
-                { WasmCode: this.contractAbi.source.hash },
+                { WasmCode: this.metadata.source.hash },
                 callData,
                 '0x' + options.salt.toString(16),
                 this.clusterId,
@@ -196,7 +196,7 @@ export class ContractFactory<T>
         
         const instance = new ContractPromise(
             workerApi,
-            this.contractAbi,
+            this.metadata,
             contractId,
         );
         

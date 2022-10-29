@@ -64,6 +64,7 @@ export class RuntimeContext
             directories: {
                 contracts: 'contracts',
                 tests: 'tests',
+                typings: 'typings'
             },
             stack: {
                 node: {

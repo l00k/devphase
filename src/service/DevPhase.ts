@@ -1,4 +1,4 @@
-import { ContractAbi, ContractType } from '@/def';
+import { ContractMetadata, ContractType } from '@/def';
 import { ContractFactory } from '@/service/ContractFactory';
 import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
@@ -371,12 +371,12 @@ export class DevPhase
         );
         
         try {
-            const contractAbi : ContractAbi = JSON.parse(contractRaw);
+            const metadata : ContractMetadata.Metadata = JSON.parse(contractRaw);
             
             return ContractFactory.create(
                 this,
                 type,
-                contractAbi,
+                metadata,
                 options.clusterId
             );
         }

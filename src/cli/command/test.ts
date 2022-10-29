@@ -47,5 +47,5 @@ export function testCommand (
 {
     program.command('test')
         .description('Start tests')
-        .action(async() => command(context));
+        .action(async(...args : any[]) => command(context));
 }

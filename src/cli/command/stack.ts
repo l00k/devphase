@@ -36,5 +36,5 @@ export function stackCommand (
 {
     program.command('stack')
         .description('Start Phala stack')
-        .action(async() => command(context));
+        .action(async(...args : any[]) => command(context));
 }
