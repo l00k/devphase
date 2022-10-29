@@ -11,11 +11,12 @@
 - ✅ ensure component is running by analyzing output
 - ✅ verify & export mocha + chai and devphase global typing
 - ✅ compile command
+- ✅ basic typing bindings generation
 
 ### TODO
 
+- ⬜ (WIP) create typings binding using ABI exported while compiling contracts
 - ⬜ create chai helpers for Phala contracts testing (waitFor like)
-- ⬜ create typings binding using ABI exported while compiling contracts
 
 - ⬜ create tests
 
