@@ -112,10 +112,22 @@ export namespace ContractMetadata
             }
         };
         
+        export type Variant = {
+            def : {
+                variant : string,
+            },
+            params: {
+                name: string,
+                type: number,
+            }[],
+            path : string[],
+        };
+        
         export type Composite = {
             def : {
                 composite : {
                     fields : Array<{
+                        name? : string,
                         type : number,
                         typeName : string,
                     }>
@@ -132,9 +144,21 @@ export namespace ContractMetadata
                 }
             },
         };
+        
+        export type Sequence = {
+            def : {
+                sequence : {
+                    type : number,
+                }
+            },
+        };
     }
     
-    export type TypeDefType = Type.Primitive | Type.Composite | Type.ArrayType;
+    export type TypeDefType = Type.Primitive
+        | Type.Variant
+        | Type.Composite
+        | Type.ArrayType
+        | Type.Sequence;
     
     export type TypeDef = {
         id : number,

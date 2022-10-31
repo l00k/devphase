@@ -10,6 +10,12 @@ import type { Codec } from '@polkadot/types/types';
 export * from '@polkadot/types-codec/types/interfaces';
 
 
+export interface FixedArray<L extends number, T>
+    extends ArrayLike<T>
+{
+    length : L
+}
+
 export interface IBool
     extends Codec
 {

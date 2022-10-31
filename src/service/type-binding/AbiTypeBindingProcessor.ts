@@ -36,6 +36,9 @@ export class AbiTypeBindingProcessor
                 ];
             })
         );
+        
+        
+        console.dir(this._types, { depth: 10 });
     }
     
     public static async createTypeBindingFile (
@@ -305,6 +308,7 @@ export class AbiTypeBindingProcessor
         ];
     }
     
+    
     public buildArgsString (args : ContractMetadata.Argument[]) : string
     {
         if (args.length === 0) {
@@ -323,22 +327,49 @@ export class AbiTypeBindingProcessor
         if (typeDef.kind === 'primitive') {
             const primitive = (<ContractMetadata.Type.Primitive>typeDef.meta).def.primitive;
             
-            switch (primitive) {
-                case 'bool':
-                    return 'boolean';
-                default:
-                    return 'any';
+            if (primitive === 'bool') {
+                return 'boolean';
+            }
+            else if ([ 'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128' ].includes(primitive)) {
+                return 'number';
+            }
+            else if ([ 'str' ].includes(primitive)) {
+                return 'string';
+            }
+            else {
+                // todo ld 2022-10-31 09:00:10
+                console.log(typeDef);
+                
+                throw new Exception(
+                    'Unknown type',
+                    1667223448403
+                );
             }
         }
-        else if (typeDef.kind === 'composite') {
+        else if (typeDef.kind === 'variant') {
             // todo ld 2022-10-31 09:00:02
             return 'any';
+        }
+        else if (typeDef.kind === 'composite') {
+            const composite = (<ContractMetadata.Type.Composite>typeDef.meta).def.composite;
+            
+            const fields = composite.fields
+                .map(field => field.name + ': ' + this.buildNativeType({ type: field.type }))
+                .join(', ');
+            
+            return '{ ' + fields + ' }';
         }
         else if (typeDef.kind === 'array') {
             const { type, len } = (<ContractMetadata.Type.ArrayType>typeDef.meta).def.array;
             
             const innerType = this.buildNativeType({ type });
-            return `DevPhase.FixedArray<${innerType}, ${len}>`;
+            return `DPT.FixedArray<${innerType}, ${len}>`;
+        }
+        else if (typeDef.kind === 'sequence') {
+            const { type } = (<ContractMetadata.Type.Sequence>typeDef.meta).def.sequence;
+            
+            const innerType = this.buildNativeType({ type });
+            return `${innerType}[]`;
         }
         else {
             throw new Exception(
@@ -355,12 +386,29 @@ export class AbiTypeBindingProcessor
         if (typeDef.kind === 'primitive') {
             const primitive = (<ContractMetadata.Type.Primitive>typeDef.meta).def.primitive;
             
-            switch (primitive) {
-                case 'bool':
-                    return 'DPT.IBool';
-                default:
-                    return 'any';
+            if (primitive === 'bool') {
+                return 'DPT.IBool';
             }
+            else if ([ 'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128' ].includes(primitive)) {
+                return 'DPT.INumber';
+            }
+            else if ([ 'str' ].includes(primitive)) {
+                return 'DPT.IText';
+            }
+            else {
+                // todo ld 2022-10-31 09:00:10
+                return 'any';
+            }
+        }
+        else if (typeDef.kind === 'variant') {
+            // todo ld 2022-10-31 09:00:10
+            const params = (<ContractMetadata.Type.Variant>typeDef.meta).params;
+            // console.dir((<ContractMetadata.Type.Variant>typeDef.meta), { depth: 10 });
+            
+            return params
+                ?.map(param => this.buildCodecType({ type: param.type }))
+                .filter(type => !!type)
+                .join(' | ');
         }
         else if (typeDef.kind === 'composite') {
             // todo ld 2022-10-31 09:00:10
@@ -370,7 +418,13 @@ export class AbiTypeBindingProcessor
             const { type, len } = (<ContractMetadata.Type.ArrayType>typeDef.meta).def.array;
             
             const innerType = this.buildCodecType({ type });
-            return `DPT.IVec<${innerType}, ${len}>`;
+            return `DPT.IVec<${innerType}>`;
+        }
+        else if (typeDef.kind === 'sequence') {
+            const { type } = (<ContractMetadata.Type.Sequence>typeDef.meta).def.sequence;
+            
+            const innerType = this.buildCodecType({ type });
+            return `DPT.IVec<${innerType}>`;
         }
         else {
             throw new Exception(

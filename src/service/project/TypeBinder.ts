@@ -39,8 +39,16 @@ export class TypeBinder
         // load & parse metadata
         const contractPath = path.join(this._contractsBasePath, contractName);
         
+        const metadataFilePath = path.join(contractPath, 'target', 'ink', 'metadata.json');
+        if (!fs.existsSync(metadataFilePath)) {
+            throw new Exception(
+                'Metadata file not found',
+                1667222247617
+            );
+        }
+        
         const metadataRaw : string = fs.readFileSync(
-            path.join(contractPath, 'target', 'ink', 'metadata.json'),
+            metadataFilePath,
             { encoding: 'utf-8' }
         );
         const metadata : ContractMetadata.Metadata = JSON.parse(metadataRaw);
