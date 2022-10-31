@@ -1,5 +1,4 @@
-import { ContractTypeBinder } from '@/service/ContractTypeBinder';
-import { RuntimeContext } from '@/service/RuntimeContext';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import childProcess from 'child_process';
@@ -7,24 +6,22 @@ import * as fs from 'fs';
 import path from 'path';
 
 
-export class ContractCompiler
+export class Compiler
 {
     
-    protected _logger = new Logger('ContractCompiler');
-    protected _contractTsBinder : ContractTypeBinder;
+    protected _logger = new Logger(Compiler.name);
     
-    public contractsBasePath : string;
+    protected _contractsBasePath : string;
+    
     
     public constructor (
-        public runtimeContext : RuntimeContext
+        protected _runtimeContext : RuntimeContext
     )
     {
-        this.contractsBasePath = path.join(
-            this.runtimeContext.projectDir,
-            this.runtimeContext.config.directories.contracts
+        this._contractsBasePath = path.join(
+            this._runtimeContext.projectDir,
+            this._runtimeContext.config.directories.contracts
         );
-        
-        this._contractTsBinder = new ContractTypeBinder(runtimeContext);
     }
     
     public async compile (
@@ -32,7 +29,7 @@ export class ContractCompiler
         releaseMode : boolean
     ) : Promise<boolean>
     {
-        const contractPath = path.join(this.contractsBasePath, contractName);
+        const contractPath = path.join(this._contractsBasePath, contractName);
         
         this._logger.log('Building:', chalk.blueBright(contractName));
         
@@ -79,7 +76,7 @@ export class ContractCompiler
         
         this._logger.log(
             'Files generated under',
-            filesToCheck.map(file => path.relative(this.runtimeContext.projectDir, file))
+            filesToCheck.map(file => path.relative(this._runtimeContext.projectDir, file))
         );
         
         return true;

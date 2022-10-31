@@ -1,6 +1,6 @@
 import { SpawnMode } from '@/def';
-import { RuntimeContext } from '@/service/RuntimeContext';
-import { StackManager } from '@/service/StackManager';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { StackManager } from '@/service/project/StackManager';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 

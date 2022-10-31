@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@/service/RuntimeContext';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';

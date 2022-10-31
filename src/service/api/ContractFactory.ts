@@ -1,5 +1,5 @@
 import { ContractMetadata, ContractType } from '@/def';
-import { AccountKey, DevPhase } from '@/service/DevPhase';
+import { AccountKey, DevPhase } from '@/service/api/DevPhase';
 import { Contract } from '@/typings';
 import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
@@ -7,7 +7,7 @@ import { Logger } from '@/utils/Logger';
 import { TxHandler } from '@/utils/TxHandler';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import type { IEvent } from '@polkadot/types/types';
 import chalk from 'chalk';
@@ -69,7 +69,7 @@ export class ContractFactory
         
         await instance.init(devPhase.api);
         
-        return <any> instance;
+        return <any>instance;
     }
     
     
@@ -189,7 +189,7 @@ export class ContractFactory
     ) : Promise<T>
     {
         const api = await this._devPhase.createApiPromise();
-    
+        
         const workerApi : ApiPromise = await PhalaSdk.create({
             api,
             baseURL: this._devPhase.workerUrl,

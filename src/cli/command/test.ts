@@ -1,4 +1,4 @@
-import { RuntimeContext } from '@/service/RuntimeContext';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 import glob from 'glob';

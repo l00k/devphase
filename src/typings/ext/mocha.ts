@@ -1,6 +1,6 @@
-import { DevPhase } from '@/service/DevPhase';
-import { RuntimeContext } from '@/service/RuntimeContext';
-import { StackManager } from '@/service/StackManager';
+import { DevPhase } from '@/service/api/DevPhase';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { StackManager } from '@/service/project/StackManager';
 import { ApiPromise } from '@polkadot/api';
 
 declare module 'mocha'

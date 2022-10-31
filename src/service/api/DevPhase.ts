@@ -1,5 +1,5 @@
 import { ContractMetadata, ContractType } from '@/def';
-import { ContractFactory } from '@/service/ContractFactory';
+import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/utils/EventQueue';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';

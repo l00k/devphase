@@ -1,7 +1,7 @@
-import { ContractCompiler } from '@/service/ContractCompiler';
-import { ContractTypeBinder } from '@/service/ContractTypeBinder';
-import { MultiContractExecutor } from '@/service/MultiContractExecutor';
-import { RuntimeContext } from '@/service/RuntimeContext';
+import { Compiler } from '@/service/project/Compiler';
+import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { TypeBinder } from '@/service/project/TypeBinder';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
@@ -21,8 +21,8 @@ async function command (
     
     logger.log('Contracts compilation');
     
-    const contractCompiler = new ContractCompiler(runtimeContext);
-    const binder = new ContractTypeBinder(runtimeContext);
+    const contractCompiler = new Compiler(runtimeContext);
+    const typeBinder = new TypeBinder(runtimeContext);
     const multiContractExecutor = new MultiContractExecutor(runtimeContext);
     
     return multiContractExecutor.exec(
@@ -39,7 +39,7 @@ async function command (
             }
             
             // generate typing binding
-            return binder.createBindings(contractName);
+            return typeBinder.createBindings(contractName);
         }
     );
 }

@@ -1,6 +1,6 @@
-import { ContractTypeBinder } from '@/service/ContractTypeBinder';
-import { MultiContractExecutor } from '@/service/MultiContractExecutor';
-import { RuntimeContext } from '@/service/RuntimeContext';
+import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { TypeBinder } from '@/service/project/TypeBinder';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
@@ -20,7 +20,7 @@ async function command (
     
     logger.log('Starting');
     
-    const binder = new ContractTypeBinder(runtimeContext);
+    const binder = new TypeBinder(runtimeContext);
     const multiContractExecutor = new MultiContractExecutor(runtimeContext);
     
     return multiContractExecutor.exec(
