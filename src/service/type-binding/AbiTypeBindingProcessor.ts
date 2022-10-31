@@ -3,7 +3,6 @@ import { Exception } from '@/utils/Exception';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
 import * as TsMorph from 'ts-morph';
-import { ParameterDeclarationStructure, StructureKind } from 'ts-morph';
 
 
 type Type = {
@@ -163,7 +162,7 @@ export class AbiTypeBindingProcessor
         }
         
         return [
-            <TsMorph.ModuleDeclarationStructure> {
+            <TsMorph.ModuleDeclarationStructure>{
                 docs: [ '', 'Queries', '' ],
                 kind: TsMorph.StructureKind.Module,
                 name: 'ContractQuery',
@@ -221,7 +220,7 @@ export class AbiTypeBindingProcessor
         }
         
         return [
-            <TsMorph.ModuleDeclarationStructure> {
+            <TsMorph.ModuleDeclarationStructure>{
                 docs: [ '', 'Transactions', '' ],
                 kind: TsMorph.StructureKind.Module,
                 name: 'ContractTx',
