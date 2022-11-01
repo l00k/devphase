@@ -25,8 +25,7 @@
         "test": "ts-node ./node_modules/.bin/jest",
         "coverage:badge": "coverage-badge-creator --config './.badge-coverage-config.json'",
         "compile": "tsup",
-        "build": "yarn test && yarn coverage:badge && yarn compile",
-        "deploy": "npm publish --access public"
+        "build": "yarn test && yarn coverage:badge && yarn compile"
     },
     "dependencies": {
         "@polkadot/api": "^9.6.2",
