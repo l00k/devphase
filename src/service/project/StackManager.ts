@@ -14,8 +14,6 @@ import path from 'path';
 export class StackManager
 {
     
-    protected static readonly STACK_DIR = 'phala-dev-stack';
-    
     protected _logger : Logger = new Logger('StackManager');
     
     
@@ -139,7 +137,7 @@ export class StackManager
     ) : Promise<ChildProcess>
     {
         // prepare directories
-        const workingDirPath = path.join(this._context.libPath, StackManager.STACK_DIR, '.data', componentName);
+        const workingDirPath = options.workingDir.replace('#DEVPHASE#', this._context.libPath);
         if (fs.existsSync(workingDirPath)) {
             fs.rmSync(workingDirPath, { recursive: true, force: true });
         }
@@ -147,7 +145,7 @@ export class StackManager
         fs.mkdirSync(workingDirPath, { recursive: true });
         
         // prepare args
-        const binaryPath = path.join(this._context.libPath, StackManager.STACK_DIR, 'bin', componentName);
+        const binaryPath = options.binary.replace('#DEVPHASE#', this._context.libPath);
         
         return this._spawnBinary(
             binaryPath,
