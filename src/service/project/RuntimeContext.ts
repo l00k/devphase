@@ -68,6 +68,8 @@ export class RuntimeContext
             },
             stack: {
                 node: {
+                    binary: '#DEVPHASE#/phala-dev-stack/bin/node',
+                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/node',
                     envs: {},
                     args: {
                         '--dev': true,
@@ -77,6 +79,8 @@ export class RuntimeContext
                     timeout: 10000,
                 },
                 pruntime: {
+                    binary: '#DEVPHASE#/phala-dev-stack/bin/pruntime',
+                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/pruntime',
                     envs: {},
                     args: {
                         '--allow-cors': true,
@@ -86,6 +90,8 @@ export class RuntimeContext
                     timeout: 2000,
                 },
                 pherry: {
+                    binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
+                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,

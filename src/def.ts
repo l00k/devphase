@@ -23,6 +23,8 @@ export enum SpawnMode
 }
 
 export type BinarySpawnOptions = {
+    binary : string,
+    workingDir : string,
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
     timeout : number
