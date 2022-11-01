@@ -10,7 +10,8 @@ Development tool for Phala Phat contracts.
 Add to your projects using package manager (yarn / npm)
 
 ```shell
-yarn add devphase
+yarn add -D devphase
+yarn add -D typescript ts-node # required peer dependencies
 ```
 
 ## Features
