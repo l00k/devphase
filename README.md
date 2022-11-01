@@ -44,11 +44,28 @@ Here is default configuration. All values are optional (merged recuresivly)
 import { ConfigOption } from 'devphase';
 
 const config : ConfigOption = {
+    // project directories
     directories: {
         contracts: 'contracts',
         tests: 'tests',
         typings: 'typings'
     },
+    /*
+     * Stack configuration
+     * {
+     *     [componentName : string]: {
+     *          binary: string, // path to binary; magic phrase "#DEVPHASE#" is replaced with package root dir
+     *          workingDir: string, // working directory as above
+     *          evns: {
+     *              [name: string]: string,
+     *          },
+     *          args: {
+     *              [name: string]: string,
+     *          },
+     *          timeout: number // start up timeout
+     *     }
+     * }
+     */
     stack: {
         node: {
             binary: '#DEVPHASE#/phala-dev-stack/bin/node',
@@ -87,6 +104,9 @@ const config : ConfigOption = {
             timeout: 2000,
         }
     },
+    /**
+     * Custom mocha configuration
+     */
     mocha: {}
 };
 
