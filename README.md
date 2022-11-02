@@ -7,7 +7,7 @@ Development tool for Phala Phat contracts.
 
 ## Install
 
-Add to your projects using package manager (yarn / npm)
+Add to your projects using package manager (`yarn@^1` / `npm`)
 
 ```shell
 yarn add -D devphase
