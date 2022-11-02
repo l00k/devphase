@@ -41,9 +41,9 @@ Create `devphase.config.ts` in root directory (`init` command in TODO)
 
 Here is default configuration. All values are optional (merged recuresivly)
 ```ts
-import { ConfigOption } from 'devphase';
+import { ProjectConfigOptions } from 'devphase';
 
-const config : ConfigOption = {
+const config : ProjectConfigOptions = {
     // project directories
     directories: {
         contracts: 'contracts',
