@@ -161,9 +161,9 @@ export class StackManager
     {
         return _path.includes('#DEVPHASE#')
             ? _path.replace('#DEVPHASE#', this._context.libPath)
-            : _path.startsWith('.')
-                ? path.join(this._context.projectDir, _path)
-                : _path
+            : _path.startsWith('/')
+                ? _path
+                : path.join(this._context.projectDir, _path)
                 ;
     }
     
