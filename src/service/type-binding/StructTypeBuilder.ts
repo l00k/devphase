@@ -1,4 +1,4 @@
-import { ContractMetadata } from '@/def';
+import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import * as TsMorph from 'ts-morph';
 

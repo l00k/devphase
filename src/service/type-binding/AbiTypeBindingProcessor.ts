@@ -1,6 +1,5 @@
-import { ContractMetadata } from '@/def';
-import { BuiltType, StructTypeBuilder } from '@/service/type-binding/StructTypeBuilder';
-import { Exception } from '@/utils/Exception';
+import { StructTypeBuilder } from '@/service/type-binding/StructTypeBuilder';
+import { ContractMetadata } from '@/typings/ContractMetadata';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
 import * as TsMorph from 'ts-morph';

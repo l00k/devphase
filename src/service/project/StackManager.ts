@@ -1,4 +1,4 @@
-import { BinarySpawnOptions, ComponentName, SpawnMode } from '@/def';
+import { StackComponentOptions, ComponentName, SpawnMode } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -80,7 +80,7 @@ export class StackManager
         mode : SpawnMode = SpawnMode.Background
     ) : Promise<ChildProcess>
     {
-        const options : BinarySpawnOptions = cloneDeep(this._context.config.stack.node);
+        const options : StackComponentOptions = cloneDeep(this._context.config.stack.node);
         if (mode === SpawnMode.Background) {
             options.args['--block-millisecs'] = 100;
         }
@@ -98,7 +98,7 @@ export class StackManager
         mode : SpawnMode = SpawnMode.Background
     ) : Promise<ChildProcess>
     {
-        const options : BinarySpawnOptions = cloneDeep(this._context.config.stack.pruntime);
+        const options : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
         
         return this._startComponent(
             'pruntime',
@@ -113,7 +113,7 @@ export class StackManager
         mode : SpawnMode = SpawnMode.Background
     ) : Promise<ChildProcess>
     {
-        const options : BinarySpawnOptions = cloneDeep(this._context.config.stack.pherry);
+        const options : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
         if (mode === SpawnMode.Background) {
             options.args['--dev-wait-block-ms'] = 100;
         }
@@ -130,7 +130,7 @@ export class StackManager
     
     protected async _startComponent (
         componentName : ComponentName,
-        options : BinarySpawnOptions,
+        options : StackComponentOptions,
         mode : SpawnMode,
         waitForReady : (text : string) => boolean = () => true,
         waitForError : (text : string) => boolean = () => false,
@@ -171,7 +171,7 @@ export class StackManager
     protected async _spawnBinary (
         binaryPath : string,
         workingDirPath : string,
-        options : BinarySpawnOptions,
+        options : StackComponentOptions,
         spawnMode : SpawnMode,
         waitForReady : (text : string) => boolean = () => true,
         waitForError : (text : string) => boolean = () => false,

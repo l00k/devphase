@@ -1,4 +1,5 @@
-import { ComponentName, Config, ConfigOption } from '@/def';
+import { ComponentName, ProjectConfig, ProjectConfigOptions } from '@/def';
+import { accessThroughPath } from '@/utils/accessThroughPath';
 import { Exception } from '@/utils/Exception';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import { ChildProcess } from 'child_process';
@@ -13,12 +14,10 @@ export class RuntimeContext
     
     public libPath : string;
     public projectDir : string;
-    public config : Config;
+    public config : ProjectConfig;
     
     public processes : Record<ComponentName, ChildProcess>;
     
-    
-    protected constructor () {}
     
     public static async getSingleton () : Promise<RuntimeContext>
     {
@@ -58,9 +57,9 @@ export class RuntimeContext
     }
     
     
-    protected _getFallbackConfig (options : ConfigOption) : Config
+    protected _getFallbackConfig (options : ProjectConfigOptions) : ProjectConfig
     {
-        return replaceRecursive({
+        const config : ProjectConfig = <any> replaceRecursive<ProjectConfigOptions>({
             directories: {
                 contracts: 'contracts',
                 tests: 'tests',
@@ -68,6 +67,7 @@ export class RuntimeContext
             },
             stack: {
                 node: {
+                    port: 9945,
                     binary: '#DEVPHASE#/phala-dev-stack/bin/node',
                     workingDir: '#DEVPHASE#/phala-dev-stack/.data/node',
                     envs: {},
@@ -75,37 +75,63 @@ export class RuntimeContext
                         '--dev': true,
                         '--rpc-methods': 'Unsafe',
                         '--block-millisecs': 6000,
+                        '--ws-port': '{{stack.node.port}}'
                     },
                     timeout: 10000,
                 },
                 pruntime: {
+                    port: 8001,
                     binary: '#DEVPHASE#/phala-dev-stack/bin/pruntime',
                     workingDir: '#DEVPHASE#/phala-dev-stack/.data/pruntime',
                     envs: {},
                     args: {
                         '--allow-cors': true,
                         '--cores': 0,
-                        '--port': 8000,
+                        '--port': '{{stack.pruntime.port}}'
                     },
                     timeout: 2000,
                 },
                 pherry: {
+                    suMnemonic: '//Alice',
                     binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
                     workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,
-                        '--mnemonic': '//Alice',
+                        '--mnemonic': '{{stack.pherry.suMnemonic}}',
                         '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
-                        '--substrate-ws-endpoint': 'ws://localhost:9944',
-                        '--pruntime-endpoint': 'http://localhost:8000',
+                        '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
+                        '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
                         '--dev-wait-block-ms': 1000,
                     },
                     timeout: 2000,
                 }
             },
+            devPhaseOptions: {
+                nodeUrl: 'ws://localhost:{{stack.node.port}}',
+                workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            },
             mocha: {}
         }, options);
+        
+        // process placeholders
+        this.replacePlaceholders(config, config);
+        
+        return config;
+    }
+    
+    public replacePlaceholders (node : any, config : ProjectConfig)
+    {
+        for (const [ prop, value ] of Object.entries(node)) {
+            if (typeof value === 'string') {
+                node[prop] = value.replace(/\{\{(.*?)\}\}/, (match, path) => {
+                    return accessThroughPath(config, path);
+                });
+            }
+            else if (value instanceof Object) {
+                this.replacePlaceholders(value, config);
+            }
+        }
     }
     
 }

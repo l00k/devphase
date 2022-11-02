@@ -1,9 +1,11 @@
-import { ContractMetadata, ContractType } from '@/def';
+import type { Accounts, ContractType, DevPhaseOptions } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
-import { EventQueue } from '@/utils/EventQueue';
+import { EventQueue } from '@/service/api/EventQueue';
+import { TxHandler } from '@/service/api/TxHandler';
+import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
-import { TxHandler } from '@/utils/TxHandler';
+import { replaceRecursive } from '@/utils/replaceRecursive';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
@@ -16,31 +18,9 @@ import chalk from 'chalk';
 import fs from 'fs';
 
 
-export type Accounts = {
-    alice? : KeyringPair,
-    bob? : KeyringPair,
-    charlie? : KeyringPair,
-    dave? : KeyringPair,
-    eve? : KeyringPair,
-    ferdie? : KeyringPair,
-    [name : string] : KeyringPair,
-}
-export type AccountKey = keyof Accounts | string;
-
-export type WorkerInfo = {
+type WorkerInfo = {
     publicKey : string,
     ecdhPublicKey : string,
-}
-
-export type SetupOptions = {
-    nodeUrl? : string,
-    nodeApiOptions? : ApiOptions,
-    workerUrl? : string,
-    accountsMnemonic? : string,
-    accountsPaths? : Record<string, string>,
-    sudoAccount? : string,
-    ss58Prefix? : number,
-    clusterId? : string,
 }
 
 export type GetFactoryOptions = {
@@ -69,9 +49,9 @@ export class DevPhase
     
     private constructor () {}
     
-    public static async setup (options : SetupOptions = {}) : Promise<DevPhase>
+    public static async setup (options : DevPhaseOptions = {}) : Promise<DevPhase>
     {
-        options = {
+        options = replaceRecursive({
             nodeUrl: 'ws://localhost:9944',
             nodeApiOptions: {
                 types: {
@@ -92,8 +72,7 @@ export class DevPhase
             sudoAccount: 'alice',
             ss58Prefix: 30,
             clusterId: undefined,
-            ...options,
-        };
+        }, options);
         
         const instance = new DevPhase();
         

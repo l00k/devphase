@@ -1,4 +1,7 @@
-import { MochaOptions } from 'mocha';
+import type { ApiOptions } from '@polkadot/api/types';
+import type { KeyringPair } from '@polkadot/keyring/types';
+import type { MochaOptions } from 'mocha';
+
 
 export type RecursivePartial<T> = {
     [P in keyof T]? : T[P] extends (infer U)[]
@@ -22,7 +25,8 @@ export enum SpawnMode
     Background = 'Background',
 }
 
-export type BinarySpawnOptions = {
+export interface StackComponentOptions
+{
     binary : string,
     workingDir : string,
     args : Record<string, any>,
@@ -30,163 +34,66 @@ export type BinarySpawnOptions = {
     timeout : number
 };
 
-export type Config = {
+export interface NodeComponentOptions
+    extends StackComponentOptions
+{
+    port : number,
+}
+
+export interface PruntimeComponentOptions
+    extends StackComponentOptions
+{
+    port : number,
+}
+
+export interface PherryComponentOptions
+    extends StackComponentOptions
+{
+    suMnemonic : string,
+}
+
+
+export type Accounts = {
+    alice? : KeyringPair,
+    bob? : KeyringPair,
+    charlie? : KeyringPair,
+    dave? : KeyringPair,
+    eve? : KeyringPair,
+    ferdie? : KeyringPair,
+    [name : string] : KeyringPair,
+}
+export type AccountKey = keyof Accounts | string;
+
+export type DevPhaseOptions = {
+    nodeUrl? : string,
+    nodeApiOptions? : ApiOptions,
+    workerUrl? : string,
+    accountsMnemonic? : string,
+    accountsPaths? : Record<string, string>,
+    sudoAccount? : string,
+    ss58Prefix? : number,
+    clusterId? : string,
+}
+
+export type ProjectConfig = {
     directories : {
         contracts : string,
         tests : string,
         typings : string,
     },
-    stack : Record<ComponentName, BinarySpawnOptions>,
+    stack : {
+        node : NodeComponentOptions,
+        pruntime : PruntimeComponentOptions,
+        pherry : PherryComponentOptions,
+    },
+    devPhaseOptions : DevPhaseOptions,
     mocha : MochaOptions
 }
 
-export type ConfigOption = RecursivePartial<Config>;
+export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
 
 export enum ContractType
 {
     InkCode = 'InkCode',
     SidevmCode = 'SidevmCode',
 }
-
-
-
-export namespace ContractMetadata
-{
-    export type TypeRef = {
-        displayName : string[],
-        type : number,
-    };
-    
-    export type Argument = {
-        label : string,
-        type : TypeRef,
-        docs : string[],
-    };
-    
-    export type IndexedArgument = Argument & {
-        indexed : boolean,
-    };
-    
-    export type Constructor = {
-        label : string,
-        args : Argument[],
-        selector : string,
-        payable : boolean,
-        docs : string[],
-    };
-    
-    export type Message = {
-        label : string,
-        args : Argument[],
-        selector : string,
-        payable : boolean,
-        mutates : boolean,
-        returnType : TypeRef,
-        docs : string[],
-    };
-    
-    export type Spec = {
-        constructors : Constructor[],
-        events : IndexedArgument[],
-        messages : Message[],
-        docs : string[],
-    };
-    
-    export type Storage = {
-        struct : {
-            fields : Array<{
-                name : string,
-                layout : {
-                    cell : {
-                        key : string,
-                        ty : number,
-                    }
-                }
-            }>
-        }
-    };
-    
-    export namespace Type
-    {
-        export type Primitive = {
-            def : {
-                primitive : string,
-            }
-        };
-        
-        export type Variant = {
-            def : {
-                variant : string,
-            },
-            params: {
-                name: string,
-                type: number,
-            }[],
-            path : string[],
-        };
-        
-        export type Composite = {
-            def : {
-                composite : {
-                    fields : Array<{
-                        name? : string,
-                        type : number,
-                        typeName : string,
-                    }>
-                }
-            },
-            path : string[],
-        };
-        
-        export type ArrayType = {
-            def : {
-                array : {
-                    len : string,
-                    type : number,
-                }
-            },
-        };
-        
-        export type Sequence = {
-            def : {
-                sequence : {
-                    type : number,
-                }
-            },
-        };
-    }
-    
-    export type TypeDefType = Type.Primitive
-        | Type.Variant
-        | Type.Composite
-        | Type.ArrayType
-        | Type.Sequence;
-    
-    export type TypeDef = {
-        id : number,
-        type : TypeDefType,
-    };
-    
-    export type ABI = {
-        spec : Spec,
-        storage : Storage,
-        types : TypeDef[],
-    };
-    
-    export type Metadata = {
-        source : {
-            hash : string,
-            language : string,
-            compiler : string,
-            wasm : string,
-        },
-        contract : {
-            name : string,
-            version : string,
-            authors : string[],
-        },
-        V3 : ABI,
-    }
-    
-}
-

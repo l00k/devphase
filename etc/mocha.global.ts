@@ -19,7 +19,7 @@ before(async function() {
     
     await this.stackManager.startStack(SpawnMode.Background);
     
-    this.devPhase = await DevPhase.setup();
+    this.devPhase = await DevPhase.setup(this.runtimeContext.config.devPhaseOptions);
     this.api = this.devPhase.api;
     
     logger.log('Global setup done');
