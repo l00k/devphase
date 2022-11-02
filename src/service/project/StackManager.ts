@@ -137,7 +137,7 @@ export class StackManager
     ) : Promise<ChildProcess>
     {
         // prepare directories
-        const workingDirPath = options.workingDir.replace('#DEVPHASE#', this._context.libPath);
+        const workingDirPath = this._processPath(options.workingDir);
         if (fs.existsSync(workingDirPath)) {
             fs.rmSync(workingDirPath, { recursive: true, force: true });
         }
@@ -145,7 +145,7 @@ export class StackManager
         fs.mkdirSync(workingDirPath, { recursive: true });
         
         // prepare args
-        const binaryPath = options.binary.replace('#DEVPHASE#', this._context.libPath);
+        const binaryPath = this._processPath(options.binary);
         
         return this._spawnBinary(
             binaryPath,
@@ -155,6 +155,16 @@ export class StackManager
             waitForReady,
             waitForError
         );
+    }
+    
+    protected _processPath(_path : string) : string
+    {
+        return _path.includes('#DEVPHASE#')
+            ? _path.replace('#DEVPHASE#', this._context.libPath)
+            : _path.startsWith('.')
+                ? path.join(this._context.projectDir, _path)
+                : _path
+                ;
     }
     
     
