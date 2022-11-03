@@ -78,6 +78,7 @@ export type DevPhaseOptions = {
 
 export type ProjectConfig = {
     directories : {
+        artifacts : string,
         contracts : string,
         tests : string,
         typings : string,

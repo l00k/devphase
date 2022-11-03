@@ -46,6 +46,7 @@ import { ProjectConfigOptions } from 'devphase';
 const config : ProjectConfigOptions = {
     // project directories
     directories: {
+        artifacts: 'artifacts',
         contracts: 'contracts',
         tests: 'tests',
         typings: 'typings'

@@ -1,10 +1,11 @@
-import { ContractMetadata } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { AbiTypeBindingProcessor } from '@/service/type-binding/AbiTypeBindingProcessor';
+import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import * as fs from 'fs';
+import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
 
@@ -14,7 +15,7 @@ export class TypeBinder
     
     protected _logger = new Logger(TypeBinder.name);
     
-    protected _contractsBasePath : string;
+    protected _artifactsBasePath : string;
     protected _typingsBasePath : string;
     
     
@@ -22,9 +23,9 @@ export class TypeBinder
         public runtimeContext : RuntimeContext
     )
     {
-        this._contractsBasePath = path.join(
+        this._artifactsBasePath = path.join(
             this.runtimeContext.projectDir,
-            this.runtimeContext.config.directories.contracts
+            this.runtimeContext.config.directories.artifacts
         );
         this._typingsBasePath = path.join(
             this.runtimeContext.projectDir,
@@ -34,12 +35,12 @@ export class TypeBinder
     
     public async createBindings (contractName : string) : Promise<boolean>
     {
-        this._logger.log('Building:', chalk.blueBright(contractName));
+        this._logger.log('Generating type bindings for:', chalk.blueBright(contractName));
         
         // load & parse metadata
-        const contractPath = path.join(this._contractsBasePath, contractName);
+        const artifactsPath = path.join(this._artifactsBasePath, contractName);
         
-        const metadataFilePath = path.join(contractPath, 'target', 'ink', 'metadata.json');
+        const metadataFilePath = path.join(artifactsPath, 'metadata.json');
         if (!fs.existsSync(metadataFilePath)) {
             throw new Exception(
                 'Metadata file not found',
@@ -62,7 +63,7 @@ export class TypeBinder
         }
         
         const abi : ContractMetadata.ABI = metadata.V3;
-        const ucfContractName = upperFirst(metadata.contract.name);
+        const pcContractName = upperFirst(camelCase(metadata.contract.name));
         
         // create typings dir
         if (!fs.existsSync(this._typingsBasePath)) {
@@ -72,12 +73,12 @@ export class TypeBinder
         // process
         const filePath = path.join(
             this._typingsBasePath,
-            `${ucfContractName}.ts`
+            `${pcContractName}.ts`
         );
         
         await AbiTypeBindingProcessor.createTypeBindingFile(
             filePath,
-            ucfContractName,
+            pcContractName,
             abi
         );
         

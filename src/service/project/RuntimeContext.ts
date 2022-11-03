@@ -61,6 +61,7 @@ export class RuntimeContext
     {
         const config : ProjectConfig = <any>replaceRecursive<ProjectConfigOptions>({
             directories: {
+                artifacts: 'artifacts',
                 contracts: 'contracts',
                 tests: 'tests',
                 typings: 'typings'

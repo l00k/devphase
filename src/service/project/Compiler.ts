@@ -11,6 +11,7 @@ export class Compiler
     
     protected _logger = new Logger(Compiler.name);
     
+    protected _artifactsBasePath : string;
     protected _contractsBasePath : string;
     
     
@@ -18,6 +19,10 @@ export class Compiler
         protected _runtimeContext : RuntimeContext
     )
     {
+        this._artifactsBasePath = path.join(
+            this._runtimeContext.projectDir,
+            this._runtimeContext.config.directories.artifacts
+        );
         this._contractsBasePath = path.join(
             this._runtimeContext.projectDir,
             this._runtimeContext.config.directories.contracts
@@ -30,6 +35,7 @@ export class Compiler
     ) : Promise<boolean>
     {
         const contractPath = path.join(this._contractsBasePath, contractName);
+        const artifactsDirPath = path.join(this._artifactsBasePath, contractName);
         
         this._logger.log('Building:', chalk.blueBright(contractName));
         
@@ -46,11 +52,26 @@ export class Compiler
             }
         );
         
+        // analyzing contracts output
+        let outputDirectory : string;
+        
+        const analyzeOutput = (text : string) => {
+            const lines = text.split('\n').map(line => line.trim());
+            const lineIdx = lines
+                .findIndex(line => line.includes('Your contract artifacts are ready'));
+            if (lineIdx !== -1) {
+                console.log(lineIdx);
+                outputDirectory = lines[lineIdx + 1];
+            }
+            
+            process.stdout.write(text);
+        };
+        
         child.stdout.setEncoding('utf-8');
         child.stderr.setEncoding('utf-8');
         
-        child.stdout.on('data', text => process.stdout.write(text));
-        child.stderr.on('data', text => process.stdout.write(text));
+        child.stdout.on('data', analyzeOutput);
+        child.stderr.on('data', analyzeOutput);
         
         const resultCode = await new Promise(resolve => {
             child.on('exit', code => resolve(code));
@@ -61,23 +82,46 @@ export class Compiler
             return false;
         }
         
-        // check files
-        const filesToCheck = [
-            path.join(contractPath, 'target', 'ink', `${contractName}.contract`),
-            path.join(contractPath, 'target', 'ink', `${contractName}.wasm`),
-            path.join(contractPath, 'target', 'ink', 'metadata.json'),
-        ];
-        for (const fileToCheck of filesToCheck) {
-            if (!fs.existsSync(fileToCheck)) {
-                this._logger.error('File', fileToCheck, 'not generated');
-                return false;
-            }
+        if (!outputDirectory) {
+            this._logger.error('Unable to detect output directory');
+            return false;
         }
         
-        this._logger.log(
-            'Files generated under',
-            filesToCheck.map(file => path.relative(this._runtimeContext.projectDir, file))
-        );
+        // create artifacts directory
+        if (!fs.existsSync(artifactsDirPath)) {
+            fs.mkdirSync(artifactsDirPath, { recursive: true });
+        }
+        
+        // check & copy artifact files
+        this._logger.log('Files generated under:');
+        
+        const artifactFiles : string[] = [
+            `${contractName}.contract`,
+            `${contractName}.wasm`,
+            'metadata.json',
+        ];
+        for (const artifactFile of artifactFiles) {
+            const sourceArtifactFilePath = path.join(outputDirectory, artifactFile);
+            if (!fs.existsSync(sourceArtifactFilePath)) {
+                this._logger.error(
+                    'File',
+                    artifactFile,
+                    'not generated under',
+                    sourceArtifactFilePath
+                );
+                return false;
+            }
+            
+            const artifactFilePath = path.join(artifactsDirPath, artifactFile);
+            fs.copyFileSync(
+                sourceArtifactFilePath,
+                artifactFilePath
+            );
+            
+            console.log(
+                path.relative(this._runtimeContext.projectDir, artifactFilePath)
+            );
+        }
         
         return true;
     }
