@@ -128,7 +128,7 @@ export class DevPhase
         await this.prepareWorker(this.options.workerUrl);
         
         // wait for gatekeeper
-        await this.waitForGatekeeper();
+        await this.prepareGatekeeper();
         
         // create cluster if needed
         if (this.options.clusterId === undefined) {
@@ -224,7 +224,7 @@ export class DevPhase
         }
     }
     
-    public async waitForGatekeeper ()
+    public async prepareGatekeeper ()
     {
         // check gatekeeper
         const gatekeepers : string[] = <any>(

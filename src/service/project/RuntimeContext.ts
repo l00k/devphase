@@ -1,6 +1,6 @@
 import { ComponentName, ProjectConfig, ProjectConfigOptions } from '@/def';
-import { accessThroughPath } from '@/utils/accessThroughPath';
 import { Exception } from '@/utils/Exception';
+import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import { ChildProcess } from 'child_process';
 import findUp from 'find-up';
@@ -59,7 +59,7 @@ export class RuntimeContext
     
     protected _getFallbackConfig (options : ProjectConfigOptions) : ProjectConfig
     {
-        const config : ProjectConfig = <any> replaceRecursive<ProjectConfigOptions>({
+        const config : ProjectConfig = <any>replaceRecursive<ProjectConfigOptions>({
             directories: {
                 contracts: 'contracts',
                 tests: 'tests',
@@ -115,23 +115,9 @@ export class RuntimeContext
         }, options);
         
         // process placeholders
-        this.replacePlaceholders(config, config);
+        replacePlaceholders(config, config);
         
         return config;
-    }
-    
-    public replacePlaceholders (node : any, config : ProjectConfig)
-    {
-        for (const [ prop, value ] of Object.entries(node)) {
-            if (typeof value === 'string') {
-                node[prop] = value.replace(/\{\{(.*?)\}\}/, (match, path) => {
-                    return accessThroughPath(config, path);
-                });
-            }
-            else if (value instanceof Object) {
-                this.replacePlaceholders(value, config);
-            }
-        }
     }
     
 }
