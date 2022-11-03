@@ -2,6 +2,7 @@ import type { Accounts, ContractType, DevPhaseOptions } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -16,6 +17,8 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import axios, { AxiosInstance } from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
+import { Runtime } from 'inspector';
+import path from 'path';
 
 
 type WorkerInfo = {
@@ -41,6 +44,8 @@ export class DevPhase
     
     public readonly mainClusterId : string;
     
+    public readonly runtimeContext : RuntimeContext;
+    
     protected _logger : Logger = new Logger('devPhase');
     protected _apiProvider : WsProvider;
     protected _apiOptions : ApiOptions;
@@ -50,7 +55,10 @@ export class DevPhase
     
     private constructor () {}
     
-    public static async setup (options : DevPhaseOptions = {}) : Promise<DevPhase>
+    public static async setup (
+        options : DevPhaseOptions = {},
+        runtimeContext? : RuntimeContext
+    ) : Promise<DevPhase>
     {
         options = replaceRecursive({
             nodeUrl: 'ws://localhost:9944',
@@ -97,6 +105,7 @@ export class DevPhase
         
         Object.assign(instance, {
             options,
+            runtimeContext,
             api,
             sudoAccount: instance.accounts[options.sudoAccount],
         });
@@ -349,7 +358,7 @@ export class DevPhase
     
     public async getFactory<T extends ContractFactory> (
         type : ContractType,
-        artifactPath : string,
+        artifactPathOrName : string,
         options : GetFactoryOptions = {}
     ) : Promise<T>
     {
@@ -358,6 +367,27 @@ export class DevPhase
             ...options
         };
         
+        // get artifact path
+        const isContractName = /^[a-z0-9_]+$/i.test(artifactPathOrName);
+        
+        let artifactPath = artifactPathOrName;
+        if (isContractName) {
+            if (!this.runtimeContext) {
+                throw new Exception(
+                    'It is not allowed to use contract name in this context',
+                    1667493436149
+                );
+            }
+        
+            artifactPath = path.join(
+                this.runtimeContext.projectDir,
+                this.runtimeContext.config.directories.artifacts,
+                artifactPathOrName,
+                `${artifactPathOrName}.contract`
+            )
+        }
+        
+        console.log(artifactPath);
         if (!fs.existsSync(artifactPath)) {
             throw new Exception(
                 'Contract artifact file not found',
@@ -383,7 +413,8 @@ export class DevPhase
         catch (e) {
             throw new Exception(
                 'Failed to parse contract artifiact JSON',
-                1665238941553
+                1665238941553,
+                e
             );
         }
     }
