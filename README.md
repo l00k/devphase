@@ -111,7 +111,7 @@ const config : ProjectConfigOptions = {
     /**
      * Configuration options of DevPhase instance used in testing
      */
-    devPhaseEnv: {
+    devPhaseOptions: {
         nodeUrl: 'ws://localhost:{{stack.node.port}}',
         nodeApiOptions: {
             types: {
