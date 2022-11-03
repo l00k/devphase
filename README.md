@@ -110,6 +110,10 @@ const config : ProjectConfigOptions = {
     },
     /**
      * Configuration options of DevPhase instance used in testing
+     * {
+     *      ...
+     *      customEnvSetup: (devPhase : DevPhase) => Promise<void>
+     * }
      */
     devPhaseOptions: {
         nodeUrl: 'ws://localhost:{{stack.node.port}}',
@@ -131,7 +135,8 @@ const config : ProjectConfigOptions = {
         },
         sudoAccount: 'alice',
         ss58Prefix: 30,
-        clusterId: undefined, // if specified it will be used as default cluster for deployments
+        clusterId: undefined, // if specified - it will be used as default cluster for deployments
+        customEnvSetup: undefined, // if specified - it will use custom environment setup procedure
     },
     /**
      * Custom mocha configuration

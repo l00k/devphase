@@ -32,6 +32,7 @@ export class DevPhase
 {
     
     public readonly api : ApiPromise;
+    public readonly options : DevPhaseOptions;
     public readonly workerUrl : string;
     public readonly workerApi : AxiosInstance;
     
@@ -95,40 +96,17 @@ export class DevPhase
         }
         
         Object.assign(instance, {
+            options,
             api,
             sudoAccount: instance.accounts[options.sudoAccount],
         });
         
-        // check worker
-        await instance._prepareWorker(options.workerUrl);
-        
-        // wait for gatekeeper
-        await instance._waitForGatekeeper();
-        
-        // create cluster if needed
-        if (options.clusterId === undefined) {
-            const clustersNum : number = <any>(
-                await api.query
-                    .phalaFatContracts.clusterCounter()
-            ).toJSON();
-            
-            if (clustersNum == 0) {
-                options.clusterId = null;
-            }
-            else {
-                options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
-            }
+        if (options.customEnvSetup) {
+            await options.customEnvSetup(instance);
         }
-        
-        let mainClusterId = options.clusterId === null
-            ? await instance._createCluster()
-            : options.clusterId
-        ;
-        
-        Object.assign(instance, { mainClusterId });
-        
-        // wait for cluster
-        await instance._waitForClusterReady();
+        else {
+            await instance.defaultEnvSetup();
+        }
         
         return instance;
     }
@@ -142,9 +120,46 @@ export class DevPhase
     }
     
     /**
+     * Default environment setup
+     */
+    public async defaultEnvSetup()
+    {
+        // check worker
+        await this.prepareWorker(this.options.workerUrl);
+        
+        // wait for gatekeeper
+        await this.waitForGatekeeper();
+        
+        // create cluster if needed
+        if (this.options.clusterId === undefined) {
+            const clustersNum : number = <any>(
+                await this.api.query
+                    .phalaFatContracts.clusterCounter()
+            ).toJSON();
+            
+            if (clustersNum == 0) {
+                this.options.clusterId = null;
+            }
+            else {
+                this.options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            }
+        }
+        
+        let mainClusterId = this.options.clusterId === null
+            ? await this.createCluster()
+            : this.options.clusterId
+        ;
+        
+        Object.assign(this, { mainClusterId });
+        
+        // wait for cluster
+        await this.waitForClusterReady();
+    }
+    
+    /**
      * Prepare DEV worker
      */
-    protected async _prepareWorker (workerUrl : string)
+    public async prepareWorker (workerUrl : string)
     {
         Object.assign(this, {
             workerUrl,
@@ -209,7 +224,7 @@ export class DevPhase
         }
     }
     
-    protected async _waitForGatekeeper ()
+    public async waitForGatekeeper ()
     {
         // check gatekeeper
         const gatekeepers : string[] = <any>(
@@ -256,7 +271,7 @@ export class DevPhase
     /**
      * Creates new cluster
      */
-    public async _createCluster () : Promise<string>
+    public async createCluster () : Promise<string>
     {
         this._logger.log('Creating cluster');
         
@@ -297,7 +312,7 @@ export class DevPhase
     /**
      * Wait for cluster to be ready
      */
-    public async _waitForClusterReady () : Promise<boolean>
+    public async waitForClusterReady () : Promise<boolean>
     {
         return this._waitFor(
             async() => {

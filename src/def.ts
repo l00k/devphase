@@ -73,6 +73,7 @@ export type DevPhaseOptions = {
     sudoAccount? : string,
     ss58Prefix? : number,
     clusterId? : string,
+    customEnvSetup? : (devPhase) => Promise<void>,
 }
 
 export type ProjectConfig = {
