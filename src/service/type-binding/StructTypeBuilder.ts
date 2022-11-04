@@ -98,6 +98,7 @@ export class StructTypeBuilder
         if (this._builtTypes[typeIdx]) {
             return this._builtTypes[typeIdx];
         }
+        
         if (typeDef.kind === 'primitive') {
             this._builtTypes[typeIdx] = this.buildPrimitive(<any>typeDef.meta);
         }
@@ -180,6 +181,7 @@ export class StructTypeBuilder
         };
     }
     
+    // todo ld 2022-11-04 17:12:31
     public buildComposite (typeDef : ContractMetadata.Type.Composite) : BuiltType
     {
         const { path, def: { composite: { fields } } } = typeDef;
@@ -219,6 +221,7 @@ export class StructTypeBuilder
         };
     }
     
+    // todo ld 2022-11-04 17:12:26
     public buildVariant (typeDef : ContractMetadata.Type.Variant) : BuiltType
     {
         const { params } = typeDef;
@@ -244,7 +247,7 @@ export class StructTypeBuilder
             .join(', ');
 
         return {
-            native: nativeTypes ? `[ ${nativeTypes} ]` : '[]',
+            native: nativeTypes ? `[ ${nativeTypes} ]` : 'never[]',
             codec: `DPT.ITuple<[ ${codecTypes} ]>`,
         };
     }

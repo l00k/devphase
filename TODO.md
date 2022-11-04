@@ -2,6 +2,7 @@
 
 ### TODO
 
+- [ ] add linter
 - [ ] type binding
     - [x] basic typing bindings generation
     - [x] create typings binding using ABI exported while compiling contracts
