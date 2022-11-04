@@ -112,10 +112,6 @@ const config : ProjectConfigOptions = {
     },
     /**
      * Configuration options of DevPhase instance used in testing
-     * {
-     *      ...
-     *      customEnvSetup: (devPhase : DevPhase) => Promise<void>
-     * }
      */
     devPhaseOptions: {
         nodeUrl: 'ws://localhost:{{stack.node.port}}',
