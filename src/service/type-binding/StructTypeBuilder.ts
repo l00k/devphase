@@ -95,6 +95,9 @@ export class StructTypeBuilder
     {
         const typeDef = this._definedTypes[typeIdx];
         
+        if (this._builtTypes[typeIdx]) {
+            return this._builtTypes[typeIdx];
+        }
         if (typeDef.kind === 'primitive') {
             this._builtTypes[typeIdx] = this.buildPrimitive(<any>typeDef.meta);
         }
@@ -109,6 +112,9 @@ export class StructTypeBuilder
         }
         else if (typeDef.kind === 'variant') {
             this._builtTypes[typeIdx] = this.buildVariant(<any>typeDef.meta);
+        }
+        else if (typeDef.kind === 'tuple') {
+            this._builtTypes[typeIdx] = this.buildTuple(<any>typeDef.meta);
         }
         else {
             throw new Exception(
@@ -222,6 +228,24 @@ export class StructTypeBuilder
         return {
             native: `any`,
             codec: 'any',
+        };
+    }
+    
+    public buildTuple (typeDef : ContractMetadata.Type.Tuple) : BuiltType
+    {        
+        const name = 'Tuple' + (++this._newTypeIdx);
+        
+        const types = typeDef.def.tuple.map(type => this.buildType(type));
+        const nativeTypes = types
+            .map(type => type.native)
+            .join(', ');
+        const codecTypes = types
+            .map(type => type.native)
+            .join(', ');
+
+        return {
+            native: nativeTypes ? `[ ${nativeTypes} ]` : '[]',
+            codec: `DPT.ITuple<[ ${codecTypes} ]>`,
         };
     }
     

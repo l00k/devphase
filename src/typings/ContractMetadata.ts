@@ -102,13 +102,20 @@ export namespace ContractMetadata
                 }
             },
         };
+
+        export type Tuple = {
+            def : {
+                tuple : Array<number>,
+            }
+        }
     }
     
     export type TypeDefType = Type.Primitive
         | Type.Variant
         | Type.Composite
         | Type.ArrayType
-        | Type.Sequence;
+        | Type.Sequence
+        | Type.Tuple;
     
     export type TypeDef = {
         id : number,
