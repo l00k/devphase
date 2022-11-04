@@ -10,7 +10,7 @@ chai.use(chaiAsPromised);
 const logger = new Logger('Test / Mocha');
 
 before(async function() {
-    this.timeout(30 * 1000);
+    this.timeout(60 * 1000);
     
     this.runtimeContext = await RuntimeContext.getSingleton();
     this.stackManager = new StackManager(this.runtimeContext);
