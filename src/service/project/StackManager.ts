@@ -82,7 +82,7 @@ export class StackManager
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.node);
         if (mode === SpawnMode.Background) {
-            options.args['--block-millisecs'] = 100;
+            options.args['--block-millisecs'] = 500;
         }
         
         return this._startComponent(
