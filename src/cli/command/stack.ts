@@ -14,7 +14,7 @@ async function command (runtimeContext : RuntimeContext)
     const stackManager = new StackManager(runtimeContext);
     
     try {
-        const processes = await stackManager.startStack(SpawnMode.Foreground);
+        const processes = await stackManager.startStack(SpawnMode.Direct);
     }
     catch (e) {
         await stackManager.stopStack();

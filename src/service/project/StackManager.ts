@@ -1,4 +1,4 @@
-import { StackComponentOptions, ComponentName, SpawnMode } from '@/def';
+import { ComponentName, SpawnMode, StackComponentOptions } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -16,42 +16,70 @@ export class StackManager
     
     protected _logger : Logger = new Logger('StackManager');
     
+    protected _logsPath : string;
+    
+    protected _processes : Record<ComponentName, ChildProcess>;
+    protected _killFlag : boolean = false;
+    protected _runLogsPath : string;
+    
     
     public constructor (
         protected _context : RuntimeContext
     )
-    {}
-    
-    
-    public async startStack (
-        mode : SpawnMode = SpawnMode.Background
-    ) : Promise<Record<ComponentName, ChildProcess>>
     {
-        if (this._context.processes) {
+        this._logsPath = path.resolve(
+            this._context.projectDir,
+            this._context.config.directories.logs,
+        );
+    }
+    
+    
+    public async startStack (spawnMode : SpawnMode) : Promise<Record<ComponentName, ChildProcess>>
+    {
+        if (this._processes) {
             throw new Exception(
                 'Stack processes already started',
                 1666229698364
             );
         }
         
-        this._context.processes = {
+        // prepare logs directory if required
+        if (this.isLogOutputUsed(spawnMode, this._context)) {
+            this._runLogsPath = path.join(
+                this._logsPath,
+                (new Date()).toISOString()
+            );
+            fs.mkdirSync(this._runLogsPath, { recursive: true });
+        }
+        
+        this._processes = {
             node: null,
             pruntime: null,
             pherry: null,
         };
         
-        this._context.processes.node = await this.startNode(mode);
-        this._context.processes.pruntime = await this.startPruntime(mode);
-        this._context.processes.pherry = await this.startPherry(mode);
+        this._processes.node = await this.startNode(spawnMode);
+        if (this._killFlag) {
+            return this._processes;
+        }
         
-        return this._context.processes;
+        this._processes.pruntime = await this.startPruntime(spawnMode);
+        if (this._killFlag) {
+            return this._processes;
+        }
+        
+        this._processes.pherry = await this.startPherry(spawnMode);
+        
+        return this._processes;
     }
     
     public async stopStack (
         force : boolean = false
     )
     {
-        if (!this._context.processes) {
+        this._killFlag = true;
+    
+        if (!this._processes) {
             throw new Exception(
                 'Stack was not started yet',
                 1666229971488
@@ -63,81 +91,79 @@ export class StackManager
             : 'SIGTERM'
         ;
         
-        if (!this._context.processes.pherry?.killed) {
-            this._context.processes.pherry?.kill(signal);
+        if (!this._processes.pherry?.killed) {
+            this._processes.pherry?.kill(signal);
         }
         
-        if (!this._context.processes.pruntime?.killed) {
-            this._context.processes.pruntime?.kill(signal);
+        if (!this._processes.pruntime?.killed) {
+            this._processes.pruntime?.kill(signal);
         }
         
-        if (!this._context.processes.node?.killed) {
-            this._context.processes.node?.kill(signal);
+        if (!this._processes.node?.killed) {
+            this._processes.node?.kill(signal);
         }
     }
     
-    public async startNode (
-        mode : SpawnMode = SpawnMode.Background
-    ) : Promise<ChildProcess>
+    public async startNode (spawnMode : SpawnMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.node);
-        if (mode === SpawnMode.Background) {
-            options.args['--block-millisecs'] = 100;
+        if (spawnMode === SpawnMode.Testing) {
+            const blockTime = this._context.config.testing.blockTime;
+            options.args['--block-millisecs'] = blockTime;
         }
         
-        return this._startComponent(
+        return this.startComponent(
             'node',
             options,
-            mode,
+            spawnMode,
             text => text.includes('Running JSON-RPC'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPruntime (
-        mode : SpawnMode = SpawnMode.Background
-    ) : Promise<ChildProcess>
+    public async startPruntime (spawnMode : SpawnMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
         
-        return this._startComponent(
+        return this.startComponent(
             'pruntime',
             options,
-            mode,
+            spawnMode,
             text => text.includes('Rocket has launched from'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPherry (
-        mode : SpawnMode = SpawnMode.Background
-    ) : Promise<ChildProcess>
+    public async startPherry (spawnMode : SpawnMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
-        if (mode === SpawnMode.Background) {
-            options.args['--dev-wait-block-ms'] = 100;
+        if (spawnMode === SpawnMode.Testing) {
+            const blockTime = this._context.config.testing.blockTime;
+            options.args['--dev-wait-block-ms'] = blockTime;
         }
         
-        return this._startComponent(
+        return this.startComponent(
             'pherry',
             options,
-            mode,
+            spawnMode,
             text => text.includes('pRuntime get_info response: PhactoryInfo'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
     
-    protected async _startComponent (
-        componentName : ComponentName,
+    public async startComponent (
+        componentName : string,
         options : StackComponentOptions,
-        mode : SpawnMode,
+        spawnMode : SpawnMode,
         waitForReady : (text : string) => boolean = () => true,
         waitForError : (text : string) => boolean = () => false,
     ) : Promise<ChildProcess>
     {
-        // prepare directories
-        const workingDirPath = this._processPath(options.workingDir);
+        // prepare paths and working directory
+        const binaryPath = this.processPath(options.binary);
+        
+        const workingDirPath = this.processPath(options.workingDir);
         if (fs.existsSync(workingDirPath)) {
             fs.rmSync(workingDirPath, { recursive: true, force: true });
         }
@@ -145,38 +171,6 @@ export class StackManager
         fs.mkdirSync(workingDirPath, { recursive: true });
         
         // prepare args
-        const binaryPath = this._processPath(options.binary);
-        
-        return this._spawnBinary(
-            binaryPath,
-            workingDirPath,
-            options,
-            mode,
-            waitForReady,
-            waitForError
-        );
-    }
-    
-    protected _processPath(_path : string) : string
-    {
-        return _path.includes('#DEVPHASE#')
-            ? _path.replace('#DEVPHASE#', this._context.libPath)
-            : _path.startsWith('/')
-                ? _path
-                : path.join(this._context.projectDir, _path)
-                ;
-    }
-    
-    
-    protected async _spawnBinary (
-        binaryPath : string,
-        workingDirPath : string,
-        options : StackComponentOptions,
-        spawnMode : SpawnMode,
-        waitForReady : (text : string) => boolean = () => true,
-        waitForError : (text : string) => boolean = () => false,
-    ) : Promise<ChildProcess>
-    {
         const spawnOptions : SpawnOptions = {
             cwd: workingDirPath,
             env: {
@@ -185,16 +179,6 @@ export class StackManager
             },
             stdio: [ 'ignore', 'pipe', 'pipe' ]
         };
-        
-        const child = childProcess.spawn(
-            binaryPath,
-            serializeProcessArgs(options.args),
-            spawnOptions
-        );
-        
-        const [ stdin, stdout, stderr ] = child.stdio;
-        stdout.setEncoding('utf-8');
-        stderr.setEncoding('utf-8');
         
         // wait for process to be ready
         const binaryName = path.basename(binaryPath);
@@ -206,26 +190,79 @@ export class StackManager
             's timeout.'
         );
         
+        // spawn child process
+        const child = childProcess.spawn(
+            binaryPath,
+            serializeProcessArgs(options.args),
+            spawnOptions
+        );
+        
+        const [ stdin, stdout, stderr ] = child.stdio;
+        stdout.setEncoding('utf-8');
+        stderr.setEncoding('utf-8');
+        
+        // pipe output to file
+        let logFileDscr : number;
+        if (this.isLogOutputUsed(spawnMode, this._context)) {
+            const logFilePath = path.join(
+                this._runLogsPath,
+                `${componentName}.log`
+            );
+            logFileDscr = fs.openSync(logFilePath, 'a');
+            
+            child.on('close', () => {
+                fs.closeSync(logFileDscr);
+            });
+        }
+        
         let settled : boolean = false;
         
         await timeout(() => {
             return new Promise((resolve, reject) => {
+                // prepare kill procedure
+                let interval = setInterval(() => {
+                    if (this._killFlag) {
+                        child.kill('SIGKILL');
+                        cleanup();
+                        
+                        reject(
+                            new Exception(
+                                `Component killed`,
+                                1667576698031
+                            )
+                        );
+                    }
+                }, 250);
+                
+                const cleanup = () => {
+                    settled = true;
+                    clearInterval(interval);
+                };
+            
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
                     
-                    if (spawnMode === SpawnMode.Foreground) {
+                    if (spawnMode === SpawnMode.Direct) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
                         process.stdout.write(text);
+                    }
+                    else if (this.isLogOutputUsed(spawnMode, this._context)) {
+                        fs.appendFileSync(
+                            logFileDscr,
+                            text,
+                            { encoding: 'utf-8' }
+                        );
                     }
                     
                     if (!settled) {
                         if (waitForReady(text)) {
                             this._logger.log('Binary', chalk.cyan(binaryName), 'started');
-                            settled = true;
+                            
+                            cleanup();
                             resolve(child);
                         }
                         else if (waitForError(text)) {
-                            settled = true;
+                            cleanup();
                             reject(
                                 new Exception(
                                     `Failed to start ${binaryName} component`,
@@ -242,6 +279,24 @@ export class StackManager
         }, options.timeout);
         
         return child;
+    }
+    
+    public processPath (_path : string) : string
+    {
+        return path.resolve(
+            this._context.projectDir,
+            _path.replace('#DEVPHASE#', this._context.libPath)
+        );
+    }
+    
+    public isLogOutputUsed (
+        spawnMode : SpawnMode,
+        context : RuntimeContext
+    ) : boolean
+    {
+        return spawnMode === SpawnMode.Testing
+            && context.config.testing.stackLogOutput
+            ;
     }
     
 }

@@ -23,11 +23,11 @@ export class TypeBinder
         public runtimeContext : RuntimeContext
     )
     {
-        this._artifactsBasePath = path.join(
+        this._artifactsBasePath = path.resolve(
             this.runtimeContext.projectDir,
             this.runtimeContext.config.directories.artifacts
         );
-        this._typingsBasePath = path.join(
+        this._typingsBasePath = path.resolve(
             this.runtimeContext.projectDir,
             this.runtimeContext.config.directories.typings
         );

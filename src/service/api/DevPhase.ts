@@ -17,7 +17,6 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import axios, { AxiosInstance } from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
-import { Runtime } from 'inspector';
 import path from 'path';
 
 
@@ -51,6 +50,8 @@ export class DevPhase
     protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
+    
+    protected _artifactsPath : string;
     
     
     private constructor () {}
@@ -110,11 +111,11 @@ export class DevPhase
             sudoAccount: instance.accounts[options.sudoAccount],
         });
         
-        if (options.customEnvSetup) {
-            await options.customEnvSetup(instance);
-        }
-        else {
-            await instance.defaultEnvSetup();
+        if (runtimeContext) {
+            instance._artifactsPath = path.resolve(
+                runtimeContext.projectDir,
+                runtimeContext.config.directories.artifacts
+            );
         }
         
         return instance;
@@ -131,7 +132,7 @@ export class DevPhase
     /**
      * Default environment setup
      */
-    public async defaultEnvSetup()
+    public async defaultEnvSetup ()
     {
         // check worker
         await this.prepareWorker(this.options.workerUrl);
@@ -378,16 +379,14 @@ export class DevPhase
                     1667493436149
                 );
             }
-        
+            
             artifactPath = path.join(
-                this.runtimeContext.projectDir,
-                this.runtimeContext.config.directories.artifacts,
+                this._artifactsPath,
                 artifactPathOrName,
                 `${artifactPathOrName}.contract`
-            )
+            );
         }
         
-        console.log(artifactPath);
         if (!fs.existsSync(artifactPath)) {
             throw new Exception(
                 'Contract artifact file not found',

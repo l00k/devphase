@@ -48,6 +48,7 @@ const config : ProjectConfigOptions = {
     directories: {
         artifacts: 'artifacts',
         contracts: 'contracts',
+        logs: 'logs',
         tests: 'tests',
         typings: 'typings'
     },
@@ -94,13 +95,13 @@ const config : ProjectConfigOptions = {
             timeout: 2000,
         },
         pherry: {
-            suMnemonic: '//Alice', // super user mnemonic
+            gkMnemonic: '//Alice', // gate keeper mnemonic
             binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
             workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
             envs: {},
             args: {
                 '--no-wait': true,
-                '--mnemonic': '{{stack.pherry.suMnemonic}}',
+                '--mnemonic': '{{stack.pherry.gkMnemonic}}',
                 '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                 '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                 '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
@@ -137,12 +138,25 @@ const config : ProjectConfigOptions = {
         sudoAccount: 'alice',
         ss58Prefix: 30,
         clusterId: undefined, // if specified - it will be used as default cluster for deployments
-        customEnvSetup: undefined, // if specified - it will use custom environment setup procedure
     },
     /**
-     * Custom mocha configuration
+     * Testing configuration
      */
-    mocha: {}
+    testing: {
+        mocha: {}, // custom mocha configuration
+        envSetup: { // environment setup
+            setup: {
+                custom: undefined, // custom setup procedure callback; (devPhase) => Promise<void>
+                timeout: 60 * 1000,
+            },
+            teardown: {
+                custom: undefined, // custom teardown procedure callback ; (devPhase) => Promise<void>
+                timeout: 10 * 1000,
+            }
+        },
+        blockTime: 100, // overrides block time specified in node (and pherry) component
+        stackLogOutput : false, // if specifed pipes output of all stack component to file (by default it is ignored)
+    }
 };
 
 export default config;

@@ -17,13 +17,19 @@ export function timeout (
     };
     
     return new Promise(async(resolve, reject) => {
-        setTimeout(() => reject(new Exception(options.message, 1663946429155)), timeLimit);
+        let _timeout = setTimeout(
+            () => reject(new Exception(options.message, 1663946429155)),
+            timeLimit
+        );
         
         try {
             const result = await callback();
+            
+            clearTimeout(_timeout);
             resolve(result);
         }
         catch (e) {
+            clearTimeout(_timeout);
             reject(e);
         }
     });

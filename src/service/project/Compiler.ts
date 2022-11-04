@@ -19,11 +19,11 @@ export class Compiler
         protected _runtimeContext : RuntimeContext
     )
     {
-        this._artifactsBasePath = path.join(
+        this._artifactsBasePath = path.resolve(
             this._runtimeContext.projectDir,
             this._runtimeContext.config.directories.artifacts
         );
-        this._contractsBasePath = path.join(
+        this._contractsBasePath = path.resolve(
             this._runtimeContext.projectDir,
             this._runtimeContext.config.directories.contracts
         );

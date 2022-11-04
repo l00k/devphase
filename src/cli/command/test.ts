@@ -16,7 +16,7 @@ async function command (runtimeContext : RuntimeContext)
     
     const mochaConfig : MochaOptions = {
         timeout: 10000,
-        ...runtimeContext.config.mocha
+        ...runtimeContext.config.testing.mocha
     };
     const mocha = new Mocha(mochaConfig);
     

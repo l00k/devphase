@@ -35,6 +35,47 @@ export class Logger
         console.log(...logArgs);
     }
     
+    public time (label : string)
+    {
+        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+            return;
+        }
+        
+        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
+        console.time(text);
+    }
+    
+    public timeEnd (label : string)
+    {
+        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+            return;
+        }
+        
+        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
+        console.timeEnd(text);
+    }
+    
+    public timeLog (label : string)
+    {
+        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+            return;
+        }
+        
+        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
+        console.timeLog(text);
+    }
+    
+    public timeStamp (label : string)
+    {
+        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+            return;
+        }
+        
+        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
+        console.timeStamp(text);
+    }
+    
+    
     public dir (object : any, options? : any)
     {
         const serviceName = chalk.white(`[${this.serviceName}]`);

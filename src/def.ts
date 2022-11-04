@@ -21,8 +21,8 @@ export type ComponentName = 'node' | 'pruntime' | 'pherry';
 
 export enum SpawnMode
 {
-    Foreground = 'Foreground',
-    Background = 'Background',
+    Direct = 'Direct',
+    Testing = 'Testing',
 }
 
 export interface StackComponentOptions
@@ -31,7 +31,7 @@ export interface StackComponentOptions
     workingDir : string,
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
-    timeout : number
+    timeout : number,
 };
 
 export interface NodeComponentOptions
@@ -49,9 +49,25 @@ export interface PruntimeComponentOptions
 export interface PherryComponentOptions
     extends StackComponentOptions
 {
-    suMnemonic : string,
+    gkMnemonic : string,
 }
 
+export interface TestingOptions
+{
+    mocha : MochaOptions,
+    envSetup : {
+        setup : {
+            custom : (devPhase : any) => Promise<void>,
+            timeout : number,
+        },
+        teardown : {
+            custom : (devPhase : any) => Promise<void>,
+            timeout : number,
+        }
+    },
+    blockTime : number,
+    stackLogOutput : boolean,
+}
 
 export type Accounts = {
     alice? : KeyringPair,
@@ -80,6 +96,7 @@ export type ProjectConfig = {
     directories : {
         artifacts : string,
         contracts : string,
+        logs: string,
         tests : string,
         typings : string,
     },
@@ -89,7 +106,7 @@ export type ProjectConfig = {
         pherry : PherryComponentOptions,
     },
     devPhaseOptions : DevPhaseOptions,
-    mocha : MochaOptions
+    testing : TestingOptions,
 }
 
 export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;

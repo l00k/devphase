@@ -21,7 +21,7 @@ export class MultiContractExecutor
         public runtimeContext : RuntimeContext
     )
     {
-        this.contractsBasePath = path.join(
+        this.contractsBasePath = path.resolve(
             this.runtimeContext.projectDir,
             this.runtimeContext.config.directories.contracts
         );

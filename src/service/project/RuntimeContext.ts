@@ -16,8 +16,6 @@ export class RuntimeContext
     public projectDir : string;
     public config : ProjectConfig;
     
-    public processes : Record<ComponentName, ChildProcess>;
-    
     
     public static async getSingleton () : Promise<RuntimeContext>
     {
@@ -63,6 +61,7 @@ export class RuntimeContext
             directories: {
                 artifacts: 'artifacts',
                 contracts: 'contracts',
+                logs: 'logs',
                 tests: 'tests',
                 typings: 'typings'
             },
@@ -93,13 +92,13 @@ export class RuntimeContext
                     timeout: 2000,
                 },
                 pherry: {
-                    suMnemonic: '//Alice',
+                    gkMnemonic: '//Alice',
                     binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
                     workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,
-                        '--mnemonic': '{{stack.pherry.suMnemonic}}',
+                        '--mnemonic': '{{stack.pherry.gkMnemonic}}',
                         '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                         '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                         '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
@@ -112,7 +111,21 @@ export class RuntimeContext
                 nodeUrl: 'ws://localhost:{{stack.node.port}}',
                 workerUrl: 'http://localhost:{{stack.pruntime.port}}',
             },
-            mocha: {}
+            testing: {
+                mocha: {}, // custom mocha configuration
+                blockTime: 100, // overrides block time specified in node (and pherry) component
+                envSetup: {
+                    setup: {
+                        custom: undefined,
+                        timeout: 60 * 1000,
+                    },
+                    teardown: {
+                        custom: undefined,
+                        timeout: 10 * 1000,
+                    }
+                },
+                stackLogOutput : false,
+            }
         }, options);
         
         // process placeholders
