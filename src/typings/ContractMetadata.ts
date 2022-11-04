@@ -105,9 +105,7 @@ export namespace ContractMetadata
 
         export type Tuple = {
             def : {
-                tuple : {
-                    types: Array<number>,
-                }
+                tuple : Array<number>,
             }
         }
     }

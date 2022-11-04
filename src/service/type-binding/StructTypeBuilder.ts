@@ -235,13 +235,13 @@ export class StructTypeBuilder
     {        
         const name = 'Tuple' + (++this._newTypeIdx);
         
-        const types = typeDef.def.tuple.types.map(type => this.buildType(type));
+        const types = typeDef.def.tuple.map(type => this.buildType(type));
         const nativeTypes = types
             .map(type => type.native)
-            .join(' ,');
+            .join(', ');
         const codecTypes = types
             .map(type => type.native)
-            .join(' ,');
+            .join(', ');
 
         return {
             native: nativeTypes ? `[ ${nativeTypes} ]` : '[]',
