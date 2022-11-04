@@ -1,17 +1,5 @@
 # devPHAse progress
 
-### DONE
-
-- [x] create CLI script
-- [x] include standalone stack
-- [x] prepare tmux config
-- [x] stack preparation command
-- [x] prepare a stack before tests running
-- [x] options for testing stack (reduce time to 100ms)
-- [x] ensure component is running by analyzing output
-- [x] verify & export mocha + chai and devphase global typing
-- [x] contracts compilation command
-
 ### TODO
 
 - [ ] type binding
@@ -20,9 +8,9 @@
     - [ ] prebuild composite types
     - [ ] cover all types
 - [ ] init command
+- [ ] cover with tests!!
 - [ ] create chai helpers for Phala contracts testing (waitFor like)
 
-- [ ] create tests
 
 
 
