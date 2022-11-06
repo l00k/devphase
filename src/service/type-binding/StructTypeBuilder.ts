@@ -229,13 +229,13 @@ export class StructTypeBuilder
         const name = 'Variant' + (++this._newTypeIdx);
         
         return {
-            native: `any`,
+            native: 'any',
             codec: 'any',
         };
     }
     
     public buildTuple (typeDef : ContractMetadata.Type.Tuple) : BuiltType
-    {        
+    {
         const name = 'Tuple' + (++this._newTypeIdx);
         
         const types = typeDef.def.tuple.map(type => this.buildType(type));

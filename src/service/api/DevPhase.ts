@@ -155,7 +155,7 @@ export class DevPhase
             }
         }
         
-        let mainClusterId = this.options.clusterId === null
+        const mainClusterId = this.options.clusterId === null
             ? await this.createCluster()
             : this.options.clusterId
         ;

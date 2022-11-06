@@ -195,7 +195,7 @@ export class AbiTypeBindingProcessor
                                 type: this._structTypeBuilder.getNativeType(arg.type.type),
                             })),
                         ],
-                        returnType: `DPT.SubmittableExtrinsic`,
+                        returnType: 'DPT.SubmittableExtrinsic',
                     }
                 ]
             });

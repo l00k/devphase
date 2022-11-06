@@ -78,7 +78,7 @@ export class StackManager
     )
     {
         this._killFlag = true;
-    
+        
         if (!this._processes) {
             throw new Exception(
                 'Stack was not started yet',
@@ -220,14 +220,14 @@ export class StackManager
         await timeout(() => {
             return new Promise((resolve, reject) => {
                 // prepare kill procedure
-                let interval = setInterval(() => {
+                const interval = setInterval(() => {
                     if (this._killFlag) {
                         child.kill('SIGKILL');
                         cleanup();
                         
                         reject(
                             new Exception(
-                                `Component killed`,
+                                'Component killed',
                                 1667576698031
                             )
                         );
@@ -238,7 +238,7 @@ export class StackManager
                     settled = true;
                     clearInterval(interval);
                 };
-            
+                
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
                     
@@ -296,7 +296,7 @@ export class StackManager
     {
         return spawnMode === SpawnMode.Testing
             && context.config.testing.stackLogOutput
-            ;
+        ;
     }
     
 }

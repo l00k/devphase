@@ -19,10 +19,10 @@ export function accessThroughPath (
     
     const parts = path.split('.');
     
-    let currentPath = [];
+    const currentPath = [];
     let part = null;
     
-    while (part = parts.shift()) {
+    while ((part = parts.shift())) {
         currentPath.push(part);
         
         const isLeaf = !parts.length;

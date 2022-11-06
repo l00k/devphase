@@ -23,8 +23,6 @@ export type InstantiateOptions = {
     asAccount? : AccountKey,
 }
 
-export type AttachOptions = {}
-
 
 export class ContractFactory
 {
@@ -44,7 +42,7 @@ export class ContractFactory
         return this._devPhase.api;
     }
     
-    protected async init (api : ApiPromise)
+    protected async init ()
     {
         await this._eventQueue.init(this._devPhase.api);
     }
@@ -67,7 +65,7 @@ export class ContractFactory
             clusterId,
         });
         
-        await instance.init(devPhase.api);
+        await instance.init();
         
         return <any>instance;
     }
@@ -82,9 +80,10 @@ export class ContractFactory
     {
         options = {
             asAccount: 'alice',
+            ...options
         };
         
-        const result = await TxHandler.handle(
+        await TxHandler.handle(
             this.api.tx.phalaFatContracts.clusterUploadResource(
                 this.clusterId,
                 this.contractType,
@@ -184,8 +183,7 @@ export class ContractFactory
     }
     
     public async attach<T extends Contract> (
-        contractId : string,
-        options : AttachOptions = {}
+        contractId : string
     ) : Promise<T>
     {
         const api = await this._devPhase.createApiPromise();

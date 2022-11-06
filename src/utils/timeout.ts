@@ -17,7 +17,7 @@ export function timeout (
     };
     
     return new Promise(async(resolve, reject) => {
-        let _timeout = setTimeout(
+        const _timeout = setTimeout(
             () => reject(new Exception(options.message, 1663946429155)),
             timeLimit
         );
