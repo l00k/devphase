@@ -16,6 +16,11 @@ yarn add -D typescript ts-node # required peer dependencies
 
 ## Features
 
+- Init project (creates required files and directories)
+```shell
+yarn devphase init
+```
+
 - Starting local stack (node + pruntime + pherry)
 ```shell
 yarn devphase stack
@@ -26,7 +31,7 @@ yarn devphase stack
 yarn devphase compile [contractName] [--watch]
 ```
 
-- Contracts TS bindings creation (wip)
+- Contracts TS bindings creation (WiP)
 ```shell
 yarn devphase typings [contractName]
 ```
