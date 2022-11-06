@@ -1,5 +1,7 @@
 import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
+import camelCase from 'lodash/camelCase';
+import upperFirst from 'lodash/upperFirst';
 import * as TsMorph from 'ts-morph';
 
 
@@ -186,7 +188,10 @@ export class StructTypeBuilder
     {
         const { path, def: { composite: { fields } } } = typeDef;
         
-        const name = path.join('$');
+        const name = path
+            .map(part => upperFirst(camelCase(part)))
+            .join('_')
+        ;
         
         let declaration : TsMorph.TypeAliasDeclarationStructure;
         
@@ -245,7 +250,7 @@ export class StructTypeBuilder
         const codecTypes = types
             .map(type => type.native)
             .join(', ');
-
+        
         return {
             native: nativeTypes ? `[ ${nativeTypes} ]` : 'never[]',
             codec: `DPT.ITuple<[ ${codecTypes} ]>`,

@@ -1,5 +1,6 @@
 import { StructTypeBuilder } from '@/service/type-binding/StructTypeBuilder';
 import { ContractMetadata } from '@/typings/ContractMetadata';
+import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
 import * as TsMorph from 'ts-morph';
@@ -109,8 +110,8 @@ export class AbiTypeBindingProcessor
         const queryMessages = this._abi.spec.messages
             .filter(message => message.mutates === false);
         for (const queryMessage of queryMessages) {
-            const name = upperFirst(queryMessage.label);
-            const returnType = this._structTypeBuilder.getNativeType(queryMessage.returnType.type);
+            const name = this.formatInterfaceName(queryMessage.label);
+            const returnType = this._structTypeBuilder.getCodecType(queryMessage.returnType.type);
             
             queriesModuleInterfaces.push({
                 isExported: true,
@@ -134,6 +135,7 @@ export class AbiTypeBindingProcessor
                             ...queryMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
                                 kind: TsMorph.StructureKind.Parameter,
                                 name: arg.label,
+                                
                                 type: this._structTypeBuilder.getNativeType(arg.type.type),
                             })),
                         ],
@@ -159,8 +161,8 @@ export class AbiTypeBindingProcessor
                     .filter(message => message.mutates === false)
                     .map(message => ({
                         kind: TsMorph.StructureKind.PropertySignature,
-                        name: message.label,
-                        type: 'ContractQuery.' + upperFirst(message.label),
+                        name: this.formatContractMethodName(message.label),
+                        type: 'ContractQuery.' + this.formatInterfaceName(message.label),
                     }))
             }
         ];
@@ -173,7 +175,7 @@ export class AbiTypeBindingProcessor
         const txMessages = this._abi.spec.messages
             .filter(message => message.mutates === true);
         for (const txMessage of txMessages) {
-            const name = upperFirst(txMessage.label);
+            const name = this.formatInterfaceName(txMessage.label);
             
             txsModuleInterfaces.push({
                 isExported: true,
@@ -217,8 +219,8 @@ export class AbiTypeBindingProcessor
                     .filter(message => message.mutates === true)
                     .map(message => ({
                         kind: TsMorph.StructureKind.PropertySignature,
-                        name: message.label,
-                        type: 'ContractTx.' + upperFirst(message.label),
+                        name: this.formatContractMethodName(message.label),
+                        type: 'ContractTx.' + this.formatInterfaceName(message.label),
                     }))
             }
         ];
@@ -285,6 +287,26 @@ export class AbiTypeBindingProcessor
                 })),
             }
         ];
+    }
+    
+    public formatInterfaceName (label : string) : string
+    {
+        return label.split('::')
+            .map(part => upperFirst(camelCase(part)))
+            .join('_')
+            ;
+    }
+    
+    public formatContractMethodName (label : string) : string
+    {
+        const methodName = label.split('::')
+            .map(part => camelCase(part))
+            .join('::')
+        ;
+        return methodName.includes('::')
+            ? `'${methodName}'`
+            : methodName
+            ;
     }
     
 }
