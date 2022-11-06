@@ -12,6 +12,8 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Running tests');
     
+    runtimeContext.requestProjectDirectory();
+    
     const { default: Mocha } = await import('mocha');
     
     const mochaConfig : MochaOptions = {
@@ -33,7 +35,7 @@ async function command (runtimeContext : RuntimeContext)
         files.forEach(file => mocha.addFile(file));
     }
     
-    const failures = await new Promise<number>((resolve) => {
+    await new Promise<number>((resolve) => {
         mocha.run(resolve);
     });
     
@@ -47,5 +49,5 @@ export function testCommand (
 {
     program.command('test')
         .description('Start tests')
-        .action(async(...args : any[]) => command(context));
+        .action(async() => command(context));
 }

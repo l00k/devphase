@@ -1,8 +1,7 @@
-import { ComponentName, ProjectConfig, ProjectConfigOptions } from '@/def';
+import { ProjectConfig, ProjectConfigOptions } from '@/def';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
-import { ChildProcess } from 'child_process';
 import findUp from 'find-up';
 import path from 'path';
 
@@ -31,27 +30,45 @@ export class RuntimeContext
         return globalAny[RuntimeContext.SINGLETON_KEY];
     }
     
+    public async isInProjectDirectory () : Promise<boolean>
+    {
+        const configFilePath = await findUp([
+            'devphase.config.ts',
+            'devphase.config.js',
+        ]);
+        
+        return (configFilePath !== undefined);
+    }
+    
+    public async requestProjectDirectory ()
+    {
+        const isInProjectDirectory = await this.isInProjectDirectory();
+        if (!isInProjectDirectory) {
+            throw new Exception(
+                'Config file not found',
+                1665952724703
+            );
+        }
+    }
+    
+    
     protected async _init () : Promise<void>
     {
         const configFilePath = await findUp([
             'devphase.config.ts',
             'devphase.config.js',
         ]);
-        if (!configFilePath) {
-            throw new Exception(
-                'Config file not found',
-                1665952724703
-            );
-        }
         
         this.libPath = __dirname.endsWith('/cli')
             ? path.join(__dirname, '../../')
             : path.join(__dirname, '../');
         
-        this.projectDir = path.dirname(configFilePath);
-        
-        const userConfig = require(configFilePath).default;
-        this.config = this._getFallbackConfig(userConfig);
+        if (configFilePath) {
+            this.projectDir = path.dirname(configFilePath);
+            
+            const userConfig = require(configFilePath).default;
+            this.config = this._getFallbackConfig(userConfig);
+        }
     }
     
     
@@ -124,7 +141,7 @@ export class RuntimeContext
                         timeout: 10 * 1000,
                     }
                 },
-                stackLogOutput : false,
+                stackLogOutput: false,
             }
         }, options);
         

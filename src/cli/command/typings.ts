@@ -20,6 +20,8 @@ async function command (
     
     logger.log('Starting');
     
+    runtimeContext.requestProjectDirectory();
+    
     const binder = new TypeBinder(runtimeContext);
     const multiContractExecutor = new MultiContractExecutor(runtimeContext);
     

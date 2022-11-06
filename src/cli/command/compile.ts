@@ -21,6 +21,8 @@ async function command (
     
     logger.log('Contracts compilation');
     
+    runtimeContext.requestProjectDirectory();
+    
     const contractCompiler = new Compiler(runtimeContext);
     const typeBinder = new TypeBinder(runtimeContext);
     const multiContractExecutor = new MultiContractExecutor(runtimeContext);

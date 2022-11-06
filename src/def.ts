@@ -32,7 +32,7 @@ export interface StackComponentOptions
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
     timeout : number,
-};
+}
 
 export interface NodeComponentOptions
     extends StackComponentOptions

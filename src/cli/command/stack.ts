@@ -11,14 +11,15 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Starting');
     
+    runtimeContext.requestProjectDirectory();
+    
     const stackManager = new StackManager(runtimeContext);
     
     try {
-        const processes = await stackManager.startStack(SpawnMode.Direct);
+        await stackManager.startStack(SpawnMode.Direct);
     }
     catch (e) {
         await stackManager.stopStack();
-        
         throw e;
     }
     
@@ -36,5 +37,5 @@ export function stackCommand (
 {
     program.command('stack')
         .description('Start Phala stack')
-        .action(async(...args : any[]) => command(context));
+        .action(async() => command(context));
 }

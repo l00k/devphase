@@ -1,6 +1,5 @@
 #! /usr/bin/env ts-node-script
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import childProcess from 'child_process';
 import { Command } from 'commander';
 
 (async() => {
