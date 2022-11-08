@@ -31,7 +31,7 @@ yarn devphase stack
 yarn devphase compile [contractName] [--watch]
 ```
 
-- Contracts TS bindings creation (WiP)
+- Contracts TS bindings creation
 ```shell
 yarn devphase typings [contractName]
 ```

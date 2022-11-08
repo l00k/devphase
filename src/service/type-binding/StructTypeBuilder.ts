@@ -183,14 +183,20 @@ export class StructTypeBuilder
         };
     }
     
-    // todo ld 2022-11-04 17:12:31
     public buildComposite (typeDef : ContractMetadata.Type.Composite) : BuiltType
     {
-        const { path, def: { composite: { fields } } } = typeDef;
+        const {
+            def: {
+                composite: {
+                    fields
+                }
+            },
+            path
+        } = typeDef;
         
-        const name = path
-            .map(part => upperFirst(camelCase(part)))
-            .join('_')
+        const compositeName = path
+            ? this.getTypeNameFromPath(path)
+            : 'Composite' + (++this._newTypeIdx)
         ;
         
         let declaration : TsMorph.TypeAliasDeclarationStructure;
@@ -206,36 +212,81 @@ export class StructTypeBuilder
             
             declaration = {
                 kind: TsMorph.StructureKind.TypeAlias,
-                name,
+                name: compositeName,
                 type: '{ ' + strFields + ' }',
             };
         }
         else {
             declaration = {
                 kind: TsMorph.StructureKind.TypeAlias,
-                name,
+                name: compositeName,
                 type: 'any',
             };
         }
         
-        this._typeStatements[name] = declaration;
+        this._typeStatements[compositeName] = declaration;
         
         return {
-            native: name,
-            codec: `DPT.IJson<${name}>`,
+            native: compositeName,
+            codec: `DPT.IJson<${compositeName}>`,
         };
     }
     
-    // todo ld 2022-11-04 17:12:26
     public buildVariant (typeDef : ContractMetadata.Type.Variant) : BuiltType
     {
-        const { params } = typeDef;
+        const {
+            def: {
+                variant: { variants }
+            },
+            params,
+            path
+        } = typeDef;
         
-        const name = 'Variant' + (++this._newTypeIdx);
+        const variantName = path
+            ? this.getTypeNameFromPath(path)
+            : 'Variant' + (++this._newTypeIdx)
+        ;
+        
+        // collect variants
+        const builtVariants : string[] = [];
+        
+        for (const variant of variants) {
+            const { name, fields } = variant;
+            
+            let innerType;
+            if (!fields?.length) {
+                innerType = 'null';
+            }
+            else if (fields.length === 1) {
+                const { native } = this.buildType(fields[0].type);
+                innerType = native;
+            }
+            else {
+                const tupleParts = fields
+                    .map(field => {
+                        const { native } = this.buildType(fields[0].type);
+                        return native;
+                    })
+                    .join(', ');
+                
+                innerType = '[' + tupleParts + ']';
+            }
+            
+            builtVariants.push(
+                `{ ${name}: ${innerType} }`
+            );
+        }
+        
+        let declaration : TsMorph.TypeAliasDeclarationStructure = {
+            kind: TsMorph.StructureKind.TypeAlias,
+            name: variantName,
+            type: builtVariants.join(' | '),
+        };
+        this._typeStatements[variantName] = declaration;
         
         return {
-            native: 'any',
-            codec: 'any',
+            native: variantName,
+            codec: `DPT.IJson<${variantName}>`,
         };
     }
     
@@ -246,15 +297,25 @@ export class StructTypeBuilder
         const types = typeDef.def.tuple.map(type => this.buildType(type));
         const nativeTypes = types
             .map(type => type.native)
-            .join(', ');
+            .join(', ')
+        ;
         const codecTypes = types
             .map(type => type.codec)
-            .join(', ');
+            .join(', ')
+        ;
         
         return {
             native: nativeTypes ? `[ ${nativeTypes} ]` : 'never[]',
             codec: `DPT.ITuple<[ ${codecTypes} ]>`,
         };
+    }
+    
+    public getTypeNameFromPath (path : string[]) : string
+    {
+        return path
+            .map(part => upperFirst(camelCase(part)))
+            .join('_')
+            ;
     }
     
 }

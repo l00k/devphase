@@ -64,7 +64,13 @@ export namespace ContractMetadata
         
         export type Variant = {
             def : {
-                variant : string,
+                variant : {
+                    variants : Array<{
+                        fields : Array<TypeRef>,
+                        index : number,
+                        name : string,
+                    }>
+                },
             },
             params : {
                 name : string,
@@ -102,7 +108,7 @@ export namespace ContractMetadata
                 }
             },
         };
-
+        
         export type Tuple = {
             def : {
                 tuple : Array<number>,
