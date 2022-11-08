@@ -5,7 +5,7 @@ import type { ApiBase } from '@polkadot/api/base';
 import type * as Submittable from '@polkadot/api/submittable/types';
 import type { DecorateMethod } from '@polkadot/api/types';
 import type { AccountId } from '@polkadot/types/interfaces';
-import type { Codec } from '@polkadot/types/types';
+import type { Codec, AnyJson } from '@polkadot/types/types';
 
 export * from '@polkadot/types-codec/types/interfaces';
 
@@ -16,15 +16,14 @@ export interface FixedArray<L extends number, T>
     length : L
 }
 
-export interface IBool
+export interface IJson<T extends AnyJson>
     extends Codec
 {
-    toHuman (isExtended? : boolean) : boolean;
-    
-    toJSON () : boolean;
-    
-    toPrimitive () : boolean;
+    toHuman (isExtended? : boolean) : T;
+    toJSON () : T;
+    toPrimitive () : T;
 }
+
 
 export interface CallOutcome<T extends Codec = Codec>
     extends ContractCallOutcome

@@ -137,7 +137,7 @@ export class StructTypeBuilder
         if (primitive === 'bool') {
             return {
                 native: 'boolean',
-                codec: 'DPT.IBool'
+                codec: 'DPT.IJson<boolean>'
             };
         }
         else if ([ 'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128' ].includes(primitive)) {
@@ -222,7 +222,7 @@ export class StructTypeBuilder
         
         return {
             native: name,
-            codec: `DPT.ICompact<${name}>`,
+            codec: `DPT.IJson<${name}>`,
         };
     }
     
@@ -248,7 +248,7 @@ export class StructTypeBuilder
             .map(type => type.native)
             .join(', ');
         const codecTypes = types
-            .map(type => type.native)
+            .map(type => type.codec)
             .join(', ');
         
         return {
