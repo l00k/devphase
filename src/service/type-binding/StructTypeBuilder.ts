@@ -40,7 +40,10 @@ export class StructTypeBuilder
                 ];
             })
         );
-        
+    }
+    
+    public build() : Record<number, BuiltType>
+    {
         for (const [ idx, typeDef ] of Object.entries(this._definedTypes)) {
             if (!this._builtTypes[idx]) {
                 this.buildType(Number(idx));
@@ -49,6 +52,8 @@ export class StructTypeBuilder
             console.dir(idx);
             console.dir(typeDef, { depth: 10 });
         }
+        
+        return this._builtTypes;
     }
     
     public getNativeType (typeIdx : number) : string

@@ -9,14 +9,15 @@ import * as TsMorph from 'ts-morph';
 export class AbiTypeBindingProcessor
 {
     
-    protected _structTypeBuilder : StructTypeBuilder;
+    public structTypeBuilder : StructTypeBuilder;
     
     
     public constructor (
         protected readonly _abi : ContractMetadata.ABI
     )
     {
-        this._structTypeBuilder = new StructTypeBuilder(this._abi.types);
+        this.structTypeBuilder = new StructTypeBuilder(this._abi.types);
+        this.structTypeBuilder.build();
     }
     
     
@@ -50,7 +51,7 @@ export class AbiTypeBindingProcessor
             isExported: true,
             name: contractName,
             statements: [
-                ...context._structTypeBuilder.getTypeStatements(),
+                ...context.structTypeBuilder.getTypeStatements(),
                 ...context.buildMapMessageQueryInterface(),
                 ...context.buildMapMessageTxInterface(),
                 ...context.buildContractClass(),
@@ -111,7 +112,7 @@ export class AbiTypeBindingProcessor
             .filter(message => message.mutates === false);
         for (const queryMessage of queryMessages) {
             const name = this.formatInterfaceName(queryMessage.label);
-            const returnType = this._structTypeBuilder.getCodecType(queryMessage.returnType.type);
+            const returnType = this.structTypeBuilder.getCodecType(queryMessage.returnType.type);
             
             queriesModuleInterfaces.push({
                 isExported: true,
@@ -136,7 +137,7 @@ export class AbiTypeBindingProcessor
                                 kind: TsMorph.StructureKind.Parameter,
                                 name: arg.label,
                                 
-                                type: this._structTypeBuilder.getNativeType(arg.type.type),
+                                type: this.structTypeBuilder.getNativeType(arg.type.type),
                             })),
                         ],
                         returnType: `DPT.CallResult<DPT.CallOutcome<${returnType}>>`,
@@ -194,7 +195,7 @@ export class AbiTypeBindingProcessor
                             ...txMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
                                 kind: TsMorph.StructureKind.Parameter,
                                 name: arg.label,
-                                type: this._structTypeBuilder.getNativeType(arg.type.type),
+                                type: this.structTypeBuilder.getNativeType(arg.type.type),
                             })),
                         ],
                         returnType: 'DPT.SubmittableExtrinsic',
@@ -275,7 +276,7 @@ export class AbiTypeBindingProcessor
                         },
                         {
                             name: 'params',
-                            type: this._structTypeBuilder.getArgsString(constructor.args),
+                            type: this.structTypeBuilder.getArgsString(constructor.args),
                         },
                         {
                             name: 'options',
