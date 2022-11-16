@@ -1,7 +1,6 @@
 /dist
 /node_modules
 
-/phala-dev-stack/.data/
-/phala-dev-stack/bin/
+/phala-dev-stack
 
 .env

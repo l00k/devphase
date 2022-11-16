@@ -1,4 +1,5 @@
 import { ProjectConfig, ProjectConfigOptions } from '@/def';
+import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
@@ -10,6 +11,8 @@ export class RuntimeContext
 {
     
     protected static readonly SINGLETON_KEY = 'devphase_Context_VSffVql3bvj9aulZY5DNnRCnrEt1V27a';
+    
+    protected _stackBinaryDownloader : StackBinaryDownloader;
     
     public libPath : string;
     public projectDir : string;
@@ -67,26 +70,33 @@ export class RuntimeContext
             this.projectDir = path.dirname(configFilePath);
             
             const userConfig = require(configFilePath).default;
-            this.config = this._getFallbackConfig(userConfig);
+            this.config = await this._getFallbackConfig(userConfig);
         }
+        
+        // download stack
+        this._stackBinaryDownloader = new StackBinaryDownloader(this);
+        await this._stackBinaryDownloader.download();
     }
     
     
-    protected _getFallbackConfig (options : ProjectConfigOptions) : ProjectConfig
+    protected async _getFallbackConfig (options : ProjectConfigOptions) : Promise<ProjectConfig>
     {
         const config : ProjectConfig = <any>replaceRecursive<ProjectConfigOptions>({
             directories: {
                 artifacts: 'artifacts',
                 contracts: 'contracts',
                 logs: 'logs',
+                stack: 'stack',
                 tests: 'tests',
                 typings: 'typings'
             },
             stack: {
+                version: 'latest',
+                downloadPath: '{{directories.stack}}/{{stack.version}}/',
                 node: {
                     port: 9945,
-                    binary: '#DEVPHASE#/phala-dev-stack/bin/node',
-                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/node',
+                    binary: '{{directories.stack}}/{{stack.version}}/phala-node',
+                    workingDir: '{{directories.stack}}/.data/node',
                     envs: {},
                     args: {
                         '--dev': true,
@@ -98,8 +108,8 @@ export class RuntimeContext
                 },
                 pruntime: {
                     port: 8001,
-                    binary: '#DEVPHASE#/phala-dev-stack/bin/pruntime',
-                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/pruntime',
+                    binary: '{{directories.stack}}/{{stack.version}}/pruntime',
+                    workingDir: '{{directories.stack}}/.data/pruntime',
                     envs: {},
                     args: {
                         '--allow-cors': true,
@@ -110,8 +120,8 @@ export class RuntimeContext
                 },
                 pherry: {
                     gkMnemonic: '//Alice',
-                    binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
-                    workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
+                    binary: '{{directories.stack}}/{{stack.version}}/pherry',
+                    workingDir: '{{directories.stack}}/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,
@@ -144,6 +154,9 @@ export class RuntimeContext
                 stackLogOutput: false,
             }
         }, options);
+        
+        // replace stack version
+        config.stack.version = await StackBinaryDownloader.uniformStackVersion(config.stack.version);
         
         // process placeholders
         replacePlaceholders(config, config);

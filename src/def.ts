@@ -97,10 +97,13 @@ export type ProjectConfig = {
         artifacts : string,
         contracts : string,
         logs: string,
+        stack : string,
         tests : string,
         typings : string,
     },
     stack : {
+        version: string,
+        downloadPath: string,
         node : NodeComponentOptions,
         pruntime : PruntimeComponentOptions,
         pherry : PherryComponentOptions,

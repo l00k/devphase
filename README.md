@@ -54,6 +54,7 @@ const config : ProjectConfigOptions = {
         artifacts: 'artifacts',
         contracts: 'contracts',
         logs: 'logs',
+        stack: 'stack',
         tests: 'tests',
         typings: 'typings'
     },
@@ -74,10 +75,12 @@ const config : ProjectConfigOptions = {
      * }
      */
     stack: {
+        version: 'latest',
+        downloadPath: '{{directories.stack}}/{{stack.version}}/',
         node: {
             port: 9944, // ws port
-            binary: '#DEVPHASE#/phala-dev-stack/bin/node',
-            workingDir: '#DEVPHASE#/phala-dev-stack/.data/node',
+            binary: '{{directories.stack}}/{{stack.version}}/phala-node',
+            workingDir: '{{directories.stack}}/.data/node',
             envs: {},
             args: {
                 '--dev': true,
@@ -89,8 +92,8 @@ const config : ProjectConfigOptions = {
         },
         pruntime: {
             port: 8000, // server port
-            binary: '#DEVPHASE#/phala-dev-stack/bin/pruntime',
-            workingDir: '#DEVPHASE#/phala-dev-stack/.data/pruntime',
+            binary: '{{directories.stack}}/{{stack.version}}/pruntime',
+            workingDir: '{{directories.stack}}/.data/pruntime',
             envs: {},
             args: {
                 '--allow-cors': true,
@@ -101,8 +104,8 @@ const config : ProjectConfigOptions = {
         },
         pherry: {
             gkMnemonic: '//Alice', // gate keeper mnemonic
-            binary: '#DEVPHASE#/phala-dev-stack/bin/pherry',
-            workingDir: '#DEVPHASE#/phala-dev-stack/.data/pherry',
+            binary: '{{directories.stack}}/{{stack.version}}/pherry',
+            workingDir: '{{directories.stack}}/.data/pherry',
             envs: {},
             args: {
                 '--no-wait': true,
