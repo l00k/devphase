@@ -21,10 +21,18 @@ export class StackBinaryDownloader
 {
     
     protected static readonly RELEASES_URL = 'https://api.github.com/repos/Phala-Network/phala-blockchain/releases';
+    protected static readonly EXECUTABLES = [
+        'phala-node',
+        'pruntime',
+        'pherry',
+    ];
+    
     
     protected _logger : Logger = new Logger('StackBinaryDownloader');
     
     protected _stacksPath : string;
+    
+    
     
     
     public constructor (
@@ -106,11 +114,20 @@ export class StackBinaryDownloader
         );
         
         for (const asset of release.assets) {
-            this._logger.log(chalk.blueBright(asset.name));
+            const isBinary = StackBinaryDownloader.EXECUTABLES.includes(asset.name);
             
             const filePath = path.join(
                 releaseStackPath,
                 asset.name
+            );
+            if (fs.existsSync(filePath)) {
+                continue;
+            }
+            
+            this._logger.log(
+                isBinary
+                    ? chalk.greenBright(asset.name)
+                    : chalk.blueBright(asset.name)
             );
             
             const { status, data } = await axios.get(
@@ -131,6 +148,11 @@ export class StackBinaryDownloader
             }
             
             fs.writeFileSync(filePath, data, { encoding: 'binary' });
+            
+            // make binary executable
+            if (isBinary) {
+                fs.chmodSync(filePath, 0o755);
+            }
         }
     }
     

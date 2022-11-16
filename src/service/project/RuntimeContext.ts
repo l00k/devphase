@@ -131,7 +131,7 @@ export class RuntimeContext
                         '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
                         '--dev-wait-block-ms': 1000,
                     },
-                    timeout: 2000,
+                    timeout: 5000,
                 }
             },
             devPhaseOptions: {
