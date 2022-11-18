@@ -1,3 +1,4 @@
+import { replaceRecursive } from '@/utils/replaceRecursive';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { DevPhase, Logger, RuntimeContext, SpawnMode, StackManager } from 'devphase';
@@ -15,6 +16,7 @@ before(async function() {
     
     const {
         spawnStack,
+        blockTime,
         envSetup: { setup }
     } = this.runtimeContext.config.testing;
     
@@ -28,8 +30,12 @@ before(async function() {
     }
     
     logger.log('Init API');
+    const devPhaseOptions = replaceRecursive({
+        blockTime,
+    }, this.runtimeContext.config.devPhaseOptions)
+    
     this.devPhase = await DevPhase.create(
-        this.runtimeContext.config.devPhaseOptions,
+        devPhaseOptions,
         this.runtimeContext
     );
     this.api = this.devPhase.api;

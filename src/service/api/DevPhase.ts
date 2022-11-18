@@ -133,7 +133,9 @@ export class DevPhase
             this.runtimeContext.config.stack.setupOptions
         );
         
-        
+        Object.assign(this, {
+            mainClusterId: result.clusterId
+        });
     }
     
     /**

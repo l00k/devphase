@@ -5,7 +5,6 @@ import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import findUp from 'find-up';
 import path from 'path';
-import { log } from 'util';
 
 
 
@@ -125,10 +124,15 @@ export class RuntimeContext
             },
             stack: {
                 version: 'nightly-2022-11-17',
+                setupOptions: {
+                    workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+                    clusterId: undefined,
+                    blockTime: undefined,
+                },
                 node: {
                     port: 9944,
-                    binary: '{{directories.stack}}/{{stack.version}}/phala-node',
-                    workingDir: '{{directories.stack}}/.data/node',
+                    binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
+                    workingDir: '{{directories.stacks}}/.data/node',
                     envs: {},
                     args: {
                         '--dev': true,
@@ -141,8 +145,8 @@ export class RuntimeContext
                 },
                 pruntime: {
                     port: 8000,
-                    binary: '{{directories.stack}}/{{stack.version}}/pruntime',
-                    workingDir: '{{directories.stack}}/.data/pruntime',
+                    binary: '{{directories.stacks}}/{{stack.version}}/pruntime',
+                    workingDir: '{{directories.stacks}}/.data/pruntime',
                     envs: {},
                     args: {
                         '--allow-cors': true,
@@ -153,8 +157,8 @@ export class RuntimeContext
                 },
                 pherry: {
                     gkMnemonic: '//Alice',
-                    binary: '{{directories.stack}}/{{stack.version}}/pherry',
-                    workingDir: '{{directories.stack}}/.data/pherry',
+                    binary: '{{directories.stacks}}/{{stack.version}}/pherry',
+                    workingDir: '{{directories.stacks}}/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,
@@ -167,10 +171,6 @@ export class RuntimeContext
                     },
                     timeout: 5000,
                 }
-            },
-            devPhaseOptions: {
-                nodeUrl: 'ws://localhost:{{stack.node.port}}',
-                workerUrl: 'http://localhost:{{stack.pruntime.port}}',
             },
             testing: {
                 mocha: {}, // custom mocha configuration
@@ -187,7 +187,11 @@ export class RuntimeContext
                         timeout: 10 * 1000,
                     }
                 },
-            }
+            },
+            devPhaseOptions: {
+                nodeUrl: 'ws://localhost:{{stack.node.port}}',
+                workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            },
         }, options);
         
         // replace stack version

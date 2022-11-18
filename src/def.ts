@@ -52,6 +52,40 @@ export interface PherryComponentOptions
     gkMnemonic : string,
 }
 
+
+export type Accounts = {
+    alice? : KeyringPair,
+    bob? : KeyringPair,
+    charlie? : KeyringPair,
+    dave? : KeyringPair,
+    eve? : KeyringPair,
+    ferdie? : KeyringPair,
+    [name : string] : KeyringPair,
+}
+export type AccountKey = keyof Accounts | string;
+
+
+export type StackSetupOptions = {
+    workerUrl? : string,
+    clusterId? : string,
+    blockTime? : number,
+};
+
+export type StackSetupResult = {
+    clusterId : string,
+};
+
+
+export type DevPhaseOptions = StackSetupOptions & {
+    nodeUrl? : string,
+    nodeApiOptions? : ApiOptions,
+    accountsMnemonic? : string,
+    accountsPaths? : Record<string, string>,
+    sudoAccount? : string,
+    ss58Prefix? : number,
+}
+
+
 export interface TestingOptions
 {
     mocha : MochaOptions,
@@ -71,40 +105,6 @@ export interface TestingOptions
 }
 
 
-export type Accounts = {
-    alice? : KeyringPair,
-    bob? : KeyringPair,
-    charlie? : KeyringPair,
-    dave? : KeyringPair,
-    eve? : KeyringPair,
-    ferdie? : KeyringPair,
-    [name : string] : KeyringPair,
-}
-export type AccountKey = keyof Accounts | string;
-
-
-export type DevPhaseOptions = {
-    nodeUrl? : string,
-    nodeApiOptions? : ApiOptions,
-    workerUrl? : string,
-    accountsMnemonic? : string,
-    accountsPaths? : Record<string, string>,
-    sudoAccount? : string,
-    ss58Prefix? : number,
-    clusterId? : string,
-}
-
-
-export type StackSetupOptions = {
-    workerUrl? : string,
-    clusterId? : string,
-};
-
-export type StackSetupResult = {
-    clusterId: string,
-};
-
-
 export type ProjectConfig = {
     directories : {
         artifacts : string,
@@ -116,13 +116,13 @@ export type ProjectConfig = {
     },
     stack : {
         version : string,
-        setupOptions: StackSetupOptions,
+        setupOptions : StackSetupOptions,
         node : NodeComponentOptions,
         pruntime : PruntimeComponentOptions,
         pherry : PherryComponentOptions,
     },
-    devPhaseOptions : DevPhaseOptions,
     testing : TestingOptions,
+    devPhaseOptions : DevPhaseOptions,
 }
 export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
 

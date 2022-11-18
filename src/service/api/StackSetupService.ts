@@ -30,10 +30,10 @@ export class StackSetupService
     protected _context : RuntimeContext;
     protected _api : ApiPromise;
     
-    public readonly accounts : Accounts = {};
-    public readonly sudoAccount : KeyringPair;
-    
-    public readonly mainClusterId : string;
+    protected _accounts : Accounts = {};
+    protected _sudoAccount : KeyringPair;
+    protected _mainClusterId : string;
+    protected _blockTime : number;
     
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
@@ -44,12 +44,16 @@ export class StackSetupService
     )
     {
         this._context = this._devPhase.runtimeContext;
+        
+        this._accounts = this._devPhase.accounts;
+        this._sudoAccount = this._devPhase.sudoAccount;
     }
     
     
     public async setupStack (options : StackSetupOptions) : Promise<StackSetupResult>
     {
-        this._api = await this._devPhase.createApiPromise();
+        this._api = this._devPhase.api;
+        this._blockTime = options.blockTime || 12_000;
         
         const setupStackVersion = StackSetupService.MAP_STACK_TO_SETUP[this._context.config.stack.version] ?? 'default';
         const setupStackMethod = 'setupStack_' + setupStackVersion;
@@ -61,7 +65,7 @@ export class StackSetupService
             );
         }
         
-        return this[setupStackMethod]();
+        return this[setupStackMethod](options);
     }
     
     /**
@@ -74,6 +78,9 @@ export class StackSetupService
         
         // wait for gatekeeper
         await this.prepareGatekeeper();
+        
+        // prepare contracts system
+        await this.preparePhatContractsSystem();
         
         // create cluster if needed
         if (options.clusterId === undefined) {
@@ -96,7 +103,7 @@ export class StackSetupService
         ;
         
         // wait for cluster
-        await this.waitForClusterReady();
+        await this.waitForClusterReady(options.clusterId);
         
         return {
             clusterId
@@ -131,7 +138,7 @@ export class StackSetupService
                     1663941402827
                 );
             },
-            20 * 1000,
+            3 * this._blockTime,
             { message: 'pRuntime initialization' }
         );
         
@@ -152,7 +159,7 @@ export class StackSetupService
             
             const result = await TxHandler.handle(
                 tx,
-                this.sudoAccount,
+                this._sudoAccount,
                 'sudo(phalaRegistry.forceRegisterWorker)'
             );
             
@@ -163,7 +170,7 @@ export class StackSetupService
                             .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
                     ).toJSON();
                 },
-                20 * 1000,
+                3 * this._blockTime,
                 { message: 'Worker registration' }
             );
         }
@@ -187,7 +194,7 @@ export class StackSetupService
             
             const result = await TxHandler.handle(
                 tx,
-                this.sudoAccount,
+                this._sudoAccount,
                 'sudo(phalaRegistry.registerGatekeeper)'
             );
         }
@@ -201,7 +208,7 @@ export class StackSetupService
                             .phalaRegistry.gatekeeperMasterPubkey()
                     ).isEmpty;
                 },
-                20 * 1000,
+                3 * this._blockTime,
                 { message: 'GK master key generation' }
             );
         }
@@ -230,8 +237,40 @@ export class StackSetupService
             'system.contract'
         );
         if (!fs.existsSync(systemContractPath)) {
-        
+            throw new Exception(
+                'Phat contracts system not found in stacks',
+                1668748436052
+            );
         }
+        
+        const systemContract = JSON.parse(
+            fs.readFileSync(systemContractPath, { encoding: 'utf-8' })
+        );
+        
+        const systemCode = systemContract.source.wasm;
+        
+        const pinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
+        const isPinkSystemCodeReady = pinkSystemCode[1].toString() === systemCode;
+        if (isPinkSystemCodeReady) {
+            return;
+        }
+        
+        this._logger.log('Preparing Phat Contracts system');
+        
+        const tx = this._api.tx.sudo.sudo(
+            this._api.tx.phalaFatContracts.setPinkSystemCode(systemCode)
+        );
+        
+        const result = await TxHandler.handle(
+            tx,
+            this._sudoAccount,
+            'sudo(phalaFatContracts.setPinkSystemCode)'
+        );
+        
+        await this._waitFor(async() => {
+            const code = await this._api.query.phalaFatContracts.pinkSystemCode();
+            return code[1].toString() === systemCode;
+        }, 3 * this._blockTime, { message: 'PinkSystemCode setup' });
     }
     
     /**
@@ -244,29 +283,22 @@ export class StackSetupService
         // create cluster
         const tx = this._api.tx.sudo.sudo(
             this._api.tx.phalaFatContracts.addCluster(
-                this.accounts.alice.address,            // owner
+                this._accounts.alice.address,            // owner
                 { Public: null },                       // access rights
                 [ this._workerInfo.publicKey ],         // workers keys
                 1e12,                                   // deposit
                 1,                                      // gas price
                 1,                                      // gas per item
                 1,                                      // gas per byte
-                this.accounts.alice.address             // treasury account
+                this._accounts.alice.address             // treasury account
             )
         );
         
         const result = await TxHandler.handle(
             tx,
-            this.sudoAccount,
+            this._sudoAccount,
             'sudo(phalaFatContracts.addCluster)'
         );
-        
-        await this._waitFor(async() => {
-            const clusters = await this._api.query.phalaFatContracts.clusters.entries();
-            console.dir(clusters, { depth: 10 });
-        }, 5000);
-        
-        console.dir(result.toHuman(true), { depth: 10 });
         
         const clusterCreatedEvent = result.events.find(({ event }) => {
             return event.section === 'phalaFatContracts'
@@ -290,20 +322,20 @@ export class StackSetupService
     /**
      * Wait for cluster to be ready
      */
-    public async waitForClusterReady () : Promise<boolean>
+    public async waitForClusterReady (clusterId : string) : Promise<boolean>
     {
         return this._waitFor(
             async() => {
                 // cluster exists
                 const cluster = await this._api.query
-                    .phalaFatContracts.clusters(this.mainClusterId);
+                    .phalaFatContracts.clusters(clusterId);
                 if (cluster.isEmpty) {
                     return false;
                 }
                 
                 // cluster key set
                 const clusterKey = await this._api.query
-                    .phalaRegistry.clusterKeys(this.mainClusterId);
+                    .phalaRegistry.clusterKeys(clusterId);
                 if (clusterKey.isEmpty) {
                     return false;
                 }

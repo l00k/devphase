@@ -17,17 +17,21 @@ async function command (runtimeContext : RuntimeContext)
         runtimeContext.config.devPhaseOptions,
         runtimeContext
     );
-    const stackSetupService = new StackSetupService(devPhase);
     
-    return stackSetupService.setupStack(runtimeContext.config.stack.setupOptions);
+    const stackSetupService = new StackSetupService(devPhase);
+    await stackSetupService.setupStack(runtimeContext.config.stack.setupOptions);
+    
+    await devPhase.cleanup();
+    
+    logger.info('Stack is ready');
 }
 
-export function stackCommand (
+export function stackSetupCommand (
     program : Command,
     context : RuntimeContext
 )
 {
-    program.command('stack:stack')
+    program.command('stack:setup')
         .description('Setup Phala stack')
         .action(async() => command(context));
 }
