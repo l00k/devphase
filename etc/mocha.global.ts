@@ -1,4 +1,3 @@
-import { replaceRecursive } from '@/utils/replaceRecursive';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { DevPhase, Logger, RuntimeContext, SpawnMode, StackManager } from 'devphase';
@@ -23,16 +22,16 @@ before(async function() {
     this.timeout(setup.timeout);
     
     logger.log('Global setup start');
-    
     if (spawnStack) {
         logger.log('Preparing dev stack');
         await this.stackManager.startStack(SpawnMode.Testing);
     }
     
     logger.log('Init API');
-    const devPhaseOptions = replaceRecursive({
+    const devPhaseOptions = {
         blockTime,
-    }, this.runtimeContext.config.devPhaseOptions)
+        ...this.runtimeContext.config.devPhaseOptions
+    };
     
     this.devPhase = await DevPhase.create(
         devPhaseOptions,

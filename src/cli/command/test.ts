@@ -23,7 +23,12 @@ async function command (runtimeContext : RuntimeContext)
     const mocha = new Mocha(mochaConfig);
     
     // add internals
-    mocha.addFile(path.join(runtimeContext.libPath, '/etc/mocha.global.ts'));
+    mocha.addFile(
+        path.join(
+            runtimeContext.paths.devphase,
+            '/etc/mocha.global.ts'
+        )
+    );
     
     // grep test files
     const patterns = [
@@ -31,7 +36,7 @@ async function command (runtimeContext : RuntimeContext)
     ];
     
     for (const pattern of patterns) {
-        const files = glob.sync(pattern, { cwd: runtimeContext.projectDir });
+        const files = glob.sync(pattern, { cwd: runtimeContext.paths.project });
         files.forEach(file => mocha.addFile(file));
     }
     

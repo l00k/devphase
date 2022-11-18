@@ -21,6 +21,9 @@ export type DeployOptions = {
 export type InstantiateOptions = {
     salt? : number,
     asAccount? : AccountKey,
+    transfer? : number,
+    gasLimit? : number,
+    storageDepositLimit? : number,
 }
 
 
@@ -107,6 +110,9 @@ export class ContractFactory
         options = {
             salt: 1000000000 + Math.round(Math.random() * 8999999999),
             asAccount: 'alice',
+            transfer: 0,
+            gasLimit: 10e12,
+            storageDepositLimit: null,
             ...options
         };
         
@@ -119,6 +125,9 @@ export class ContractFactory
                 callData,
                 '0x' + options.salt.toString(16),
                 this.clusterId,
+                options.transfer,
+                options.gasLimit,
+                options.storageDepositLimit
             ),
             this._devPhase.accounts[options.asAccount],
             'phalaFatContracts.instantiateContract'
@@ -159,7 +168,7 @@ export class ContractFactory
                 async() => {
                     return instantiated && !!publicKey;
                 },
-                20 * 1000,
+                20_000,
                 { message: 'Contract instantiation' }
             );
         }

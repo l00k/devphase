@@ -105,6 +105,7 @@ export class DevPhase
             runtimeContext,
             api,
             sudoAccount: instance.accounts[options.sudoAccount],
+            workerUrl: options.workerUrl,
         });
         
         return instance;
