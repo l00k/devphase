@@ -28,22 +28,13 @@ export class StackBinaryDownloader
     ];
     
     
-    protected _logger : Logger = new Logger('StackBinaryDownloader');
-    
-    protected _stacksPath : string;
-    
-    
+    protected _logger : Logger = new Logger(StackBinaryDownloader.name);
     
     
     public constructor (
         protected _context : RuntimeContext
     )
-    {
-        this._stacksPath = path.resolve(
-            this._context.projectDir,
-            this._context.config.directories.stack,
-        );
-    }
+    {}
     
     public static async uniformStackVersion (version : string) : Promise<string>
     {
@@ -89,17 +80,14 @@ export class StackBinaryDownloader
     
     public async download () : Promise<void>
     {
-        const releaseStackPath = path.join(
-            this._stacksPath,
-            this._context.config.stack.version
-        );
+        const releaseStackPath = this._context.paths.currentStack;
         if (!fs.existsSync(releaseStackPath)) {
             this._logger.log('Creating stack directory');
             
             fs.mkdirSync(releaseStackPath, { recursive: true });
         }
         
-        const needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
+        let needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
         if (!needsDownload) {
             return;
         }

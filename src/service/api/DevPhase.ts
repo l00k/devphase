@@ -1,21 +1,18 @@
 import type { Accounts, ContractType, DevPhaseOptions } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
-import { TxHandler } from '@/service/api/TxHandler';
+import { StackSetupService } from '@/service/api/StackSetupService';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import { replaceRecursive } from '@/utils/replaceRecursive';
-import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
-import axios, { AxiosInstance } from 'axios';
-import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 
@@ -36,7 +33,6 @@ export class DevPhase
     public readonly api : ApiPromise;
     public readonly options : DevPhaseOptions;
     public readonly workerUrl : string;
-    public readonly workerApi : AxiosInstance;
     
     public readonly accounts : Accounts = {};
     public readonly sudoAccount : KeyringPair;
@@ -45,18 +41,18 @@ export class DevPhase
     
     public readonly runtimeContext : RuntimeContext;
     
-    protected _logger : Logger = new Logger('devPhase');
+    protected _logger : Logger = new Logger(DevPhase.name);
+    
     protected _apiProvider : WsProvider;
     protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
     
-    protected _artifactsPath : string;
-    
     
     private constructor () {}
     
-    public static async setup (
+    
+    public static async create (
         options : DevPhaseOptions = {},
         runtimeContext? : RuntimeContext
     ) : Promise<DevPhase>
@@ -111,13 +107,6 @@ export class DevPhase
             sudoAccount: instance.accounts[options.sudoAccount],
         });
         
-        if (runtimeContext) {
-            instance._artifactsPath = path.resolve(
-                runtimeContext.projectDir,
-                runtimeContext.config.directories.artifacts
-            );
-        }
-        
         return instance;
     }
     
@@ -129,222 +118,22 @@ export class DevPhase
         });
     }
     
-    /**
-     * Default environment setup
-     */
-    public async defaultEnvSetup ()
+    public async stackSetup () : Promise<void>
     {
-        // check worker
-        await this.prepareWorker(this.options.workerUrl);
-        
-        // wait for gatekeeper
-        await this.prepareGatekeeper();
-        
-        // create cluster if needed
-        if (this.options.clusterId === undefined) {
-            const clustersNum : number = <any>(
-                await this.api.query
-                    .phalaFatContracts.clusterCounter()
-            ).toJSON();
-            
-            if (clustersNum == 0) {
-                this.options.clusterId = null;
-            }
-            else {
-                this.options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
-            }
-        }
-        
-        const mainClusterId = this.options.clusterId === null
-            ? await this.createCluster()
-            : this.options.clusterId
-        ;
-        
-        Object.assign(this, { mainClusterId });
-        
-        // wait for cluster
-        await this.waitForClusterReady();
-    }
-    
-    /**
-     * Prepare DEV worker
-     */
-    public async prepareWorker (workerUrl : string)
-    {
-        Object.assign(this, {
-            workerUrl,
-            workerApi: axios.create({ baseURL: workerUrl })
-        });
-        
-        this._workerInfo = await this._waitFor(
-            async() => {
-                const { status, data } = await this.workerApi.get('/get_info', { validateStatus: () => true });
-                if (status === 200) {
-                    const payload : any = JSON.parse(data.payload);
-                    if (!payload.initialized) {
-                        return false;
-                    }
-                    
-                    return {
-                        publicKey: '0x' + payload.public_key,
-                        ecdhPublicKey: '0x' + payload.ecdh_public_key,
-                    };
-                }
-                
-                throw new Exception(
-                    'Unable to get worker info',
-                    1663941402827
-                );
-            },
-            20 * 1000,
-            { message: 'pRuntime initialization' }
-        );
-        
-        const workerInfo : typeof KhalaTypes.WorkerInfo = <any>(
-            await this.api.query
-                .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
-        ).toJSON();
-        
-        if (!workerInfo) {
-            // register worker
-            const tx = this.api.tx.sudo.sudo(
-                this.api.tx.phalaRegistry.forceRegisterWorker(
-                    this._workerInfo.publicKey,
-                    this._workerInfo.ecdhPublicKey,
-                    null
-                )
-            );
-            
-            const result = await TxHandler.handle(
-                tx,
-                this.sudoAccount,
-                'sudo(phalaRegistry.forceRegisterWorker)'
-            );
-            
-            await this._waitFor(
-                async() => {
-                    return (
-                        await this.api.query
-                            .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
-                    ).toJSON();
-                },
-                20 * 1000,
-                { message: 'Worker registration' }
-            );
-        }
-    }
-    
-    public async prepareGatekeeper ()
-    {
-        // check gatekeeper
-        const gatekeepers : string[] = <any>(
-            await this.api.query
-                .phalaRegistry.gatekeeper()
-        ).toJSON();
-        
-        if (!gatekeepers.includes(this._workerInfo.publicKey)) {
-            // register gatekeeper
-            const tx = this.api.tx.sudo.sudo(
-                this.api.tx.phalaRegistry.registerGatekeeper(
-                    this._workerInfo.publicKey
-                )
-            );
-            
-            const result = await TxHandler.handle(
-                tx,
-                this.sudoAccount,
-                'sudo(phalaRegistry.registerGatekeeper)'
-            );
-        }
-        
-        // wait for gate keeper master key
-        try {
-            await this._waitFor(
-                async() => {
-                    return !(
-                        await this.api.query
-                            .phalaRegistry.gatekeeperMasterPubkey()
-                    ).isEmpty;
-                },
-                20 * 1000,
-                { message: 'GK master key generation' }
-            );
-        }
-        catch (e) {
+        if (!this.runtimeContext) {
             throw new Exception(
-                'Could not fetch GK master key',
-                1663941402827
-            );
-        }
-    }
-    
-    /**
-     * Creates new cluster
-     */
-    public async createCluster () : Promise<string>
-    {
-        this._logger.log('Creating cluster');
-        
-        // create cluster
-        const tx = this.api.tx.sudo.sudo(
-            this.api.tx.phalaFatContracts.addCluster(
-                this.accounts.alice.address,
-                { Public: null },
-                [ this._workerInfo.publicKey ]
-            )
-        );
-        
-        const result = await TxHandler.handle(
-            tx,
-            this.sudoAccount,
-            'sudo(phalaFatContracts.addCluster)'
-        );
-        
-        const clusterCreatedEvent = result.events.find(({ event }) => {
-            return event.section === 'phalaFatContracts'
-                && event.method === 'ClusterCreated';
-        });
-        if (!clusterCreatedEvent) {
-            throw new Exception(
-                'Error while creating cluster',
-                1663941940784
+                'Stack setup is not possible out of runtime context',
+                1668741635272
             );
         }
         
-        const clusterId = clusterCreatedEvent.event.data[0].toString();
+        const stackSetupService = new StackSetupService(this);
         
-        this._logger.log(chalk.green('Cluster created'));
-        this._logger.log(clusterId);
-        
-        return clusterId;
-    }
-    
-    /**
-     * Wait for cluster to be ready
-     */
-    public async waitForClusterReady () : Promise<boolean>
-    {
-        return this._waitFor(
-            async() => {
-                // cluster exists
-                const cluster = await this.api.query
-                    .phalaFatContracts.clusters(this.mainClusterId);
-                if (cluster.isEmpty) {
-                    return false;
-                }
-                
-                // cluster key set
-                const clusterKey = await this.api.query
-                    .phalaRegistry.clusterKeys(this.mainClusterId);
-                if (clusterKey.isEmpty) {
-                    return false;
-                }
-                
-                return true;
-            },
-            20 * 1000,
-            { message: 'Cluster ready' }
+        const result = await stackSetupService.setupStack(
+            this.runtimeContext.config.stack.setupOptions
         );
+        
+        
     }
     
     /**
@@ -381,7 +170,7 @@ export class DevPhase
             }
             
             artifactPath = path.join(
-                this._artifactsPath,
+                this.runtimeContext.paths.artifacts,
                 artifactPathOrName,
                 `${artifactPathOrName}.contract`
             );
@@ -416,33 +205,6 @@ export class DevPhase
                 e
             );
         }
-    }
-    
-    
-    protected async _waitFor (
-        callback : () => Promise<any>,
-        timeLimit : number,
-        options : WaitForOptions = {}
-    )
-    {
-        const firstTry = await callback();
-        if (firstTry) {
-            return firstTry;
-        }
-        
-        if (options.message) {
-            this._logger.debug('Waiting for', chalk.cyan(options.message));
-        }
-        
-        const result = waitFor(
-            callback,
-            timeLimit,
-            options
-        );
-        
-        this._logger.debug(chalk.green('Ready'));
-        
-        return result;
     }
     
 }

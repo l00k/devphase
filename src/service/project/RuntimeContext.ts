@@ -1,10 +1,12 @@
-import { ProjectConfig, ProjectConfigOptions } from '@/def';
+import { ProjectConfig, ProjectConfigOptions, RuntimePaths } from '@/def';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import findUp from 'find-up';
 import path from 'path';
+import { log } from 'util';
+
 
 
 export class RuntimeContext
@@ -14,9 +16,21 @@ export class RuntimeContext
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
     
-    public libPath : string;
-    public projectDir : string;
     public config : ProjectConfig;
+    public paths : RuntimePaths = {
+        devphase: null,
+        project: null,
+        
+        artifacts: null,
+        contracts: null,
+        logs: null,
+        currentLog: null,
+        scripts: null,
+        stacks: null,
+        currentStack: null,
+        tests: null,
+        typings: null,
+    };
     
     
     public static async getSingleton () : Promise<RuntimeContext>
@@ -62,16 +76,35 @@ export class RuntimeContext
             'devphase.config.js',
         ]);
         
-        this.libPath = __dirname.endsWith('/cli')
+        this.paths.devphase = __dirname.endsWith('/cli')
             ? path.join(__dirname, '../../')
             : path.join(__dirname, '../');
         
         if (configFilePath) {
-            this.projectDir = path.dirname(configFilePath);
+            this.paths.project = path.dirname(configFilePath);
             
             const userConfig = require(configFilePath).default;
             this.config = await this._getFallbackConfig(userConfig);
         }
+        
+        // setup directories
+        for (const [ name, directory ] of Object.entries(this.config.directories)) {
+            this.paths[name] = path.resolve(
+                this.paths.project,
+                directory
+            );
+        }
+        
+        const logStamp = (new Date()).toISOString();
+        this.paths.currentLog = path.join(
+            this.paths.logs,
+            logStamp
+        );
+        
+        this.paths.currentStack = path.join(
+            this.paths.stacks,
+            this.config.stack.version
+        );
         
         // download stack
         this._stackBinaryDownloader = new StackBinaryDownloader(this);
@@ -86,15 +119,14 @@ export class RuntimeContext
                 artifacts: 'artifacts',
                 contracts: 'contracts',
                 logs: 'logs',
-                stack: 'stack',
+                stacks: 'stacks',
                 tests: 'tests',
                 typings: 'typings'
             },
             stack: {
-                version: 'latest',
-                downloadPath: '{{directories.stack}}/{{stack.version}}/',
+                version: 'nightly-2022-11-17',
                 node: {
-                    port: 9945,
+                    port: 9944,
                     binary: '{{directories.stack}}/{{stack.version}}/phala-node',
                     workingDir: '{{directories.stack}}/.data/node',
                     envs: {},
@@ -102,12 +134,13 @@ export class RuntimeContext
                         '--dev': true,
                         '--rpc-methods': 'Unsafe',
                         '--block-millisecs': 6000,
-                        '--ws-port': '{{stack.node.port}}'
+                        '--ws-port': '{{stack.node.port}}',
+                        '--base-path': '.',
                     },
                     timeout: 10000,
                 },
                 pruntime: {
-                    port: 8001,
+                    port: 8000,
                     binary: '{{directories.stack}}/{{stack.version}}/pruntime',
                     workingDir: '{{directories.stack}}/.data/pruntime',
                     envs: {},
@@ -130,6 +163,7 @@ export class RuntimeContext
                         '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                         '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
                         '--dev-wait-block-ms': 1000,
+                        '--attestation-provider': 'none',
                     },
                     timeout: 5000,
                 }
@@ -140,6 +174,8 @@ export class RuntimeContext
             },
             testing: {
                 mocha: {}, // custom mocha configuration
+                spawnStack: true, // spawn runtime stack
+                stackLogOutput: false,
                 blockTime: 100, // overrides block time specified in node (and pherry) component
                 envSetup: {
                     setup: {
@@ -151,7 +187,6 @@ export class RuntimeContext
                         timeout: 10 * 1000,
                     }
                 },
-                stackLogOutput: false,
             }
         }, options);
         

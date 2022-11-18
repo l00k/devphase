@@ -55,6 +55,7 @@ export interface PherryComponentOptions
 export interface TestingOptions
 {
     mocha : MochaOptions,
+    spawnStack : boolean,
     envSetup : {
         setup : {
             custom : (devPhase : any) => Promise<void>,
@@ -69,6 +70,7 @@ export interface TestingOptions
     stackLogOutput : boolean,
 }
 
+
 export type Accounts = {
     alice? : KeyringPair,
     bob? : KeyringPair,
@@ -80,6 +82,7 @@ export type Accounts = {
 }
 export type AccountKey = keyof Accounts | string;
 
+
 export type DevPhaseOptions = {
     nodeUrl? : string,
     nodeApiOptions? : ApiOptions,
@@ -89,21 +92,31 @@ export type DevPhaseOptions = {
     sudoAccount? : string,
     ss58Prefix? : number,
     clusterId? : string,
-    customEnvSetup? : (devPhase) => Promise<void>,
 }
+
+
+export type StackSetupOptions = {
+    workerUrl? : string,
+    clusterId? : string,
+};
+
+export type StackSetupResult = {
+    clusterId: string,
+};
+
 
 export type ProjectConfig = {
     directories : {
         artifacts : string,
         contracts : string,
-        logs: string,
-        stack : string,
+        logs : string,
+        stacks : string,
         tests : string,
         typings : string,
     },
     stack : {
-        version: string,
-        downloadPath: string,
+        version : string,
+        setupOptions: StackSetupOptions,
         node : NodeComponentOptions,
         pruntime : PruntimeComponentOptions,
         pherry : PherryComponentOptions,
@@ -111,8 +124,23 @@ export type ProjectConfig = {
     devPhaseOptions : DevPhaseOptions,
     testing : TestingOptions,
 }
-
 export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
+
+
+export type RuntimePaths = {
+    devphase : string,
+    project : string,
+    
+    artifacts : string,
+    contracts : string,
+    logs : string,
+    currentLog : string,
+    scripts : string,
+    stacks : string,
+    currentStack : string,
+    tests : string,
+    typings : string,
+}
 
 export enum ContractType
 {

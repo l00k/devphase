@@ -62,7 +62,7 @@ const config : ProjectConfigOptions = {
      * Stack configuration
      * {
      *     [componentName : string]: {
-     *          binary: string, // path to binary; magic phrase "#DEVPHASE#" is replaced with package root dir
+     *          binary: string, // path to binary
      *          workingDir: string, // working directory as above
      *          evns: {
      *              [name: string]: string,
@@ -75,8 +75,7 @@ const config : ProjectConfigOptions = {
      * }
      */
     stack: {
-        version: 'latest',
-        downloadPath: '{{directories.stack}}/{{stack.version}}/',
+        version: 'nightly-2022-11-17', // version which you want to pull from official repository (tag name) or "latest" one
         node: {
             port: 9944, // ws port
             binary: '{{directories.stack}}/{{stack.version}}/phala-node',
@@ -148,6 +147,9 @@ const config : ProjectConfigOptions = {
      */
     testing: {
         mocha: {}, // custom mocha configuration
+        spawnStack: true, // spawn runtime stack? or assume there is running one
+        stackLogOutput: false, // if specifed pipes output of all stack component to file (by default it is ignored)
+        blockTime: 100, // overrides block time specified in node (and pherry) component
         envSetup: { // environment setup
             setup: {
                 custom: undefined, // custom setup procedure callback; (devPhase) => Promise<void>
@@ -158,8 +160,6 @@ const config : ProjectConfigOptions = {
                 timeout: 10 * 1000,
             }
         },
-        blockTime: 100, // overrides block time specified in node (and pherry) component
-        stackLogOutput : false, // if specifed pipes output of all stack component to file (by default it is ignored)
     }
 };
 

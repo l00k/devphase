@@ -11,31 +11,25 @@ export class Compiler
     
     protected _logger = new Logger(Compiler.name);
     
-    protected _artifactsBasePath : string;
-    protected _contractsBasePath : string;
-    
     
     public constructor (
         protected _runtimeContext : RuntimeContext
     )
-    {
-        this._artifactsBasePath = path.resolve(
-            this._runtimeContext.projectDir,
-            this._runtimeContext.config.directories.artifacts
-        );
-        this._contractsBasePath = path.resolve(
-            this._runtimeContext.projectDir,
-            this._runtimeContext.config.directories.contracts
-        );
-    }
+    {}
     
     public async compile (
         contractName : string,
         releaseMode : boolean
     ) : Promise<boolean>
     {
-        const contractPath = path.join(this._contractsBasePath, contractName);
-        const artifactsDirPath = path.join(this._artifactsBasePath, contractName);
+        const contractPath = path.join(
+            this._runtimeContext.paths.contracts,
+            contractName
+        );
+        const artifactsDirPath = path.join(
+            this._runtimeContext.paths.artifacts,
+            contractName
+        );
         
         this._logger.log('Building:', chalk.blueBright(contractName));
         
@@ -119,7 +113,7 @@ export class Compiler
             );
             
             console.log(
-                path.relative(this._runtimeContext.projectDir, artifactFilePath)
+                path.relative(this._runtimeContext.paths.project, artifactFilePath)
             );
         }
         

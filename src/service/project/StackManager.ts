@@ -14,9 +14,7 @@ import path from 'path';
 export class StackManager
 {
     
-    protected _logger : Logger = new Logger('StackManager');
-    
-    protected _logsPath : string;
+    protected _logger : Logger = new Logger(StackManager.name);
     
     protected _processes : Record<ComponentName, ChildProcess>;
     protected _killFlag : boolean = false;
@@ -27,10 +25,7 @@ export class StackManager
         protected _context : RuntimeContext
     )
     {
-        this._logsPath = path.resolve(
-            this._context.projectDir,
-            this._context.config.directories.logs,
-        );
+        this._runLogsPath = this._context.paths.currentLog;
     }
     
     
@@ -45,10 +40,6 @@ export class StackManager
         
         // prepare logs directory if required
         if (this.isLogOutputUsed(spawnMode, this._context)) {
-            this._runLogsPath = path.join(
-                this._logsPath,
-                (new Date()).toISOString()
-            );
             fs.mkdirSync(this._runLogsPath, { recursive: true });
         }
         
@@ -161,9 +152,9 @@ export class StackManager
     ) : Promise<ChildProcess>
     {
         // prepare paths and working directory
-        const binaryPath = this.processPath(options.binary);
+        const binaryPath = this.getComponentPath(options.binary);
         
-        const workingDirPath = this.processPath(options.workingDir);
+        const workingDirPath = this.getComponentPath(options.workingDir);
         if (fs.existsSync(workingDirPath)) {
             fs.rmSync(workingDirPath, { recursive: true, force: true });
         }
@@ -281,11 +272,11 @@ export class StackManager
         return child;
     }
     
-    public processPath (_path : string) : string
+    public getComponentPath (_path : string) : string
     {
         return path.resolve(
-            this._context.projectDir,
-            _path.replace('#DEVPHASE#', this._context.libPath)
+            this._context.paths.project,
+            _path
         );
     }
     

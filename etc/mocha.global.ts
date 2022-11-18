@@ -13,17 +13,22 @@ before(async function() {
     this.runtimeContext = await RuntimeContext.getSingleton();
     this.stackManager = new StackManager(this.runtimeContext);
     
-    const { envSetup: { setup } } = this.runtimeContext.config.testing;
+    const {
+        spawnStack,
+        envSetup: { setup }
+    } = this.runtimeContext.config.testing;
     
     this.timeout(setup.timeout);
     
     logger.log('Global setup start');
     
-    logger.log('Preparing dev stack');
-    await this.stackManager.startStack(SpawnMode.Testing);
+    if (spawnStack) {
+        logger.log('Preparing dev stack');
+        await this.stackManager.startStack(SpawnMode.Testing);
+    }
     
     logger.log('Init API');
-    this.devPhase = await DevPhase.setup(
+    this.devPhase = await DevPhase.create(
         this.runtimeContext.config.devPhaseOptions,
         this.runtimeContext
     );
@@ -35,7 +40,7 @@ before(async function() {
     }
     else {
         // run default
-        await this.devPhase.defaultEnvSetup();
+        await this.devPhase.stackSetup();
     }
     
     logger.log('Global setup done');

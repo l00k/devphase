@@ -31,7 +31,7 @@ export class ContractFactory
     public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
     
-    protected _logger : Logger = new Logger('ContractFactory');
+    protected _logger : Logger = new Logger(ContractFactory.name);
     protected _devPhase : DevPhase;
     protected _eventQueue : EventQueue = new EventQueue();
     
