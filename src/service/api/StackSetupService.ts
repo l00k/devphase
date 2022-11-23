@@ -34,6 +34,7 @@ export class StackSetupService
     protected _sudoAccount : KeyringPair;
     protected _mainClusterId : string;
     protected _blockTime : number;
+    protected _waitTime : number;
     
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
@@ -48,6 +49,7 @@ export class StackSetupService
         this._accounts = this._devPhase.accounts;
         this._sudoAccount = this._devPhase.sudoAccount;
         this._blockTime = this._devPhase.runtimeContext.config.stack.blockTime;
+        this._waitTime = Math.max(20_000, 4 * this._blockTime)
     }
     
     
@@ -138,7 +140,7 @@ export class StackSetupService
                     1663941402827
                 );
             },
-            5 * this._blockTime,
+            this._waitTime,
             { message: 'pRuntime initialization' }
         );
         
@@ -170,7 +172,7 @@ export class StackSetupService
                             .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
                     ).toJSON();
                 },
-                3 * this._blockTime,
+                this._waitTime,
                 { message: 'Worker registration' }
             );
         }
@@ -208,7 +210,7 @@ export class StackSetupService
                             .phalaRegistry.gatekeeperMasterPubkey()
                     ).isEmpty;
                 },
-                10 * this._blockTime,
+                this._waitTime,
                 { message: 'GK master key generation' }
             );
         }
@@ -270,7 +272,7 @@ export class StackSetupService
         await this._waitFor(async() => {
             const code = await this._api.query.phalaFatContracts.pinkSystemCode();
             return code[1].toString() === systemCode;
-        }, 5 * this._blockTime, { message: 'PinkSystemCode setup' });
+        }, this._waitTime, { message: 'PinkSystemCode setup' });
     }
     
     /**
@@ -342,7 +344,7 @@ export class StackSetupService
                 
                 return true;
             },
-            5 * this._blockTime,
+            this._waitTime,
             { message: 'Cluster ready' }
         );
     }

@@ -36,14 +36,15 @@ export class RuntimeContext
     {
         const globalAny = global as any;
         
-        if (!globalAny[RuntimeContext.SINGLETON_KEY]) {
+        const singletonKey = RuntimeContext.SINGLETON_KEY + ' ' + runMode;
+        if (!globalAny[singletonKey]) {
             const instance = new RuntimeContext();
             await instance._init(runMode);
             
-            globalAny[RuntimeContext.SINGLETON_KEY] = instance;
+            globalAny[singletonKey] = instance;
         }
         
-        return globalAny[RuntimeContext.SINGLETON_KEY];
+        return globalAny[singletonKey];
     }
     
     public async isInProjectDirectory () : Promise<boolean>
