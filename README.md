@@ -26,6 +26,11 @@ yarn devphase init
 yarn devphase stack
 ```
 
+- Setup local stack (register gatekeeper, create cluster, deploy system contract etc.)
+```shell
+yarn devphase stack:setup
+```
+
 - Contracts compilation
 ```shell
 yarn devphase compile [contractName] [--watch]
