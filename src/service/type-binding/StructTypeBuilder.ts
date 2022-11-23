@@ -48,9 +48,6 @@ export class StructTypeBuilder
             if (!this._builtTypes[idx]) {
                 this.buildType(Number(idx));
             }
-            
-            console.dir(idx);
-            console.dir(typeDef, { depth: 10 });
         }
         
         return this._builtTypes;

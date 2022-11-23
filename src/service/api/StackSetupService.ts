@@ -47,13 +47,13 @@ export class StackSetupService
         
         this._accounts = this._devPhase.accounts;
         this._sudoAccount = this._devPhase.sudoAccount;
+        this._blockTime = this._devPhase.runtimeContext.config.stack.blockTime;
     }
     
     
     public async setupStack (options : StackSetupOptions) : Promise<StackSetupResult>
     {
         this._api = this._devPhase.api;
-        this._blockTime = options.blockTime || 12_000;
         
         const setupStackVersion = StackSetupService.MAP_STACK_TO_SETUP[this._context.config.stack.version] ?? 'default';
         const setupStackMethod = 'setupStack_' + setupStackVersion;
@@ -138,7 +138,7 @@ export class StackSetupService
                     1663941402827
                 );
             },
-            3 * this._blockTime,
+            5 * this._blockTime,
             { message: 'pRuntime initialization' }
         );
         
@@ -208,7 +208,7 @@ export class StackSetupService
                             .phalaRegistry.gatekeeperMasterPubkey()
                     ).isEmpty;
                 },
-                3 * this._blockTime,
+                10 * this._blockTime,
                 { message: 'GK master key generation' }
             );
         }
@@ -270,7 +270,7 @@ export class StackSetupService
         await this._waitFor(async() => {
             const code = await this._api.query.phalaFatContracts.pinkSystemCode();
             return code[1].toString() === systemCode;
-        }, 3 * this._blockTime, { message: 'PinkSystemCode setup' });
+        }, 5 * this._blockTime, { message: 'PinkSystemCode setup' });
     }
     
     /**
@@ -342,7 +342,7 @@ export class StackSetupService
                 
                 return true;
             },
-            20 * 1000,
+            5 * this._blockTime,
             { message: 'Cluster ready' }
         );
     }

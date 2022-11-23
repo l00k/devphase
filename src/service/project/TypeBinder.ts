@@ -15,30 +15,21 @@ export class TypeBinder
     
     protected _logger = new Logger(TypeBinder.name);
     
-    protected _artifactsBasePath : string;
-    protected _typingsBasePath : string;
-    
     
     public constructor (
         public runtimeContext : RuntimeContext
     )
-    {
-        this._artifactsBasePath = path.resolve(
-            this.runtimeContext.projectDir,
-            this.runtimeContext.config.directories.artifacts
-        );
-        this._typingsBasePath = path.resolve(
-            this.runtimeContext.projectDir,
-            this.runtimeContext.config.directories.typings
-        );
-    }
+    {}
     
     public async createBindings (contractName : string) : Promise<boolean>
     {
         this._logger.log('Generating type bindings for:', chalk.blueBright(contractName));
         
         // load & parse metadata
-        const artifactsPath = path.join(this._artifactsBasePath, contractName);
+        const artifactsPath = path.join(
+            this.runtimeContext.paths.artifacts,
+            contractName
+        );
         
         const metadataFilePath = path.join(artifactsPath, 'metadata.json');
         if (!fs.existsSync(metadataFilePath)) {
@@ -66,13 +57,14 @@ export class TypeBinder
         const pcContractName = upperFirst(camelCase(metadata.contract.name));
         
         // create typings dir
-        if (!fs.existsSync(this._typingsBasePath)) {
-            fs.mkdirSync(this._typingsBasePath, { recursive: true });
+        const typingsBasePath = this.runtimeContext.paths.typings;
+        if (!fs.existsSync(typingsBasePath)) {
+            fs.mkdirSync(typingsBasePath, { recursive: true });
         }
         
         // process
         const filePath = path.join(
-            this._typingsBasePath,
+            typingsBasePath,
             `${pcContractName}.ts`
         );
         

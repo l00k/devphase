@@ -15,17 +15,10 @@ export class MultiContractExecutor
     
     protected _logger = new Logger(MultiContractExecutor.name);
     
-    public contractsBasePath : string;
-    
     public constructor (
         public runtimeContext : RuntimeContext
     )
-    {
-        this.contractsBasePath = path.resolve(
-            this.runtimeContext.projectDir,
-            this.runtimeContext.config.directories.contracts
-        );
-    }
+    {}
     
     
     public async exec (
@@ -60,11 +53,13 @@ export class MultiContractExecutor
         }
         
         if (watch) {
+            const contractsBasePath = this.runtimeContext.paths.contracts;
+        
             const patternsToWatch = matchedContracts.map(contract => {
-                return path.join(this.contractsBasePath, contract);
+                return path.join(contractsBasePath, contract);
             });
             const patternsToIgnore = matchedContracts.map(contract => {
-                return path.join(this.contractsBasePath, contract, 'target');
+                return path.join(contractsBasePath, contract, 'target');
             });
             
             const watcher = chokidar.watch(patternsToWatch, {
@@ -72,7 +67,7 @@ export class MultiContractExecutor
             });
             
             watcher.on('change', (_path, stats) => {
-                const relPath = path.relative(this.contractsBasePath, _path);
+                const relPath = path.relative(contractsBasePath, _path);
                 const contractName = relPath.split('/')[0];
                 
                 this._logger.log('Change detected in', chalk.blueBright(contractName));
@@ -84,7 +79,7 @@ export class MultiContractExecutor
     
     public matchContracts (contractName? : string) : string[]
     {
-        const allContracts = glob.sync('*', { cwd: this.contractsBasePath });
+        const allContracts = glob.sync('*', { cwd: this.runtimeContext.paths.contracts });
         
         if (contractName) {
             return allContracts.filter(contract => contract.toLowerCase() === contractName.toLowerCase());

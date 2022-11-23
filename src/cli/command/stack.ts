@@ -1,4 +1,4 @@
-import { SpawnMode } from '@/def';
+import { RunMode } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { StackManager } from '@/service/project/StackManager';
 import { Logger } from '@/utils/Logger';
@@ -16,7 +16,7 @@ async function command (runtimeContext : RuntimeContext)
     const stackManager = new StackManager(runtimeContext);
     
     try {
-        await stackManager.startStack(SpawnMode.Direct);
+        await stackManager.startStack(RunMode.Simple);
     }
     catch (e) {
         await stackManager.stopStack();

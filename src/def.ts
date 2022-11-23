@@ -19,9 +19,9 @@ export interface FixedArray<L extends number, T>
 
 export type ComponentName = 'node' | 'pruntime' | 'pherry';
 
-export enum SpawnMode
+export enum RunMode
 {
-    Direct = 'Direct',
+    Simple = 'Simple',
     Testing = 'Testing',
 }
 
@@ -68,7 +68,6 @@ export type AccountKey = keyof Accounts | string;
 export type StackSetupOptions = {
     workerUrl? : string,
     clusterId? : string,
-    blockTime? : number,
 };
 
 export type StackSetupResult = {
@@ -115,6 +114,7 @@ export type ProjectConfig = {
         typings : string,
     },
     stack : {
+        blockTime: number,
         version : string,
         setupOptions : StackSetupOptions,
         node : NodeComponentOptions,

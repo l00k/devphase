@@ -49,12 +49,14 @@ Here is default configuration. All values are optional (merged recuresivly)
 import { ProjectConfigOptions } from 'devphase';
 
 const config : ProjectConfigOptions = {
-    // project directories
+    /*
+     * Project directories
+     */
     directories: {
         artifacts: 'artifacts',
         contracts: 'contracts',
         logs: 'logs',
-        stack: 'stack',
+        stacks: 'stacks',
         tests: 'tests',
         typings: 'typings'
     },
@@ -75,7 +77,8 @@ const config : ProjectConfigOptions = {
      * }
      */
     stack: {
-        version: 'nightly-2022-11-17', // version which you want to pull from official repository (tag name) or "latest" one
+        blockTime: 6000, // default block time for direct stack running
+        version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
         node: {
             port: 9944, // ws port
             binary: '{{directories.stack}}/{{stack.version}}/phala-node',
@@ -84,7 +87,7 @@ const config : ProjectConfigOptions = {
             args: {
                 '--dev': true,
                 '--rpc-methods': 'Unsafe',
-                '--block-millisecs': 6000,
+                '--block-millisecs': '{{stack.blockTime}}',
                 '--ws-port': '{{stack.port.port}}'
             },
             timeout: 10000,
@@ -112,35 +115,10 @@ const config : ProjectConfigOptions = {
                 '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                 '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                 '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
-                '--dev-wait-block-ms': 1000,
+                '--dev-wait-block-ms': '{{stack.blockTime}}',
             },
             timeout: 2000,
         }
-    },
-    /**
-     * Configuration options of DevPhase instance used in testing
-     */
-    devPhaseOptions: {
-        nodeUrl: 'ws://localhost:{{stack.node.port}}',
-        nodeApiOptions: {
-            types: {
-                ...KhalaTypes,
-                ...PhalaSDKTypes,
-            }
-        },
-        workerUrl: 'http://localhost:{{stack.pruntime.port}}',
-        accountsMnemonic: '', // default account
-        accountsPaths: {
-            alice: '//Alice',
-            bob: '//Bob',
-            charlie: '//Charlie',
-            dave: '//Dave',
-            eve: '//Eve',
-            ferdie: '//Ferdie',
-        },
-        sudoAccount: 'alice',
-        ss58Prefix: 30,
-        clusterId: undefined, // if specified - it will be used as default cluster for deployments
     },
     /**
      * Testing configuration
@@ -160,7 +138,14 @@ const config : ProjectConfigOptions = {
                 timeout: 10 * 1000,
             }
         },
-    }
+    },
+    /**
+     * Configuration options of DevPhase instance used in testing
+     */
+    devPhaseOptions: {
+        nodeUrl: 'ws://localhost:{{stack.node.port}}',
+        workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+    },
 };
 
 export default config;

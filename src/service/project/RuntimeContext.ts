@@ -1,4 +1,4 @@
-import { ProjectConfig, ProjectConfigOptions, RuntimePaths } from '@/def';
+import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
@@ -32,13 +32,13 @@ export class RuntimeContext
     };
     
     
-    public static async getSingleton () : Promise<RuntimeContext>
+    public static async getSingleton (runMode : RunMode = RunMode.Simple) : Promise<RuntimeContext>
     {
         const globalAny = global as any;
         
         if (!globalAny[RuntimeContext.SINGLETON_KEY]) {
             const instance = new RuntimeContext();
-            await instance._init();
+            await instance._init(runMode);
             
             globalAny[RuntimeContext.SINGLETON_KEY] = instance;
         }
@@ -68,7 +68,7 @@ export class RuntimeContext
     }
     
     
-    protected async _init () : Promise<void>
+    protected async _init (runMode : RunMode) : Promise<void>
     {
         const configFilePath = await findUp([
             'devphase.config.ts',
@@ -83,7 +83,10 @@ export class RuntimeContext
             this.paths.project = path.dirname(configFilePath);
             
             const userConfig = require(configFilePath).default;
-            this.config = await this._getFallbackConfig(userConfig);
+            this.config = await this._getRunConfiguration(
+                userConfig,
+                runMode
+            );
         }
         
         // setup directories
@@ -111,7 +114,10 @@ export class RuntimeContext
     }
     
     
-    protected async _getFallbackConfig (options : ProjectConfigOptions) : Promise<ProjectConfig>
+    protected async _getRunConfiguration (
+        options : ProjectConfigOptions,
+        runMode : RunMode
+    ) : Promise<ProjectConfig>
     {
         const config : ProjectConfig = <any>replaceRecursive<ProjectConfigOptions>({
             directories: {
@@ -123,11 +129,11 @@ export class RuntimeContext
                 typings: 'typings'
             },
             stack: {
-                version: 'nightly-2022-11-17',
+                blockTime: 6000,
+                version: 'latest',
                 setupOptions: {
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
                     clusterId: undefined,
-                    blockTime: undefined,
                 },
                 node: {
                     port: 9944,
@@ -137,7 +143,7 @@ export class RuntimeContext
                     args: {
                         '--dev': true,
                         '--rpc-methods': 'Unsafe',
-                        '--block-millisecs': 6000,
+                        '--block-millisecs': '{{stack.blockTime}}',
                         '--ws-port': '{{stack.node.port}}',
                         '--base-path': '.',
                     },
@@ -166,7 +172,7 @@ export class RuntimeContext
                         '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                         '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                         '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
-                        '--dev-wait-block-ms': 1000,
+                        '--dev-wait-block-ms': '{{stack.blockTime}}',
                         '--attestation-provider': 'none',
                     },
                     timeout: 5000,
@@ -196,6 +202,10 @@ export class RuntimeContext
         
         // replace stack version
         config.stack.version = await StackBinaryDownloader.uniformStackVersion(config.stack.version);
+        
+        if (runMode == RunMode.Testing) {
+            config.stack.blockTime = config.testing.blockTime;
+        }
         
         // process placeholders
         replacePlaceholders(config, config);

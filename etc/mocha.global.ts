@@ -1,6 +1,6 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { DevPhase, Logger, RuntimeContext, SpawnMode, StackManager } from 'devphase';
+import { DevPhase, Logger, RuntimeContext, RunMode, StackManager } from 'devphase';
 
 chai.use(chaiAsPromised);
 
@@ -10,7 +10,7 @@ chai.use(chaiAsPromised);
 const logger = new Logger('Test / Mocha');
 
 before(async function() {
-    this.runtimeContext = await RuntimeContext.getSingleton();
+    this.runtimeContext = await RuntimeContext.getSingleton(RunMode.Testing);
     this.stackManager = new StackManager(this.runtimeContext);
     
     const {
@@ -24,7 +24,7 @@ before(async function() {
     logger.log('Global setup start');
     if (spawnStack) {
         logger.log('Preparing dev stack');
-        await this.stackManager.startStack(SpawnMode.Testing);
+        await this.stackManager.startStack(RunMode.Testing);
     }
     
     logger.log('Init API');
@@ -54,7 +54,10 @@ before(async function() {
 after(async function() {
     logger.log('Global teardown start');
     
-    const { envSetup: { teardown } } = this.runtimeContext.config.testing;
+    const {
+        spawnStack,
+        envSetup: { teardown }
+    } = this.runtimeContext.config.testing;
     
     this.timeout(teardown.timeout);
     
@@ -68,7 +71,10 @@ after(async function() {
         await this.devPhase.cleanup();
     }
     
-    if (this.stackManager) {
+    if (
+        spawnStack
+        && this.stackManager
+    ) {
         logger.log('Stopping stack');
         await this.stackManager.stopStack();
     }

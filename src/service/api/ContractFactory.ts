@@ -10,6 +10,7 @@ import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import type { IEvent } from '@polkadot/types/types';
+import axios from 'axios';
 import chalk from 'chalk';
 
 
@@ -24,6 +25,7 @@ export type InstantiateOptions = {
     transfer? : number,
     gasLimit? : number,
     storageDepositLimit? : number,
+    transferToCluster? : number
 }
 
 
@@ -111,8 +113,9 @@ export class ContractFactory
             salt: 1000000000 + Math.round(Math.random() * 8999999999),
             asAccount: 'alice',
             transfer: 0,
-            gasLimit: 10e12,
+            gasLimit: 1e12,
             storageDepositLimit: null,
+            transferToCluster: 1e12,
             ...options
         };
         
@@ -180,13 +183,18 @@ export class ContractFactory
             );
         }
         
-        const clusterKey = (
-            await this.api.query.phalaRegistry.clusterKeys(this.clusterId)
-        ).toJSON();
-        
-        const contractKey = (
-            await this.api.query.phalaRegistry.contractKeys(contractId)
-        ).toJSON();
+        // transfer funds to cluster if specified
+        if (options.transferToCluster) {
+            const result = await TxHandler.handle(
+                this.api.tx.phalaFatContracts.transferToCluster(
+                    options.transferToCluster,
+                    this.clusterId,
+                    contractId
+                ),
+                this._devPhase.accounts[options.asAccount],
+                'phalaFatContracts.transferToCluster'
+            );
+        }
         
         return this.attach(contractId);
     }
@@ -197,14 +205,15 @@ export class ContractFactory
     {
         const api = await this._devPhase.createApiPromise();
         
-        const workerApi : ApiPromise = await PhalaSdk.create({
-            api,
+        const { api: workerApi } = await PhalaSdk.create({
+            api: <any> api,
             baseURL: this._devPhase.workerUrl,
-            contractId
+            contractId,
+            autoDeposit: true,
         });
         
         const instance = new ContractPromise(
-            workerApi,
+            <any> workerApi,
             this.metadata,
             contractId,
         );

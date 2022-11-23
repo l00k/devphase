@@ -1,4 +1,4 @@
-import { ComponentName, SpawnMode, StackComponentOptions } from '@/def';
+import { ComponentName, RunMode, StackComponentOptions } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -29,7 +29,7 @@ export class StackManager
     }
     
     
-    public async startStack (spawnMode : SpawnMode) : Promise<Record<ComponentName, ChildProcess>>
+    public async startStack (runMode : RunMode) : Promise<Record<ComponentName, ChildProcess>>
     {
         if (this._processes) {
             throw new Exception(
@@ -39,7 +39,7 @@ export class StackManager
         }
         
         // prepare logs directory if required
-        if (this.isLogOutputUsed(spawnMode, this._context)) {
+        if (this.isLogOutputUsed(runMode, this._context)) {
             fs.mkdirSync(this._runLogsPath, { recursive: true });
         }
         
@@ -49,17 +49,17 @@ export class StackManager
             pherry: null,
         };
         
-        this._processes.node = await this.startNode(spawnMode);
+        this._processes.node = await this.startNode(runMode);
         if (this._killFlag) {
             return this._processes;
         }
         
-        this._processes.pruntime = await this.startPruntime(spawnMode);
+        this._processes.pruntime = await this.startPruntime(runMode);
         if (this._killFlag) {
             return this._processes;
         }
         
-        this._processes.pherry = await this.startPherry(spawnMode);
+        this._processes.pherry = await this.startPherry(runMode);
         
         return this._processes;
     }
@@ -95,48 +95,40 @@ export class StackManager
         }
     }
     
-    public async startNode (spawnMode : SpawnMode) : Promise<ChildProcess>
+    public async startNode (runMode : RunMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.node);
-        if (spawnMode === SpawnMode.Testing) {
-            const blockTime = this._context.config.testing.blockTime;
-            options.args['--block-millisecs'] = blockTime;
-        }
         
         return this.startComponent(
             'node',
             options,
-            spawnMode,
+            runMode,
             text => text.includes('Running JSON-RPC'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPruntime (spawnMode : SpawnMode) : Promise<ChildProcess>
+    public async startPruntime (runMode : RunMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
         
         return this.startComponent(
             'pruntime',
             options,
-            spawnMode,
+            runMode,
             text => text.includes('Rocket has launched from'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPherry (spawnMode : SpawnMode) : Promise<ChildProcess>
+    public async startPherry (runMode : RunMode) : Promise<ChildProcess>
     {
         const options : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
-        if (spawnMode === SpawnMode.Testing) {
-            const blockTime = this._context.config.testing.blockTime;
-            options.args['--dev-wait-block-ms'] = blockTime;
-        }
         
         return this.startComponent(
             'pherry',
             options,
-            spawnMode,
+            runMode,
             text => text.includes('pRuntime get_info response: PhactoryInfo'),
             text => text.toLowerCase().includes('error'),
         );
@@ -146,7 +138,7 @@ export class StackManager
     public async startComponent (
         componentName : string,
         options : StackComponentOptions,
-        spawnMode : SpawnMode,
+        runMode : RunMode,
         waitForReady : (text : string) => boolean = () => true,
         waitForError : (text : string) => boolean = () => false,
     ) : Promise<ChildProcess>
@@ -194,7 +186,7 @@ export class StackManager
         
         // pipe output to file
         let logFileDscr : number;
-        if (this.isLogOutputUsed(spawnMode, this._context)) {
+        if (this.isLogOutputUsed(runMode, this._context)) {
             const logFilePath = path.join(
                 this._runLogsPath,
                 `${componentName}.log`
@@ -233,11 +225,11 @@ export class StackManager
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
                     
-                    if (spawnMode === SpawnMode.Direct) {
+                    if (runMode === RunMode.Simple) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
                         process.stdout.write(text);
                     }
-                    else if (this.isLogOutputUsed(spawnMode, this._context)) {
+                    else if (this.isLogOutputUsed(runMode, this._context)) {
                         fs.appendFileSync(
                             logFileDscr,
                             text,
@@ -281,11 +273,11 @@ export class StackManager
     }
     
     public isLogOutputUsed (
-        spawnMode : SpawnMode,
+        runMode : RunMode,
         context : RuntimeContext
     ) : boolean
     {
-        return spawnMode === SpawnMode.Testing
+        return runMode === RunMode.Testing
             && context.config.testing.stackLogOutput
         ;
     }
