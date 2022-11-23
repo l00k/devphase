@@ -2,3 +2,5 @@
 /contracts/*/target
 /logs
 /stacks
+
+node_modules
