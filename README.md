@@ -93,7 +93,7 @@ const config : ProjectConfigOptions = {
                 '--dev': true,
                 '--rpc-methods': 'Unsafe',
                 '--block-millisecs': '{{stack.blockTime}}',
-                '--ws-port': '{{stack.port.port}}'
+                '--ws-port': '{{stack.node.port}}'
             },
             timeout: 10000,
         },
