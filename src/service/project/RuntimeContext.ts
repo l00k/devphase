@@ -79,15 +79,19 @@ export class RuntimeContext
             ? path.join(__dirname, '../../')
             : path.join(__dirname, '../');
         
+        let userConfig : ProjectConfigOptions = {};
         if (configFilePath) {
             this.paths.project = path.dirname(configFilePath);
-            
-            const userConfig = require(configFilePath).default;
-            this.config = await this._getRunConfiguration(
-                userConfig,
-                runMode
-            );
+            userConfig = require(configFilePath).default;
         }
+        else {
+            this.paths.project = process.cwd();
+        }
+        
+        this.config = await this._getRunConfiguration(
+            userConfig,
+            runMode
+        );
         
         // setup directories
         for (const [ name, directory ] of Object.entries(this.config.directories)) {

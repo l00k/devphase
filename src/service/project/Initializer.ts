@@ -42,7 +42,7 @@ export class Initializer
         
         for (const templateFile of this._templates) {
             const sourceTemplatePath = path.join(
-                this._runtimeContext.libPath,
+                this._runtimeContext.paths.devphase,
                 'templates',
                 templateFile
             );
