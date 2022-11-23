@@ -86,8 +86,8 @@ const config : ProjectConfigOptions = {
         version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
         node: {
             port: 9944, // ws port
-            binary: '{{directories.stack}}/{{stack.version}}/phala-node',
-            workingDir: '{{directories.stack}}/.data/node',
+            binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
+            workingDir: '{{directories.stacks}}/.data/node',
             envs: {},
             args: {
                 '--dev': true,
@@ -99,8 +99,8 @@ const config : ProjectConfigOptions = {
         },
         pruntime: {
             port: 8000, // server port
-            binary: '{{directories.stack}}/{{stack.version}}/pruntime',
-            workingDir: '{{directories.stack}}/.data/pruntime',
+            binary: '{{directories.stacks}}/{{stack.version}}/pruntime',
+            workingDir: '{{directories.stacks}}/.data/pruntime',
             envs: {},
             args: {
                 '--allow-cors': true,
@@ -111,8 +111,8 @@ const config : ProjectConfigOptions = {
         },
         pherry: {
             gkMnemonic: '//Alice', // gate keeper mnemonic
-            binary: '{{directories.stack}}/{{stack.version}}/pherry',
-            workingDir: '{{directories.stack}}/.data/pherry',
+            binary: '{{directories.stacks}}/{{stack.version}}/pherry',
+            workingDir: '{{directories.stacks}}/.data/pherry',
             envs: {},
             args: {
                 '--no-wait': true,
