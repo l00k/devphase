@@ -202,7 +202,7 @@ export class ContractFactory
         if (options.adjustStake) {
             const result = await TxHandler.handle(
                 this.api.tx.phalaFatTokenomic.adjustStake(
-                    this.clusterId,
+                    contractId,
                     options.adjustStake
                 ),
                 this._devPhase.accounts[options.asAccount],
