@@ -25,7 +25,8 @@ export type InstantiateOptions = {
     transfer? : number,
     gasLimit? : number,
     storageDepositLimit? : number,
-    transferToCluster? : number
+    transferToCluster? : number,
+    adjustStake? : number,
 }
 
 
@@ -116,6 +117,7 @@ export class ContractFactory
             gasLimit: 1e12,
             storageDepositLimit: null,
             transferToCluster: 1e12,
+            adjustStake: 1e12,
             ...options
         };
         
@@ -193,6 +195,18 @@ export class ContractFactory
                 ),
                 this._devPhase.accounts[options.asAccount],
                 'phalaFatContracts.transferToCluster'
+            );
+        }
+        
+        // adjust stake if specified
+        if (options.adjustStake) {
+            const result = await TxHandler.handle(
+                this.api.tx.phalaFatTokenomic.adjustStake(
+                    this.clusterId,
+                    options.adjustStake
+                ),
+                this._devPhase.accounts[options.asAccount],
+                'phalaFatTokenomic.adjustStake'
             );
         }
         
