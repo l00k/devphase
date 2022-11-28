@@ -4,6 +4,7 @@ import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import findUp from 'find-up';
+import fs from 'fs';
 import path from 'path';
 
 
@@ -19,6 +20,7 @@ export class RuntimeContext
     public paths : RuntimePaths = {
         devphase: null,
         project: null,
+        context: null,
         
         artifacts: null,
         contracts: null,
@@ -46,6 +48,13 @@ export class RuntimeContext
         
         return globalAny[singletonKey];
     }
+    
+    
+    private constructor ()
+    {
+        this._stackBinaryDownloader = new StackBinaryDownloader(this);
+    }
+    
     
     public async isInProjectDirectory () : Promise<boolean>
     {
@@ -89,6 +98,17 @@ export class RuntimeContext
             this.paths.project = process.cwd();
         }
         
+        // create context directory
+        this.paths.context = path.join(
+            this.paths.project,
+            '.devphase'
+        );
+        
+        if (!fs.existsSync(this.paths.context)) {
+            fs.mkdirSync(this.paths.context, { recursive: true });
+        }
+        
+        // get configuration
         this.config = await this._getRunConfiguration(
             userConfig,
             runMode
@@ -113,11 +133,15 @@ export class RuntimeContext
             this.config.stack.version
         );
         
-        // download stack
-        this._stackBinaryDownloader = new StackBinaryDownloader(this);
-        await this._stackBinaryDownloader.download();
+        await this._setupActions();
     }
     
+    
+    protected async _setupActions()
+    {
+        // download stack
+        await this._stackBinaryDownloader.downloadIfRequired();
+    }
     
     protected async _getRunConfiguration (
         options : ProjectConfigOptions,
@@ -206,7 +230,7 @@ export class RuntimeContext
         }, options);
         
         // replace stack version
-        config.stack.version = await StackBinaryDownloader.uniformStackVersion(config.stack.version);
+        config.stack.version = await this._stackBinaryDownloader.uniformStackVersion(config.stack.version);
         
         if (runMode == RunMode.Testing) {
             config.stack.blockTime = config.testing.blockTime;

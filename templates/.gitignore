@@ -1,3 +1,4 @@
+/.devphase
 /artifacts
 /contracts/*/target
 /logs

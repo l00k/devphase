@@ -21,6 +21,7 @@ export class StackBinaryDownloader
 {
     
     protected static readonly RELEASES_URL = 'https://api.github.com/repos/Phala-Network/phala-blockchain/releases';
+    protected static readonly RELEASES_CACHE_TIME = 60 * 60 * 1000;
     protected static readonly EXECUTABLES = [
         'phala-node',
         'pruntime',
@@ -30,13 +31,16 @@ export class StackBinaryDownloader
     
     protected _logger : Logger = new Logger(StackBinaryDownloader.name);
     
+    protected _releases : Release[];
+    
     
     public constructor (
         protected _context : RuntimeContext
     )
     {}
     
-    public static async uniformStackVersion (version : string) : Promise<string>
+    
+    public async uniformStackVersion (version : string) : Promise<string>
     {
         if (version === 'latest') {
             const releases = await this.getReleases();
@@ -46,8 +50,27 @@ export class StackBinaryDownloader
         return version;
     }
     
-    public static async getReleases () : Promise<Release[]>
+    public async getReleases () : Promise<Release[]>
     {
+        // try to load from cache
+        const cachePath = path.join(
+            this._context.paths.context,
+            'releases.json'
+        );
+        
+        if (fs.existsSync(cachePath)) {
+            const stat = fs.statSync(cachePath);
+            const outdated = (Date.now() - stat.ctimeMs) > StackBinaryDownloader.RELEASES_CACHE_TIME;
+            if (!outdated) {
+                const releasesCacheRaw = fs.readFileSync(cachePath, { encoding: 'utf-8' });
+                this._releases = JSON.parse(releasesCacheRaw);
+            }
+        }
+        
+        if (this._releases) {
+            return this._releases;
+        }
+        
         const { status, data } = await axios.get(
             StackBinaryDownloader.RELEASES_URL,
             { validateStatus: () => true, }
@@ -60,12 +83,16 @@ export class StackBinaryDownloader
             );
         }
         
+        // push into cache
+        const releasesCacheRaw = JSON.stringify(data);
+        fs.writeFileSync(cachePath, releasesCacheRaw, { encoding: 'utf-8' });
+        
         return data;
     }
     
     public async findRelease (tagName : string) : Promise<Release>
     {
-        const releases = await StackBinaryDownloader.getReleases();
+        const releases = await this.getReleases();
         const targetRelease = releases.find(release => release.tag_name === tagName);
         
         if (!targetRelease) {
@@ -78,8 +105,9 @@ export class StackBinaryDownloader
         return targetRelease;
     }
     
-    public async download () : Promise<void>
+    public async downloadIfRequired () : Promise<void>
     {
+        // create releases dir
         const releaseStackPath = this._context.paths.currentStack;
         if (!fs.existsSync(releaseStackPath)) {
             this._logger.log('Creating stack directory');

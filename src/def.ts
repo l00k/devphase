@@ -130,6 +130,7 @@ export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
 export type RuntimePaths = {
     devphase : string,
     project : string,
+    context : string,
     
     artifacts : string,
     contracts : string,
