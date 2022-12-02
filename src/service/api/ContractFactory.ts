@@ -25,6 +25,7 @@ export type InstantiateOptions = {
     transfer? : number,
     gasLimit? : number,
     storageDepositLimit? : number,
+    deposit? : number,
     transferToCluster? : number,
     adjustStake? : number,
 }
@@ -116,6 +117,7 @@ export class ContractFactory
             transfer: 0,
             gasLimit: 1e12,
             storageDepositLimit: null,
+            deposit: 0,
             transferToCluster: 1e12,
             adjustStake: 1e12,
             ...options
@@ -132,7 +134,8 @@ export class ContractFactory
                 this.clusterId,
                 options.transfer,
                 options.gasLimit,
-                options.storageDepositLimit
+                options.storageDepositLimit,
+                options.deposit
             ),
             this._devPhase.accounts[options.asAccount],
             'phalaFatContracts.instantiateContract'
