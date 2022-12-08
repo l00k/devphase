@@ -280,13 +280,14 @@ export class StructTypeBuilder
                 );
             }
         }
+        else {
+            builtVariants.push('{}');
+        }
         
         let declaration : TsMorph.TypeAliasDeclarationStructure = {
             kind: TsMorph.StructureKind.TypeAlias,
             name: variantName,
-            type: builtVariants.length
-                ? builtVariants.join(' | ')
-                : 'void',
+            type: builtVariants.join(' | '),
         };
         this._typeStatements[variantName] = declaration;
         
