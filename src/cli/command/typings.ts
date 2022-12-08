@@ -1,3 +1,4 @@
+import { RunMode } from '@/def';
 import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { TypeBinder } from '@/service/project/TypeBinder';
@@ -20,6 +21,7 @@ async function command (
     
     logger.log('Starting');
     
+    await runtimeContext.init(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const binder = new TypeBinder(runtimeContext);

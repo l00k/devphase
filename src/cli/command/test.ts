@@ -1,3 +1,4 @@
+import { RunMode } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
@@ -12,7 +13,9 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Running tests');
     
+    await runtimeContext.init(RunMode.Testing);
     runtimeContext.requestProjectDirectory();
+    await runtimeContext.requestStackBinaries();
     
     const { default: Mocha } = await import('mocha');
     

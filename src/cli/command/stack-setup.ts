@@ -1,3 +1,4 @@
+import { RunMode } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
@@ -11,6 +12,7 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Setup started');
     
+    await runtimeContext.init(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const devPhase = await DevPhase.create(

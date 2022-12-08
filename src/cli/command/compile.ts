@@ -1,3 +1,4 @@
+import { RunMode } from '@/def';
 import { Compiler } from '@/service/project/Compiler';
 import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
@@ -21,6 +22,7 @@ async function command (
     
     logger.log('Contracts compilation');
     
+    await runtimeContext.init(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const contractCompiler = new Compiler(runtimeContext);

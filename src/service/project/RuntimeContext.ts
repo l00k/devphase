@@ -34,15 +34,13 @@ export class RuntimeContext
     };
     
     
-    public static async getSingleton (runMode : RunMode = RunMode.Simple) : Promise<RuntimeContext>
+    public static async getSingleton () : Promise<RuntimeContext>
     {
         const globalAny = global as any;
         
-        const singletonKey = RuntimeContext.SINGLETON_KEY + ' ' + runMode;
+        const singletonKey = RuntimeContext.SINGLETON_KEY;
         if (!globalAny[singletonKey]) {
             const instance = new RuntimeContext();
-            await instance._init(runMode);
-            
             globalAny[singletonKey] = instance;
         }
         
@@ -78,7 +76,7 @@ export class RuntimeContext
     }
     
     
-    protected async _init (runMode : RunMode) : Promise<void>
+    public async init (runMode : RunMode) : Promise<void>
     {
         const configFilePath = await findUp([
             'devphase.config.ts',
@@ -132,14 +130,11 @@ export class RuntimeContext
             this.paths.stacks,
             this.config.stack.version
         );
-        
-        await this._setupActions();
     }
     
     
-    protected async _setupActions()
+    public async requestStackBinaries()
     {
-        // download stack
         await this._stackBinaryDownloader.downloadIfRequired();
     }
     

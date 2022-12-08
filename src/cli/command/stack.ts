@@ -11,7 +11,9 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Starting');
     
+    await runtimeContext.init(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
+    await runtimeContext.requestStackBinaries();
     
     const stackManager = new StackManager(runtimeContext);
     

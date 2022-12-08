@@ -252,37 +252,41 @@ export class StructTypeBuilder
         // collect variants
         const builtVariants : string[] = [];
         
-        for (const variant of variants) {
-            const { name, fields } = variant;
-            
-            let innerType;
-            if (!fields?.length) {
-                innerType = 'null';
-            }
-            else if (fields.length === 1) {
-                const { native } = this.buildType(fields[0].type);
-                innerType = native;
-            }
-            else {
-                const tupleParts = fields
-                    .map(field => {
-                        const { native } = this.buildType(fields[0].type);
-                        return native;
-                    })
-                    .join(', ');
+        if (variants) {
+            for (const variant of variants) {
+                const { name, fields } = variant;
                 
-                innerType = '[' + tupleParts + ']';
+                let innerType;
+                if (!fields?.length) {
+                    innerType = 'null';
+                }
+                else if (fields.length === 1) {
+                    const { native } = this.buildType(fields[0].type);
+                    innerType = native;
+                }
+                else {
+                    const tupleParts = fields
+                        .map(field => {
+                            const { native } = this.buildType(fields[0].type);
+                            return native;
+                        })
+                        .join(', ');
+                    
+                    innerType = '[' + tupleParts + ']';
+                }
+                
+                builtVariants.push(
+                    `{ ${name}: ${innerType} }`
+                );
             }
-            
-            builtVariants.push(
-                `{ ${name}: ${innerType} }`
-            );
         }
         
         let declaration : TsMorph.TypeAliasDeclarationStructure = {
             kind: TsMorph.StructureKind.TypeAlias,
             name: variantName,
-            type: builtVariants.join(' | '),
+            type: builtVariants.length
+                ? builtVariants.join(' | ')
+                : 'void',
         };
         this._typeStatements[variantName] = declaration;
         

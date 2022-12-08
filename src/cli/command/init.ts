@@ -1,3 +1,4 @@
+import { RunMode } from '@/def';
 import { Initializer } from '@/service/project/Initializer';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
@@ -11,6 +12,8 @@ async function command (
     const logger = new Logger('Init');
     
     logger.log('Initiation');
+    
+    await runtimeContext.init(RunMode.Simple);
     
     const initializer = new Initializer(runtimeContext);
     await initializer.init();

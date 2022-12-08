@@ -54,7 +54,6 @@ export class Compiler
             const lineIdx = lines
                 .findIndex(line => line.includes('Your contract artifacts are ready'));
             if (lineIdx !== -1) {
-                console.log(lineIdx);
                 outputDirectory = lines[lineIdx + 1];
             }
             
