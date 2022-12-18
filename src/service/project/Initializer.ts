@@ -31,10 +31,8 @@ export class Initializer
     {
         const inProjectDirectory = await this._runtimeContext.isInProjectDirectory();
         if (inProjectDirectory) {
-            throw new Exception(
-                'Project already initiated',
-                1667764070755
-            );
+            this._logger.log('Project already initiated');
+            return true;
         }
         
         // copy templates
