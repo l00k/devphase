@@ -121,13 +121,19 @@ export class AccountsManager
             ss58Format
         });
         
-        account.keyring = keyring.addFromMnemonic(mnemonicGenerate());
+        const mnemonic : string = mnemonicGenerate();
+        account.keyring = keyring.addFromMnemonic(mnemonic);
         
         const { password } = await prompts({
             type: 'password',
             name: 'password',
             message: `Account password (leave empty if to save as plain text)`,
         });
+        
+        const exported : any = !!password
+            ? account.keyring.toJson(password)
+            : mnemonic
+            ;
         
         // export to config file
         const accountsConfigPath = path.join(
@@ -142,11 +148,11 @@ export class AccountsManager
             fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
         );
         
-        accountsJson[alias] = account.keyring.toJson(password || undefined);
+        accountsJson[alias] = exported;
         
         fs.writeFileSync(
             accountsConfigPath,
-            JSON.stringify(accountsJson),
+            JSON.stringify(accountsJson, undefined, 4),
             { encoding: 'utf-8' }
         );
         
