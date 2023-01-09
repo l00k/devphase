@@ -1,3 +1,4 @@
+export * from './accounts';
 export * from './compile';
 export * from './init';
 export * from './stack';

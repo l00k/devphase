@@ -31,7 +31,7 @@ export class StackSetupService
     protected _api : ApiPromise;
     
     protected _accounts : Accounts = {};
-    protected _sudoAccount : KeyringPair;
+    protected _suAccount : KeyringPair;
     protected _mainClusterId : string;
     protected _blockTime : number;
     protected _waitTime : number;
@@ -47,7 +47,7 @@ export class StackSetupService
         this._context = this._devPhase.runtimeContext;
         
         this._accounts = this._devPhase.accounts;
-        this._sudoAccount = this._devPhase.sudoAccount;
+        this._suAccount = this._devPhase.suAccount;
         this._blockTime = this._devPhase.runtimeContext.config.stack.blockTime;
         this._waitTime = Math.max(20_000, 4 * this._blockTime)
     }
@@ -161,7 +161,7 @@ export class StackSetupService
             
             const result = await TxHandler.handle(
                 tx,
-                this._sudoAccount,
+                this._suAccount,
                 'sudo(phalaRegistry.forceRegisterWorker)'
             );
             
@@ -196,7 +196,7 @@ export class StackSetupService
             
             const result = await TxHandler.handle(
                 tx,
-                this._sudoAccount,
+                this._suAccount,
                 'sudo(phalaRegistry.registerGatekeeper)'
             );
         }
@@ -265,7 +265,7 @@ export class StackSetupService
         
         const result = await TxHandler.handle(
             tx,
-            this._sudoAccount,
+            this._suAccount,
             'sudo(phalaFatContracts.setPinkSystemCode)'
         );
         
@@ -298,7 +298,7 @@ export class StackSetupService
         
         const result = await TxHandler.handle(
             tx,
-            this._sudoAccount,
+            this._suAccount,
             'sudo(phalaFatContracts.addCluster)'
         );
         

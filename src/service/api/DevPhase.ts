@@ -2,6 +2,7 @@ import type { Accounts, ContractType, DevPhaseOptions } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
+import { AccountsManager } from '@/service/project/AccountsManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
@@ -11,7 +12,6 @@ import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
-import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import fs from 'fs';
 import path from 'path';
@@ -35,7 +35,7 @@ export class DevPhase
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
-    public readonly sudoAccount : KeyringPair;
+    public readonly suAccount : KeyringPair;
     
     public readonly mainClusterId : string;
     
@@ -66,20 +66,21 @@ export class DevPhase
                 }
             },
             workerUrl: 'http://localhost:8000',
-            accountsMnemonic: '',
-            accountsPaths: {
-                alice: '//Alice',
-                bob: '//Bob',
-                charlie: '//Charlie',
-                dave: '//Dave',
-                eve: '//Eve',
-                ferdie: '//Ferdie',
+            accountsConfig: {
+                keyrings: {
+                    alice: '//Alice',
+                    bob: '//Bob',
+                    charlie: '//Charlie',
+                    dave: '//Dave',
+                    eve: '//Eve',
+                    ferdie: '//Ferdie',
+                },
+                suAccount: 'alice',
             },
-            sudoAccount: 'alice',
-            ss58Prefix: 30,
             clusterId: undefined,
         }, options);
         
+        // create instance
         const instance = new DevPhase();
         
         instance._apiOptions = options.nodeApiOptions;
@@ -88,24 +89,38 @@ export class DevPhase
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
-        // get accounts
-        const keyring = new Keyring.Keyring();
-        keyring.setSS58Format(options.ss58Prefix);
-        
-        for (const [ name, path ] of Object.entries(options.accountsPaths)) {
-            instance.accounts[name] = keyring.createFromUri(
-                options.accountsMnemonic + path,
-                undefined,
-                'sr25519'
-            );
-        }
-        
         Object.assign(instance, {
             options,
             runtimeContext,
             api,
-            sudoAccount: instance.accounts[options.sudoAccount],
             workerUrl: options.workerUrl,
+        });
+        
+        // load accounts
+        const accountsManager = new AccountsManager();
+        let ss58Format : number = 30;
+        
+        if (runtimeContext) {
+            const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
+            if (accountsKeyrings) {
+                replaceRecursive(
+                    options.accountsConfig.keyrings,
+                    accountsKeyrings
+                );
+            }
+            
+            ss58Format = runtimeContext.config.general.ss58Format;
+        }
+        
+        const accounts = await accountsManager.loadAccounts(
+            options.accountsConfig.keyrings,
+            ss58Format,
+            true
+        );
+        
+        Object.assign(instance, {
+            accounts,
+            suAccount: accounts[options.accountsConfig.suAccount],
         });
         
         return instance;

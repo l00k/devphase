@@ -144,6 +144,9 @@ export class RuntimeContext
     ) : Promise<ProjectConfig>
     {
         const config : ProjectConfig = <any>replaceRecursive<ProjectConfigOptions>({
+            general: {
+                ss58Format: 30,
+            },
             directories: {
                 artifacts: 'artifacts',
                 contracts: 'contracts',

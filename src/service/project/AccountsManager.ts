@@ -1,0 +1,156 @@
+import { AccountKeyringsConfig, Accounts } from '@/def';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
+import * as Keyring from '@polkadot/keyring';
+import type { KeyringPair } from '@polkadot/keyring/types';
+import { mnemonicGenerate } from '@polkadot/util-crypto';
+import { waitReady } from '@polkadot/wasm-crypto';
+import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
+import prompts from 'prompts';
+
+
+export type CreatedAccount = {
+    alias : string,
+    keyring : KeyringPair,
+}
+
+
+export class AccountsManager
+{
+    
+    protected _logger = new Logger(AccountsManager.name);
+    
+    
+    public async loadAccountsKeyringsFromConfigFile (
+        runtimeContext : RuntimeContext
+    ) : Promise<AccountKeyringsConfig>
+    {
+        const accountsConfigPath = path.join(
+            runtimeContext.paths.project,
+            'accounts.json'
+        );
+        if (!fs.existsSync(accountsConfigPath)) {
+            return null;
+        }
+        
+        return JSON.parse(
+            fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
+        );
+    }
+    
+    public async loadAccounts (
+        accountKeyrings : AccountKeyringsConfig,
+        ss58Format : number = 30,
+        unlock : boolean = true
+    ) : Promise<Accounts>
+    {
+        await waitReady();
+        
+        const accounts : Accounts = {};
+        
+        // load accounts
+        const keyring = new Keyring.Keyring();
+        
+        if (ss58Format) {
+            keyring.setSS58Format(ss58Format);
+        }
+        
+        for (const [ alias, accountKeyring ] of Object.entries(accountKeyrings)) {
+            if (typeof accountKeyring === 'string') {
+                accounts[alias] = keyring.createFromUri(
+                    accountKeyring,
+                    undefined,
+                    'sr25519'
+                );
+            }
+            else {
+                accounts[alias] = keyring.createFromJson(accountKeyring);
+            }
+        }
+        
+        // unlock accounts if required
+        if (unlock) {
+            for (const [ alias, keyring ] of Object.entries(accounts)) {
+                if (keyring.isLocked) {
+                    const { password } = await prompts({
+                        type: 'password',
+                        name: 'password',
+                        message: `Account ${chalk.cyan(alias)} is locked. Provide password:`
+                    });
+                    
+                    try {
+                        keyring.unlock(password);
+                    }
+                    catch (e) {
+                        throw new Exception(
+                            'Unable to unlock account keyring',
+                            1673268293515,
+                            e
+                        );
+                    }
+                }
+            }
+        }
+        
+        return accounts;
+    }
+    
+    public async createAccount (
+        runtimeContext : RuntimeContext,
+        ss58Format : number = 30
+    ) : Promise<CreatedAccount>
+    {
+        const account : CreatedAccount = {
+            alias: '',
+            keyring: null,
+        };
+        
+        const { alias } = await prompts({
+            type: 'text',
+            name: 'alias',
+            message: `Account alias`,
+            validate: alias => /^[a-z0-9_]+$/.test(alias)
+        });
+        account.alias = alias;
+        
+        const keyring = new Keyring.Keyring({
+            type: 'sr25519',
+            ss58Format
+        });
+        
+        account.keyring = keyring.addFromMnemonic(mnemonicGenerate());
+        
+        const { password } = await prompts({
+            type: 'password',
+            name: 'password',
+            message: `Account password (leave empty if to save as plain text)`,
+        });
+        
+        // export to config file
+        const accountsConfigPath = path.join(
+            runtimeContext.paths.project,
+            'accounts.json'
+        );
+        if (!fs.existsSync(accountsConfigPath)) {
+            return null;
+        }
+        
+        const accountsJson = JSON.parse(
+            fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
+        );
+        
+        accountsJson[alias] = account.keyring.toJson(password || undefined);
+        
+        fs.writeFileSync(
+            accountsConfigPath,
+            JSON.stringify(accountsJson),
+            { encoding: 'utf-8' }
+        );
+        
+        return account;
+    }
+    
+}

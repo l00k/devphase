@@ -1,7 +1,6 @@
 import type { ApiOptions } from '@polkadot/api/types';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types';
 import type { MochaOptions } from 'mocha';
-
 
 export type RecursivePartial<T> = {
     [P in keyof T]? : T[P] extends (infer U)[]
@@ -65,6 +64,11 @@ export type Accounts = {
 export type AccountKey = keyof Accounts | string;
 
 
+export type AccountKeyringsConfig = {
+    [name : string] : string | KeyringPair$Json,
+};
+
+
 export type StackSetupOptions = {
     workerUrl? : string,
     clusterId? : string,
@@ -78,11 +82,11 @@ export type StackSetupResult = {
 export type DevPhaseOptions = StackSetupOptions & {
     nodeUrl? : string,
     nodeApiOptions? : ApiOptions,
-    accountsMnemonic? : string,
-    accountsPaths? : Record<string, string>,
-    sudoAccount? : string,
-    ss58Prefix? : number,
-}
+    accountsConfig? : {
+        keyrings : AccountKeyringsConfig,
+        suAccount : string,
+    },
+};
 
 
 export interface TestingOptions
@@ -104,7 +108,13 @@ export interface TestingOptions
 }
 
 
+export type GeneralConfig = {
+    ss58Format : number,
+};
+
+
 export type ProjectConfig = {
+    general : GeneralConfig,
     directories : {
         artifacts : string,
         contracts : string,
@@ -114,7 +124,7 @@ export type ProjectConfig = {
         typings : string,
     },
     stack : {
-        blockTime: number,
+        blockTime : number,
         version : string,
         setupOptions : StackSetupOptions,
         node : NodeComponentOptions,

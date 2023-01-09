@@ -4,4 +4,6 @@
 /logs
 /stacks
 
+/accounts.json
+
 node_modules

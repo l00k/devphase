@@ -13,6 +13,7 @@ export class Initializer
     
     protected _templates : string[] = [
         '.gitignore',
+        'accounts.json',
         'devphase.config.ts',
     ];
     
