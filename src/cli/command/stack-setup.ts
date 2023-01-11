@@ -15,7 +15,7 @@ async function command (
     
     logger.log('Setup started');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const devPhase = await DevPhase.create(runtimeContext);

@@ -5,5 +5,6 @@
 /stacks
 
 /accounts.json
+/contracts.json
 
 node_modules

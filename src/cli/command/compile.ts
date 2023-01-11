@@ -22,7 +22,7 @@ async function command (
     
     logger.log('Contracts compilation');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const contractCompiler = new Compiler(runtimeContext);

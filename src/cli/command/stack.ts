@@ -11,7 +11,7 @@ async function command (runtimeContext : RuntimeContext)
     
     logger.log('Starting');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     await runtimeContext.requestStackBinaries();
     

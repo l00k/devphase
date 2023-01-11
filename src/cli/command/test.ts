@@ -16,7 +16,7 @@ async function command (
     
     logger.log('Running tests');
     
-    await runtimeContext.init(RunMode.Testing, network);
+    await runtimeContext.initContext(RunMode.Testing, network);
     runtimeContext.requestProjectDirectory();
     await runtimeContext.requestStackBinaries();
     

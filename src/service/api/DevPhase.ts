@@ -2,7 +2,7 @@ import type { Accounts, AccountsConfig, ContractType, DevPhaseOptions, NetworkCo
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
-import { AccountsManager } from '@/service/project/AccountsManager';
+import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
@@ -69,15 +69,15 @@ export class DevPhase
         });
         
         // load accounts
-        const accountsManager = new AccountsManager();
+        const accountManager = new AccountManager(runtimeContext);
         const accountsConfig : AccountsConfig = replaceRecursive({}, runtimeContext.config.accountsConfig);
         
-        const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
+        const accountsKeyrings = await accountManager.loadAccountsKeyringsFromStorageFile();
         if (accountsKeyrings) {
             replaceRecursive(accountsConfig, accountsKeyrings);
         }
         
-        const accounts = await accountsManager.loadAccounts(
+        const accounts = await accountManager.loadAccounts(
             accountsConfig.keyrings,
             runtimeContext.config.general.ss58Format,
             true
@@ -145,13 +145,6 @@ export class DevPhase
         
         let artifactPath = artifactPathOrName;
         if (isContractName) {
-            if (!this.runtimeContext) {
-                throw new Exception(
-                    'It is not allowed to use contract name in this context',
-                    1667493436149
-                );
-            }
-            
             artifactPath = path.join(
                 this.runtimeContext.paths.artifacts,
                 artifactPathOrName,

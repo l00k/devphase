@@ -1,4 +1,5 @@
 import { NetworkConfig, ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
+import { DevPhase } from '@/service/api/DevPhase';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
@@ -18,9 +19,10 @@ export class RuntimeContext
     public static readonly NETWORK_LOCAL = 'local';
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
+    protected _devPhase : DevPhase;
     
-    public config : ProjectConfig;
-    public paths : RuntimePaths = {
+    public readonly config : ProjectConfig;
+    public readonly paths : RuntimePaths = {
         devphase: null,
         project: null,
         context: null,
@@ -36,8 +38,8 @@ export class RuntimeContext
         typings: null,
     };
     
-    public network : string;
-    public networkConfig : NetworkConfig;
+    public readonly network : string;
+    public readonly networkConfig : NetworkConfig;
     
     
     public static async getSingleton () : Promise<RuntimeContext>
@@ -82,7 +84,7 @@ export class RuntimeContext
     }
     
     
-    public async init (
+    public async initContext (
         runMode : RunMode,
         network : string = RuntimeContext.NETWORK_LOCAL
     ) : Promise<void>
@@ -116,10 +118,11 @@ export class RuntimeContext
         }
         
         // get configuration
-        this.config = await this._getRunConfiguration(
+        const config = await this._getRunConfiguration(
             userConfig,
             runMode
         );
+        Object.assign(this, { config });
         
         // setup directories
         for (const [ name, directory ] of Object.entries(this.config.directories)) {
@@ -141,8 +144,11 @@ export class RuntimeContext
         );
         
         // network setup
-        this.network = network;
-        this.networkConfig = this.config.networks[this.network];
+        const networkConfig = this.config.networks[this.network];
+        Object.assign(this, {
+            network,
+            networkConfig
+        });
         
         if (
             runMode === RunMode.Testing
@@ -151,6 +157,33 @@ export class RuntimeContext
             this.networkConfig.blockTime = this.config.testing.blockTime;
         }
     }
+    
+    public async initDevPhase() : Promise<DevPhase>
+    {
+        if (this._devPhase) {
+            throw new Exception(
+                'DevPhase was already initiated',
+                1673451278525
+            );
+        }
+        
+        this._devPhase = await DevPhase.create(this);
+        
+        return this._devPhase;
+    }
+    
+    public getDevPhase() : DevPhase
+    {
+        if (!this._devPhase) {
+            throw new Exception(
+                'DevPhase is not ready yet',
+                1673451408519
+            );
+        }
+        
+        return this._devPhase;
+    }
+    
     
     
     public async requestStackBinaries ()

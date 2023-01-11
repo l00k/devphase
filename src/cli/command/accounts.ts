@@ -1,14 +1,15 @@
 import { RunMode } from '@/def';
-import { AccountsManager } from '@/service/project/AccountsManager';
+import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import { Command } from 'commander';
+import { table } from 'table';
 
 
 async function commandMain (runtimeContext : RuntimeContext)
 {
-    const logger = new Logger('Accounts management');
+    const logger = new Logger('Accounts');
     logger.log('Use subcommands');
 }
 
@@ -16,45 +17,56 @@ async function commandList (runtimeContext : RuntimeContext)
 {
     const logger = new Logger('Accounts');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
-    const accountsManager = new AccountsManager();
+    const accountManager = new AccountManager(runtimeContext);
     
-    const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
-    const accounts = await accountsManager.loadAccounts(
+    const accountsKeyrings = await accountManager.loadAccountsKeyringsFromStorageFile();
+    const accounts = await accountManager.loadAccounts(
         accountsKeyrings,
         runtimeContext.config.general.ss58Format,
         false
     );
     
-    logger.log('List of accounts');
+    
+    const tableData = [
+        [
+            chalk.bold.white('Alias'),
+            chalk.bold.white('Address'),
+            chalk.bold.white('Protection'),
+        ]
+    ];
+    
     for (const [ alias, account ] of Object.entries(accounts)) {
-        console.log(chalk.cyan(alias));
-        console.log(account.address);
-        console.log(account.isLocked ? chalk.green('Password protected') : chalk.yellow('Unprotected'));
-        console.log();
+        tableData.push([
+            chalk.cyan(alias),
+            account.address,
+            account.isLocked ? chalk.green('Password') : chalk.yellow('Unprotected')
+        ]);
     }
+    
+    logger.log('List of accounts');
+    console.log(table(tableData));
 }
 
 async function commandCreate (runtimeContext : RuntimeContext)
 {
     const logger = new Logger('Accounts');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
-    const accountsManager = new AccountsManager();
+    const accountManager = new AccountManager(runtimeContext);
     
-    const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
-    const accounts = await accountsManager.loadAccounts(
+    const accountsKeyrings = await accountManager.loadAccountsKeyringsFromStorageFile();
+    const accounts = await accountManager.loadAccounts(
         accountsKeyrings,
         runtimeContext.config.general.ss58Format,
         false
     );
     
-    const account = await accountsManager.createAccount(
-        runtimeContext,
+    const account = await accountManager.createAccount(
         runtimeContext.config.general.ss58Format
     );
     
@@ -69,7 +81,7 @@ export function accountsCommand (
     context : RuntimeContext
 )
 {
-    const mainCommand = program.command('accounts')
+    const mainCommand = program.command('account')
         .description('Accounts management')
         .action(() => commandMain(context))
     ;

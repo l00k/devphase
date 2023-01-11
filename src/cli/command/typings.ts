@@ -21,7 +21,7 @@ async function command (
     
     logger.log('Starting');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
     const binder = new TypeBinder(runtimeContext);

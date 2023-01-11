@@ -13,7 +13,7 @@ async function command (
     
     logger.log('Initiation');
     
-    await runtimeContext.init(RunMode.Simple);
+    await runtimeContext.initContext(RunMode.Simple);
     
     const initializer = new Initializer(runtimeContext);
     await initializer.init();

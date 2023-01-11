@@ -18,26 +18,29 @@ export type CreatedAccount = {
 }
 
 
-export class AccountsManager
+export class AccountManager
 {
     
-    protected _logger = new Logger(AccountsManager.name);
+    protected _logger = new Logger(AccountManager.name);
+    
+    public constructor (
+        protected _runtimeContext : RuntimeContext
+    )
+    {}
     
     
-    public async loadAccountsKeyringsFromConfigFile (
-        runtimeContext : RuntimeContext
-    ) : Promise<AccountKeyringsConfig>
+    public async loadAccountsKeyringsFromStorageFile () : Promise<AccountKeyringsConfig>
     {
-        const accountsConfigPath = path.join(
-            runtimeContext.paths.project,
+        const accountsStoragePath = path.join(
+            this._runtimeContext.paths.project,
             'accounts.json'
         );
-        if (!fs.existsSync(accountsConfigPath)) {
+        if (!fs.existsSync(accountsStoragePath)) {
             return null;
         }
         
         return JSON.parse(
-            fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
+            fs.readFileSync(accountsStoragePath, { encoding: 'utf-8' })
         );
     }
     
@@ -99,7 +102,6 @@ export class AccountsManager
     }
     
     public async createAccount (
-        runtimeContext : RuntimeContext,
         ss58Format : number = 30
     ) : Promise<CreatedAccount>
     {
@@ -133,11 +135,11 @@ export class AccountsManager
         const exported : any = !!password
             ? account.keyring.toJson(password)
             : mnemonic
-            ;
+        ;
         
         // export to config file
         const accountsConfigPath = path.join(
-            runtimeContext.paths.project,
+            this._runtimeContext.paths.project,
             'accounts.json'
         );
         if (!fs.existsSync(accountsConfigPath)) {
