@@ -68,6 +68,17 @@ export type AccountKeyringsConfig = {
     [name : string] : string | KeyringPair$Json,
 };
 
+export type AccountsConfig = {
+    keyrings : AccountKeyringsConfig,
+    suAccount : string,
+};
+
+
+export type NetworkConfig = {
+    nodeUrl : string,
+    nodeApiOptions? : ApiOptions,
+    workerUrl : string,
+};
 
 export type StackSetupOptions = {
     workerUrl? : string,
@@ -78,15 +89,7 @@ export type StackSetupResult = {
     clusterId : string,
 };
 
-
-export type DevPhaseOptions = StackSetupOptions & {
-    nodeUrl? : string,
-    nodeApiOptions? : ApiOptions,
-    accountsConfig? : {
-        keyrings : AccountKeyringsConfig,
-        suAccount : string,
-    },
-};
+export type DevPhaseOptions = NetworkConfig & StackSetupOptions;
 
 
 export interface TestingOptions
@@ -132,7 +135,10 @@ export type ProjectConfig = {
         pherry : PherryComponentOptions,
     },
     testing : TestingOptions,
-    devPhaseOptions : DevPhaseOptions,
+    networks : {
+        [networkName : string] : NetworkConfig,
+    },
+    accountsConfig : AccountsConfig,
 }
 export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
 

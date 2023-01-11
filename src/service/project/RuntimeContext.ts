@@ -3,6 +3,8 @@ import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
+import { types as PhalaSDKTypes } from '@phala/sdk';
+import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import findUp from 'find-up';
 import fs from 'fs';
 import path from 'path';
@@ -133,7 +135,7 @@ export class RuntimeContext
     }
     
     
-    public async requestStackBinaries()
+    public async requestStackBinaries ()
     {
         await this._stackBinaryDownloader.downloadIfRequired();
     }
@@ -221,10 +223,29 @@ export class RuntimeContext
                     }
                 },
             },
-            devPhaseOptions: {
-                nodeUrl: 'ws://localhost:{{stack.node.port}}',
-                workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            networks: {
+                local: {
+                    nodeUrl: 'ws://localhost:{{stack.node.port}}',
+                    nodeApiOptions: {
+                        types: {
+                            ...KhalaTypes,
+                            ...PhalaSDKTypes,
+                        }
+                    },
+                    workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+                }
             },
+            accountsConfig: {
+                keyrings: {
+                    alice: '//Alice',
+                    bob: '//Bob',
+                    charlie: '//Charlie',
+                    dave: '//Dave',
+                    eve: '//Eve',
+                    ferdie: '//Ferdie'
+                },
+                suAccount: 'alice'
+            }
         }, options);
         
         // replace stack version

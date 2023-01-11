@@ -145,12 +145,36 @@ const config : ProjectConfigOptions = {
         },
     },
     /**
-     * Configuration options of DevPhase instance used in testing
+     * Networks configuration
+     * Default network is local and it can be changed using CLI argument
      */
-    devPhaseOptions: {
-        nodeUrl: 'ws://localhost:{{stack.node.port}}',
-        workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+    networks: {
+        local: {
+            nodeUrl: 'ws://localhost:{{stack.node.port}}',
+            nodeApiOptions: {
+                types: {
+                    ...KhalaTypes,
+                    ...PhalaSDKTypes,
+                }
+            },
+            workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+        }
     },
+    /**
+     * Accounts fallback configuration
+     * It is overriden by values saved in ./accounts.json
+     */
+    accountsConfig: {
+        keyrings: {
+            alice: '//Alice', // string (in case of mnemonic) or account keyring JSON
+            bob: '//Bob',
+            charlie: '//Charlie',
+            dave: '//Dave',
+            eve: '//Eve',
+            ferdie: '//Ferdie'
+        },
+        suAccount: 'alice'
+    }
 };
 
 export default config;

@@ -1,4 +1,4 @@
-import type { Accounts, ContractType, DevPhaseOptions } from '@/def';
+import type { Accounts, AccountsConfig, ContractType, DevPhaseOptions } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
@@ -8,8 +8,6 @@ import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import { replaceRecursive } from '@/utils/replaceRecursive';
-import { types as PhalaSDKTypes } from '@phala/sdk';
-import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -31,7 +29,7 @@ export class DevPhase
 {
     
     public readonly api : ApiPromise;
-    public readonly options : DevPhaseOptions;
+    public readonly networkOptions : DevPhaseOptions;
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
@@ -53,74 +51,48 @@ export class DevPhase
     
     
     public static async create (
-        options : DevPhaseOptions = {},
-        runtimeContext? : RuntimeContext
+        runtimeContext : RuntimeContext,
+        network? : string
     ) : Promise<DevPhase>
     {
-        options = replaceRecursive({
-            nodeUrl: 'ws://localhost:9944',
-            nodeApiOptions: {
-                types: {
-                    ...KhalaTypes,
-                    ...PhalaSDKTypes,
-                }
-            },
-            workerUrl: 'http://localhost:8000',
-            accountsConfig: {
-                keyrings: {
-                    alice: '//Alice',
-                    bob: '//Bob',
-                    charlie: '//Charlie',
-                    dave: '//Dave',
-                    eve: '//Eve',
-                    ferdie: '//Ferdie',
-                },
-                suAccount: 'alice',
-            },
-            clusterId: undefined,
-        }, options);
+        network = network ?? 'local';
+        
+        const networkOptions = runtimeContext.config.networks[network];
         
         // create instance
         const instance = new DevPhase();
         
-        instance._apiOptions = options.nodeApiOptions;
-        instance._apiProvider = new WsProvider(options.nodeUrl);
+        instance._apiOptions = networkOptions.nodeApiOptions;
+        instance._apiProvider = new WsProvider(networkOptions.nodeUrl);
         
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
         Object.assign(instance, {
-            options,
+            networkOptions,
             runtimeContext,
             api,
-            workerUrl: options.workerUrl,
+            workerUrl: networkOptions.workerUrl,
         });
         
         // load accounts
         const accountsManager = new AccountsManager();
-        let ss58Format : number = 30;
+        const accountsConfig : AccountsConfig = replaceRecursive({}, runtimeContext.config.accountsConfig);
         
-        if (runtimeContext) {
-            const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
-            if (accountsKeyrings) {
-                replaceRecursive(
-                    options.accountsConfig.keyrings,
-                    accountsKeyrings
-                );
-            }
-            
-            ss58Format = runtimeContext.config.general.ss58Format;
+        const accountsKeyrings = await accountsManager.loadAccountsKeyringsFromConfigFile(runtimeContext);
+        if (accountsKeyrings) {
+            replaceRecursive(accountsConfig, accountsKeyrings);
         }
         
         const accounts = await accountsManager.loadAccounts(
-            options.accountsConfig.keyrings,
-            ss58Format,
+            accountsConfig.keyrings,
+            runtimeContext.config.general.ss58Format,
             true
         );
         
         Object.assign(instance, {
             accounts,
-            suAccount: accounts[options.accountsConfig.suAccount],
+            suAccount: accounts[accountsConfig.suAccount],
         });
         
         return instance;
