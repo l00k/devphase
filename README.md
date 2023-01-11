@@ -82,7 +82,7 @@ const config : ProjectConfigOptions = {
      * }
      */
     stack: {
-        blockTime: 6000, // default block time for direct stack running
+        blockTime: 6000, // default block time for direct stack running (may be overriden in testing mode)
         version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
         node: {
             port: 9944, // ws port
@@ -158,6 +158,7 @@ const config : ProjectConfigOptions = {
                 }
             },
             workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            blockTime: 6000, // network block time (may be overriden in testing mode)
         }
     },
     /**

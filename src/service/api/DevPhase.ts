@@ -1,4 +1,4 @@
-import type { Accounts, AccountsConfig, ContractType, DevPhaseOptions } from '@/def';
+import type { Accounts, AccountsConfig, ContractType, DevPhaseOptions, NetworkConfig } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
@@ -29,7 +29,7 @@ export class DevPhase
 {
     
     public readonly api : ApiPromise;
-    public readonly networkOptions : DevPhaseOptions;
+    public readonly networkConfig : NetworkConfig;
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
@@ -50,29 +50,22 @@ export class DevPhase
     private constructor () {}
     
     
-    public static async create (
-        runtimeContext : RuntimeContext,
-        network? : string
-    ) : Promise<DevPhase>
+    public static async create (runtimeContext : RuntimeContext) : Promise<DevPhase>
     {
-        network = network ?? 'local';
-        
-        const networkOptions = runtimeContext.config.networks[network];
-        
         // create instance
         const instance = new DevPhase();
         
-        instance._apiOptions = networkOptions.nodeApiOptions;
-        instance._apiProvider = new WsProvider(networkOptions.nodeUrl);
+        instance._apiOptions = runtimeContext.networkConfig.nodeApiOptions;
+        instance._apiProvider = new WsProvider(runtimeContext.networkConfig.nodeUrl);
         
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
         Object.assign(instance, {
-            networkOptions,
+            networkConfig: runtimeContext.networkConfig,
             runtimeContext,
             api,
-            workerUrl: networkOptions.workerUrl,
+            workerUrl: runtimeContext.networkConfig.workerUrl,
         });
         
         // load accounts

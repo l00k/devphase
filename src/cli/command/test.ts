@@ -7,13 +7,16 @@ import { MochaOptions } from 'mocha';
 import path from 'path';
 
 
-async function command (runtimeContext : RuntimeContext)
+async function command (
+    runtimeContext : RuntimeContext,
+    network : string
+)
 {
     const logger = new Logger('Test');
     
     logger.log('Running tests');
     
-    await runtimeContext.init(RunMode.Testing);
+    await runtimeContext.init(RunMode.Testing, network);
     runtimeContext.requestProjectDirectory();
     await runtimeContext.requestStackBinaries();
     
@@ -57,5 +60,6 @@ export function testCommand (
 {
     program.command('test')
         .description('Start tests')
-        .action(async() => command(context));
+        .option('-n, --network <network>', 'Network key', 'local')
+        .action((options) => command(context, options.network));
 }

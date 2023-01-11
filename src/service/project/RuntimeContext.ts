@@ -1,4 +1,4 @@
-import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
+import { NetworkConfig, ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
@@ -15,6 +15,7 @@ export class RuntimeContext
 {
     
     protected static readonly SINGLETON_KEY = 'devphase_Context_VSffVql3bvj9aulZY5DNnRCnrEt1V27a';
+    public static readonly NETWORK_LOCAL = 'local';
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
     
@@ -34,6 +35,9 @@ export class RuntimeContext
         tests: null,
         typings: null,
     };
+    
+    public network : string;
+    public networkConfig : NetworkConfig;
     
     
     public static async getSingleton () : Promise<RuntimeContext>
@@ -78,7 +82,10 @@ export class RuntimeContext
     }
     
     
-    public async init (runMode : RunMode) : Promise<void>
+    public async init (
+        runMode : RunMode,
+        network : string = RuntimeContext.NETWORK_LOCAL
+    ) : Promise<void>
     {
         const configFilePath = await findUp([
             'devphase.config.ts',
@@ -132,6 +139,17 @@ export class RuntimeContext
             this.paths.stacks,
             this.config.stack.version
         );
+        
+        // network setup
+        this.network = network;
+        this.networkConfig = this.config.networks[this.network];
+        
+        if (
+            runMode === RunMode.Testing
+            && this.network === RuntimeContext.NETWORK_LOCAL
+        ) {
+            this.networkConfig.blockTime = this.config.testing.blockTime;
+        }
     }
     
     
@@ -233,6 +251,7 @@ export class RuntimeContext
                         }
                     },
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+                    blockTime: 6000,
                 }
             },
             accountsConfig: {
@@ -251,7 +270,7 @@ export class RuntimeContext
         // replace stack version
         config.stack.version = await this._stackBinaryDownloader.uniformStackVersion(config.stack.version);
         
-        if (runMode == RunMode.Testing) {
+        if (runMode === RunMode.Testing) {
             config.stack.blockTime = config.testing.blockTime;
         }
         

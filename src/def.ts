@@ -78,6 +78,7 @@ export type NetworkConfig = {
     nodeUrl : string,
     nodeApiOptions? : ApiOptions,
     workerUrl : string,
+    blockTime : number,
 };
 
 export type StackSetupOptions = {

@@ -15,7 +15,6 @@ before(async function() {
     
     const {
         spawnStack,
-        blockTime,
         envSetup: { setup }
     } = this.runtimeContext.config.testing;
     
@@ -28,15 +27,7 @@ before(async function() {
     }
     
     logger.log('Init API');
-    const devPhaseOptions = {
-        blockTime,
-        ...this.runtimeContext.config.devPhaseOptions
-    };
-    
-    this.devPhase = await DevPhase.create(
-        devPhaseOptions,
-        this.runtimeContext
-    );
+    this.devPhase = await DevPhase.create(this.runtimeContext);
     this.api = this.devPhase.api;
     
     logger.log('Setup environment');
