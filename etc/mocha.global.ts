@@ -27,7 +27,7 @@ before(async function() {
     }
     
     logger.log('Init API');
-    this.devPhase = await DevPhase.create(this.runtimeContext);
+    this.devPhase = await DevPhase.create(this.runtimeContext, RuntimeContext.NETWORK_LOCAL);
     this.api = this.devPhase.api;
     
     logger.log('Setup environment');

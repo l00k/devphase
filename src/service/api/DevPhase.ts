@@ -12,6 +12,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import fs from 'fs';
+import * as net from 'net';
 import path from 'path';
 
 
@@ -29,13 +30,14 @@ export class DevPhase
 {
     
     public readonly api : ApiPromise;
+    public readonly network : string;
     public readonly networkConfig : NetworkConfig;
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
     public readonly suAccount : KeyringPair;
     
-    public readonly mainClusterId : string;
+    public readonly mainClusterId : string = '0x0000000000000000000000000000000000000000000000000000000000000000';
     
     public readonly runtimeContext : RuntimeContext;
     
@@ -50,22 +52,34 @@ export class DevPhase
     private constructor () {}
     
     
-    public static async create (runtimeContext : RuntimeContext) : Promise<DevPhase>
+    public static async create (
+        runtimeContext : RuntimeContext,
+        network : string
+    ) : Promise<DevPhase>
     {
         // create instance
         const instance = new DevPhase();
         
-        instance._apiOptions = runtimeContext.networkConfig.nodeApiOptions;
-        instance._apiProvider = new WsProvider(runtimeContext.networkConfig.nodeUrl);
+        const networkConfig = runtimeContext.config.networks[network];
+        if (!networkConfig) {
+            throw new Exception(
+                'Undefined network',
+                1673537590278
+            );
+        }
+        
+        instance._apiOptions = networkConfig.nodeApiOptions;
+        instance._apiProvider = new WsProvider(networkConfig.nodeUrl);
         
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
         Object.assign(instance, {
-            networkConfig: runtimeContext.networkConfig,
+            network,
+            networkConfig,
             runtimeContext,
             api,
-            workerUrl: runtimeContext.networkConfig.workerUrl,
+            workerUrl: networkConfig.workerUrl,
         });
         
         // load accounts

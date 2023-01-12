@@ -19,7 +19,7 @@ export class RuntimeContext
     public static readonly NETWORK_LOCAL = 'local';
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
-    protected _devPhase : DevPhase;
+    protected _devPhases : Record<string, DevPhase> = {};
     
     public readonly config : ProjectConfig;
     public readonly paths : RuntimePaths = {
@@ -38,9 +38,6 @@ export class RuntimeContext
         tests: null,
         typings: null,
     };
-    
-    public readonly network : string;
-    public readonly networkConfig : NetworkConfig;
     
     
     public static async getSingleton () : Promise<RuntimeContext>
@@ -150,44 +147,39 @@ export class RuntimeContext
         );
         
         // network setup
-        const networkConfig = this.config.networks[this.network];
-        Object.assign(this, {
-            network,
-            networkConfig
-        });
-        
-        if (
-            runMode === RunMode.Testing
-            && this.network === RuntimeContext.NETWORK_LOCAL
-        ) {
-            this.networkConfig.blockTime = this.config.testing.blockTime;
+        if (runMode === RunMode.Testing) {
+            this.config.networks.local.blockTime = this.config.testing.blockTime;
         }
     }
     
-    public async initDevPhase() : Promise<DevPhase>
+    public async initDevPhase(
+        network : string = RuntimeContext.NETWORK_LOCAL
+    ) : Promise<DevPhase>
     {
-        if (this._devPhase) {
+        if (this._devPhases[network]) {
             throw new Exception(
                 'DevPhase was already initiated',
                 1673451278525
             );
         }
         
-        this._devPhase = await DevPhase.create(this);
+        this._devPhases[network] = await DevPhase.create(this, network);
         
-        return this._devPhase;
+        return this._devPhases[network];
     }
     
-    public getDevPhase() : DevPhase
+    public getDevPhase(
+        network : string = RuntimeContext.NETWORK_LOCAL
+    ) : DevPhase
     {
-        if (!this._devPhase) {
+        if (!this._devPhases[network]) {
             throw new Exception(
                 'DevPhase is not ready yet',
                 1673451408519
             );
         }
         
-        return this._devPhase;
+        return this._devPhases[network];
     }
     
     

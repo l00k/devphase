@@ -1,4 +1,5 @@
 import { ContractType } from '@/def';
+import { DeployOptions, InstantiateOptions } from '@/service/api/ContractFactory';
 import { Compiler } from '@/service/project/Compiler';
 import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
@@ -31,8 +32,10 @@ export type ContractCompileOptions = {
 };
 
 export type ContractDeployOptions = {
-    contractName? : string,
+    contractType? : ContractType,
+    clusterId? : string,
     network? : string,
+    account? : string,
 };
 
 export type ContractCallOptions = {
@@ -68,6 +71,31 @@ export class ContractManager
         
         return JSON.parse(
             fs.readFileSync(contractsStoragePath, { encoding: 'utf-8' })
+        );
+    }
+    
+    protected async _addContractDefToStorageFile (
+        contractDef : ContractDefinition
+    )
+    {
+        const contractsStoragePath = path.join(
+            this._runtimeContext.paths.project,
+            'contracts.json'
+        );
+        
+        let currentData : ContractDefinition[] = await this.loadContractsDefFromStorageFile();
+        if (!currentData) {
+            currentData = [];
+        }
+        
+        currentData.push(contractDef);
+        
+        const outData = JSON.stringify(currentData);
+        
+        fs.writeFileSync(
+            contractsStoragePath,
+            outData,
+            { encoding: 'utf-8' }
         );
     }
     
@@ -127,7 +155,6 @@ export class ContractManager
         }
         
         // copy template
-        
         fs.cpSync(
             templatePath,
             targetContractPath,
@@ -202,10 +229,61 @@ export class ContractManager
     }
     
     public async deploy (
+        contractName : string,
+        constructor : string,
+        ctorArgs : string[],
         options : ContractDeployOptions
     )
     {
-    
+        options = {
+            network: RuntimeContext.NETWORK_LOCAL,
+            contractType: ContractType.InkCode,
+            ...options
+        };
+        
+        const devPhase = await this._runtimeContext.initDevPhase(options.network);
+        
+        const contractFactory = await devPhase.getFactory(
+            options.contractType,
+            contractName,
+            { clusterId: options.clusterId }
+        );
+        
+        // deploy
+        // todo ld 2023-01-12 16:52:42 - verify was contacts already deployed (query not implemented yet)
+        const deployOptions : DeployOptions = {};
+        if (options.account) {
+            deployOptions.asAccount = options.account;
+        }
+        
+        await contractFactory.deploy(deployOptions);
+        
+        // instantiate
+        const instantiateOptions : InstantiateOptions = {};
+        if (options.account) {
+            instantiateOptions.asAccount = options.account;
+        }
+        
+        const instance = await contractFactory.instantiate(
+            constructor,
+            ctorArgs,
+            instantiateOptions
+        );
+        
+        // save in contracts file
+        await this._addContractDefToStorageFile({
+            name: contractName,
+            network: options.network,
+            contractId: instance.contractId,
+            type: options.contractType,
+            clusterId: instance.clusterId,
+        });
+        
+        this._logger.log('Contract deployed');
+        console.log('Contract Id:', instance.contractId);
+        console.log('Cluster Id: ', instance.clusterId);
+        
+        await devPhase.cleanup();
     }
     
     public async contractCall (

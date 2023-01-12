@@ -5,10 +5,13 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import { Command } from 'commander';
 
+type StackSetupOptions = {
+    network? : string,
+}
 
 async function command (
     runtimeContext : RuntimeContext,
-    network : string
+    options : StackSetupOptions
 )
 {
     const logger = new Logger('StackSetup');
@@ -18,7 +21,7 @@ async function command (
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
-    const devPhase = await DevPhase.create(runtimeContext);
+    const devPhase = await DevPhase.create(runtimeContext, options.network);
     
     const stackSetupService = new StackSetupService(devPhase);
     await stackSetupService.setupStack(runtimeContext.config.stack.setupOptions);
@@ -36,5 +39,5 @@ export function stackSetupCommand (
     program.command('stack:setup')
         .description('Setup Phala stack')
         .option('-n, --network <network>', 'Network key', 'local')
-        .action((options) => command(context, options.network));
+        .action((options) => command(context, options));
 }

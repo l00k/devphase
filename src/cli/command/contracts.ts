@@ -1,4 +1,4 @@
-import { RunMode } from '@/def';
+import { ContractType, RunMode } from '@/def';
 import {
     ContractCallOptions,
     ContractCompileOptions,
@@ -81,6 +81,9 @@ async function commandCompile (
 
 async function commandDeploy (
     runtimeContext : RuntimeContext,
+    contractName : string,
+    constructor : string,
+    ctorArgs : string[],
     deployOptions : ContractDeployOptions
 )
 {
@@ -89,7 +92,12 @@ async function commandDeploy (
     
     const contractManager = new ContractManager(runtimeContext);
     
-    await contractManager.deploy(deployOptions);
+    await contractManager.deploy(
+        contractName,
+        constructor,
+        ctorArgs,
+        deployOptions
+    );
 }
 
 async function commandCall (
@@ -137,9 +145,27 @@ export function contractsCommand (
     
     mainCommand.command('deploy')
         .description('Deploy contract')
-        .option('-c, --contract <contractName>', 'Optional name of contract(s) to compile')
-        .option('-n, --network <network>', 'Target network to deploy')
-        .action((deployOptions : ContractDeployOptions) => commandDeploy(context, deployOptions))
+        .argument('contractName', 'Contract name')
+        .argument('constructor', 'Contract constructor')
+        .option('-t, --type <contractType>', 'Contract type (InkCode default)')
+        .option('-n, --network <network>', 'Target network to deploy (local default)')
+        .option('-l, --cluster <network>', 'Target cluster Id')
+        .option('-a, --account <account>', 'Account used to deploy')
+        .argument('[ctorArgs...]', 'Contract constructor arguments')
+        .action((
+            contractName : string,
+            constructor: string,
+            ctorArgs : string[],
+            deployOptions : ContractDeployOptions
+        ) => {
+            return commandDeploy(
+                context,
+                contractName,
+                constructor,
+                ctorArgs,
+                deployOptions
+            );
+        })
     ;
     
     mainCommand.command('call')

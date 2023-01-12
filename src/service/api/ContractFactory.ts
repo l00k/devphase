@@ -10,7 +10,6 @@ import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import type { IEvent } from '@polkadot/types/types';
-import axios from 'axios';
 import chalk from 'chalk';
 
 
@@ -65,6 +64,10 @@ export class ContractFactory
         const instance = new ContractFactory();
         
         instance._devPhase = devPhase;
+        
+        if (!clusterId) {
+            clusterId = devPhase.mainClusterId;
+        }
         
         Object.assign(instance, {
             contractType,
@@ -223,20 +226,21 @@ export class ContractFactory
         const api = await this._devPhase.createApiPromise();
         
         const { api: workerApi } = await PhalaSdk.create({
-            api: <any> api,
+            api: <any>api,
             baseURL: this._devPhase.workerUrl,
             contractId,
             autoDeposit: true,
         });
         
         const instance = new ContractPromise(
-            <any> workerApi,
+            <any>workerApi,
             this.metadata,
             contractId,
         );
         
         Object.assign(instance, {
-            contractId
+            contractId,
+            clusterId: this.clusterId,
         });
         
         return <any>instance;
