@@ -1,12 +1,15 @@
 import { ContractType } from '@/def';
+import { Compiler } from '@/service/project/Compiler';
+import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { TypeBinder } from '@/service/project/TypeBinder';
 import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import fs from 'fs';
+import _ from 'lodash';
 import path from 'path';
 import prompts from 'prompts';
-import _ from 'lodash';
 
 
 export type ContractDefinition = {
@@ -17,8 +20,24 @@ export type ContractDefinition = {
     clusterId? : string,
 }
 
-export type ContractCreateNewArgs = {
-    name : string,
+export type ContractCreateNewOptions = {
+    name? : string,
+};
+
+export type ContractCompileOptions = {
+    contractName? : string,
+    watch? : boolean,
+    release? : boolean,
+};
+
+export type ContractDeployOptions = {
+    contractName? : string,
+    network? : string,
+};
+
+export type ContractCallOptions = {
+    contractName? : string,
+    network? : string,
 };
 
 
@@ -67,21 +86,23 @@ export class ContractManager
         return contractFactory.attach(contractDef.contractId);
     }
     
-    public async createNew (args : Partial<ContractCreateNewArgs>)
+    public async createNew (
+        options : ContractCreateNewOptions
+    )
     {
         const contractNameValidator = name => /^[a-z][a-z0-9_]+$/.test(name);
         
-        if (!args.name) {
+        if (!options.name) {
             const { name } = await prompts({
                 type: 'text',
                 name: 'name',
                 message: `Contract name:`,
                 validate: contractNameValidator
             });
-            args.name = name;
+            options.name = name;
         }
         
-        if (!contractNameValidator(args.name)) {
+        if (!contractNameValidator(options.name)) {
             throw new Exception(
                 'Unallowed characters in contract name',
                 1673533712922
@@ -94,7 +115,7 @@ export class ContractManager
         );
         const targetContractPath = path.join(
             this._runtimeContext.paths.contracts,
-            args.name,
+            options.name,
         );
         
         // check it already exists
@@ -115,8 +136,8 @@ export class ContractManager
         
         // replace placeholders
         const placeholders = {
-            '{{contract_name}}': args.name,
-            '{{ContractName}}': _.startCase(_.camelCase(args.name)),
+            '{{contract_name}}': options.name,
+            '{{ContractName}}': _.startCase(_.camelCase(options.name)),
         };
         
         for (const file of ContractManager.TEMPLATE_FILES) {
@@ -149,6 +170,49 @@ export class ContractManager
         }
         
         fs.writeFileSync(filePath, fileData, { encoding: 'utf-8' });
+    }
+    
+    public async compile (
+        options : ContractCompileOptions
+    )
+    {
+        this._logger.log('Contracts compilation');
+        
+        const contractCompiler = new Compiler(this._runtimeContext);
+        const typeBinder = new TypeBinder(this._runtimeContext);
+        const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
+        
+        return multiContractExecutor.exec(
+            options.contractName,
+            options.watch,
+            async(contractName) => {
+                // compile
+                const result = await contractCompiler.compile(
+                    contractName,
+                    options.release
+                );
+                if (!result) {
+                    return false;
+                }
+                
+                // generate typing binding
+                return typeBinder.createBindings(contractName);
+            }
+        );
+    }
+    
+    public async deploy (
+        options : ContractDeployOptions
+    )
+    {
+    
+    }
+    
+    public async contractCall (
+        options : ContractCallOptions
+    )
+    {
+    
     }
     
 }

@@ -1,11 +1,17 @@
 import { RunMode } from '@/def';
-import { ContractCreateNewArgs, ContractDefinition, ContractManager } from '@/service/project/ContractManager';
+import {
+    ContractCallOptions,
+    ContractCompileOptions,
+    ContractCreateNewOptions,
+    ContractDefinition,
+    ContractDeployOptions,
+    ContractManager
+} from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { table } from 'table';
 import sortBy from 'lodash/sortBy';
+import { table } from 'table';
 
 
 async function commandMain (runtimeContext : RuntimeContext)
@@ -49,7 +55,7 @@ async function commandList (runtimeContext : RuntimeContext)
 
 async function commandNew (
     runtimeContext : RuntimeContext,
-    contractCreateNewArgs : Partial<ContractCreateNewArgs>
+    createNewOptions : ContractCreateNewOptions
 )
 {
     await runtimeContext.initContext(RunMode.Simple);
@@ -57,20 +63,46 @@ async function commandNew (
     
     const contractManager = new ContractManager(runtimeContext);
     
-    await contractManager.createNew(contractCreateNewArgs);
+    await contractManager.createNew(createNewOptions);
 }
 
-async function commandDeploy (runtimeContext : RuntimeContext)
-{
-    await runtimeContext.initContext(RunMode.Simple);
-    runtimeContext.requestProjectDirectory();
-}
-
-async function commandCall (runtimeContext : RuntimeContext)
+async function commandCompile (
+    runtimeContext : RuntimeContext,
+    compileOptions : ContractCompileOptions
+)
 {
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
+    const contractManager = new ContractManager(runtimeContext);
+    
+    await contractManager.compile(compileOptions);
+}
+
+async function commandDeploy (
+    runtimeContext : RuntimeContext,
+    deployOptions : ContractDeployOptions
+)
+{
+    await runtimeContext.initContext(RunMode.Simple);
+    runtimeContext.requestProjectDirectory();
+    
+    const contractManager = new ContractManager(runtimeContext);
+    
+    await contractManager.deploy(deployOptions);
+}
+
+async function commandCall (
+    runtimeContext : RuntimeContext,
+    callOptions : ContractCallOptions
+)
+{
+    await runtimeContext.initContext(RunMode.Simple);
+    runtimeContext.requestProjectDirectory();
+    
+    const contractManager = new ContractManager(runtimeContext);
+    
+    await contractManager.contractCall(callOptions);
 }
 
 
@@ -92,16 +124,27 @@ export function contractsCommand (
     mainCommand.command('new')
         .description('Create new contract')
         .option('-n, --name <name>', 'Contract name')
-        .action((contractCreateNewArgs : Partial<ContractCreateNewArgs>) => commandNew(context, contractCreateNewArgs))
+        .action((contractCreateNewOptions : Partial<ContractCreateNewOptions>) => commandNew(context, contractCreateNewOptions))
+    ;
+    
+    mainCommand.command('compile')
+        .description('Compile contract(s)')
+        .option('-c, --contract <contractName>', 'Optional name of contract(s) to compile')
+        .option('-w, --watch', 'Watch for changes', false)
+        .option('-r, --release', 'Compile in release mode', false)
+        .action((contractCompileOptions : ContractCompileOptions) => commandCompile(context, contractCompileOptions))
     ;
     
     mainCommand.command('deploy')
         .description('Deploy contract')
-        .action(() => commandDeploy(context))
+        .option('-c, --contract <contractName>', 'Optional name of contract(s) to compile')
+        .option('-n, --network <network>', 'Target network to deploy')
+        .action((deployOptions : ContractDeployOptions) => commandDeploy(context, deployOptions))
     ;
     
     mainCommand.command('call')
         .description('Call contract method')
-        .action(() => commandCall(context))
+        .option('-c, --contract <contractName>', 'Optional name of contract(s) to compile')
+        .action((callOptions : ContractCallOptions) => commandCall(context, callOptions))
     ;
 }
