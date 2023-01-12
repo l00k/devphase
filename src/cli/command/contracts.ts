@@ -102,6 +102,7 @@ async function commandDeploy (
 
 async function commandCall (
     runtimeContext : RuntimeContext,
+    contractName : string,
     callOptions : ContractCallOptions
 )
 {
@@ -110,7 +111,10 @@ async function commandCall (
     
     const contractManager = new ContractManager(runtimeContext);
     
-    await contractManager.contractCall(callOptions);
+    await contractManager.contractCall(
+        contractName,
+        callOptions
+    );
 }
 
 
@@ -170,7 +174,16 @@ export function contractsCommand (
     
     mainCommand.command('call')
         .description('Call contract method')
-        .option('-c, --contract <contractName>', 'Optional name of contract(s) to compile')
-        .action((callOptions : ContractCallOptions) => commandCall(context, callOptions))
+        .argument('contractName', 'Contract name')
+        .action((
+            contractName : string,
+            callOptions : ContractCallOptions
+        ) => {
+            return commandCall(
+                context,
+                contractName,
+                callOptions
+            );
+        })
     ;
 }

@@ -39,7 +39,6 @@ export type ContractDeployOptions = {
 };
 
 export type ContractCallOptions = {
-    contractName? : string,
     network? : string,
 };
 
@@ -287,6 +286,7 @@ export class ContractManager
     }
     
     public async contractCall (
+        contractName : string,
         options : ContractCallOptions
     )
     {
