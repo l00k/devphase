@@ -1,5 +1,5 @@
 import { RunMode } from '@/def';
-import { ContractDefinition, ContractManager } from '@/service/project/ContractManager';
+import { ContractCreateNewArgs, ContractDefinition, ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
@@ -10,14 +10,11 @@ import sortBy from 'lodash/sortBy';
 
 async function commandMain (runtimeContext : RuntimeContext)
 {
-    const logger = new Logger('Contracts');
-    logger.log('Use subcommands');
+    console.log('Use subcommands');
 }
 
 async function commandList (runtimeContext : RuntimeContext)
 {
-    const logger = new Logger('Contracts');
-    
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
@@ -46,32 +43,31 @@ async function commandList (runtimeContext : RuntimeContext)
         ]);
     }
     
-    logger.log('List of contracts');
+    console.log('List of contracts');
     console.log(table(tableData));
 }
 
-async function commandNew (runtimeContext : RuntimeContext)
+async function commandNew (
+    runtimeContext : RuntimeContext,
+    contractCreateNewArgs : Partial<ContractCreateNewArgs>
+)
 {
-    const logger = new Logger('Contracts');
-    
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
+    const contractManager = new ContractManager(runtimeContext);
+    
+    await contractManager.createNew(contractCreateNewArgs);
 }
 
 async function commandDeploy (runtimeContext : RuntimeContext)
 {
-    const logger = new Logger('Contracts');
-    
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
-    
 }
 
 async function commandCall (runtimeContext : RuntimeContext)
 {
-    const logger = new Logger('Contracts');
-    
     await runtimeContext.initContext(RunMode.Simple);
     runtimeContext.requestProjectDirectory();
     
@@ -95,7 +91,8 @@ export function contractsCommand (
     
     mainCommand.command('new')
         .description('Create new contract')
-        .action(() => commandNew(context))
+        .option('-n, --name <name>', 'Contract name')
+        .action((contractCreateNewArgs : Partial<ContractCreateNewArgs>) => commandNew(context, contractCreateNewArgs))
     ;
     
     mainCommand.command('deploy')

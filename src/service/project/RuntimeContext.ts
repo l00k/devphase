@@ -24,6 +24,7 @@ export class RuntimeContext
     public readonly config : ProjectConfig;
     public readonly paths : RuntimePaths = {
         devphase: null,
+        templates : null,
         project: null,
         context: null,
         
@@ -97,6 +98,11 @@ export class RuntimeContext
         this.paths.devphase = __dirname.endsWith('/cli')
             ? path.join(__dirname, '../../')
             : path.join(__dirname, '../');
+        
+        this.paths.templates = path.join(
+            this.paths.devphase,
+            'templates'
+        );
         
         let userConfig : ProjectConfigOptions = {};
         if (configFilePath) {

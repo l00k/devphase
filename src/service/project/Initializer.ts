@@ -40,8 +40,7 @@ export class Initializer
         
         for (const [ fromTemplateFile, toTemplateFile ] of Object.entries(this._templates)) {
             const sourceTemplatePath = path.join(
-                this._runtimeContext.paths.devphase,
-                'templates',
+                this._runtimeContext.paths.templates,
                 fromTemplateFile
             );
             

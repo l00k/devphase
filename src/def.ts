@@ -146,6 +146,7 @@ export type ProjectConfigOptions = RecursivePartial<ProjectConfig>;
 
 export type RuntimePaths = {
     devphase : string,
+    templates : string,
     project : string,
     context : string,
     
