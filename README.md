@@ -31,9 +31,19 @@ yarn devphase stack
 yarn devphase stack:setup
 ```
 
-- Contracts compilation
+- Accounts management
 ```shell
-yarn devphase compile [contractName] [--watch]
+yarn devphase account list
+yarn devphase account create
+```
+
+- Contracts management
+```shell
+yarn devphase contract list
+yarn devphase contract new
+yarn devphase contract compile
+yarn devphase contract deploy
+yarn devphase contract call
 ```
 
 - Contracts TS bindings creation
