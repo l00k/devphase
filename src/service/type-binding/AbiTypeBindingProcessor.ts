@@ -112,7 +112,9 @@ export class AbiTypeBindingProcessor
             .filter(message => message.mutates === false);
         for (const queryMessage of queryMessages) {
             const name = this.formatInterfaceName(queryMessage.label);
-            const returnType = this.structTypeBuilder.getCodecType(queryMessage.returnType.type);
+            const returnType = queryMessage.returnType
+                ? this.structTypeBuilder.getCodecType(queryMessage.returnType.type)
+                : null;
             
             queriesModuleInterfaces.push({
                 isExported: true,
