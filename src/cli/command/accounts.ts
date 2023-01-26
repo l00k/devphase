@@ -1,6 +1,7 @@
 import { RunMode } from '@/def';
-import { AccountManager } from '@/service/project/AccountManager';
+import { AccountCreateOptions, AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -50,7 +51,10 @@ async function commandList (runtimeContext : RuntimeContext)
     console.log(table(tableData));
 }
 
-async function commandCreate (runtimeContext : RuntimeContext)
+async function commandCreate (
+    runtimeContext : RuntimeContext,
+    options : AccountCreateOptions
+)
 {
     const logger = new Logger('Accounts');
     
@@ -59,14 +63,8 @@ async function commandCreate (runtimeContext : RuntimeContext)
     
     const accountManager = new AccountManager(runtimeContext);
     
-    const accountsKeyrings = await accountManager.loadAccountsKeyringsFromStorageFile();
-    const accounts = await accountManager.loadAccounts(
-        accountsKeyrings,
-        runtimeContext.config.general.ss58Format,
-        false
-    );
-    
     const account = await accountManager.createAccount(
+        options,
         runtimeContext.config.general.ss58Format
     );
     
@@ -93,6 +91,7 @@ export function accountsCommand (
     
     mainCommand.command('create')
         .description('Create new account')
-        .action(() => commandCreate(context))
+        .requiredOption('-a, --alias <alias>', 'Account alias')
+        .action((options) => commandCreate(context, options))
     ;
 }

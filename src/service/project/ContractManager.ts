@@ -117,7 +117,7 @@ export class ContractManager
         options : ContractCreateNewOptions
     )
     {
-        const contractNameValidator = name => /^[a-z][a-z0-9_]+$/.test(name);
+        const contractNameValidator = value => /^[a-z][a-z0-9_]+$/.test(value);
         
         if (!options.name) {
             const { name } = await prompts({

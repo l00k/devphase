@@ -12,6 +12,11 @@ import path from 'path';
 import prompts from 'prompts';
 
 
+export type AccountCreateOptions = {
+    alias : string,
+    
+}
+
 export type CreatedAccount = {
     alias : string,
     keyring : KeyringPair,
@@ -102,21 +107,32 @@ export class AccountManager
     }
     
     public async createAccount (
+        options : AccountCreateOptions,
         ss58Format : number = 30
     ) : Promise<CreatedAccount>
     {
+        // validate
+        const accountAliasValidator = value => /^[a-z0-9_]+$/.test(value);
+        if (!accountAliasValidator(options.alias)) {
+            throw new Exception(
+                'Unallowed characters in account alias',
+                1674652892297
+            );
+        }
+        
+        const accountsKeyrings = await this.loadAccountsKeyringsFromStorageFile();
+        if (accountsKeyrings[options.alias]) {
+            throw new Exception(
+                'Account with given alias already exists',
+                1674653030541
+            );
+        }
+        
+        // create
         const account : CreatedAccount = {
-            alias: '',
+            alias: options.alias,
             keyring: null,
         };
-        
-        const { alias } = await prompts({
-            type: 'text',
-            name: 'alias',
-            message: `Account alias`,
-            validate: alias => /^[a-z0-9_]+$/.test(alias)
-        });
-        account.alias = alias;
         
         const keyring = new Keyring.Keyring({
             type: 'sr25519',
@@ -150,7 +166,7 @@ export class AccountManager
             fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
         );
         
-        accountsJson[alias] = exported;
+        accountsJson[options.alias] = exported;
         
         fs.writeFileSync(
             accountsConfigPath,
