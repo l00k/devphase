@@ -92,9 +92,11 @@ export class RuntimeContext
             'devphase.config.js',
         ]);
         
-        this.paths.devphase = __dirname.endsWith('/cli')
-            ? path.join(__dirname, '../../')
-            : path.join(__dirname, '../');
+        const packageFilePath = await findUp(
+            [ 'package.json' ],
+            { cwd: __dirname }
+        );
+        this.paths.devphase = path.dirname(packageFilePath);
         
         this.paths.templates = path.join(
             this.paths.devphase,

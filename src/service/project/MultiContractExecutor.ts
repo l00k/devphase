@@ -1,19 +1,17 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
 import glob from 'glob';
+import Listr from 'listr';
 import path from 'path';
 
 
-type ExecCallback = (contractName : string) => Promise<boolean>;
+type ExecCallback = (contractName : string) => Promise<Listr>;
 
 
 export class MultiContractExecutor
 {
-    
-    protected _logger = new Logger(MultiContractExecutor.name);
     
     public constructor (
         public runtimeContext : RuntimeContext
@@ -22,39 +20,39 @@ export class MultiContractExecutor
     
     
     public async exec (
-        contractName : string,
+        contractNamePattern : string,
         watch : boolean,
         callback : ExecCallback,
-    ) : Promise<void>
+    ) : Promise<Listr>
     {
-        if (contractName) {
-            this._logger.log('Criteria:', chalk.cyan(contractName));
+        if (contractNamePattern) {
+            ux.debug('Criteria:', chalk.cyan(contractNamePattern));
         }
         else {
-            this._logger.log('Criteria:', chalk.yellow('any'));
+            ux.debug('Criteria:', chalk.yellow('any'));
         }
         
-        const matchedContracts = this.matchContracts(contractName);
-        this._logger.log('Matched contracts:', matchedContracts);
-        
+        const matchedContracts = this.matchContracts(contractNamePattern);
         if (!matchedContracts.length) {
-            this._logger.log('Nothing to do');
-            return;
+            ux.debug('Nothing to do');
+            return null;
         }
         
+        ux.debug('Matched contracts:');
+        ux.debug(matchedContracts.map(name => chalk.cyan(name)).join(', '));
+        ux.debug('');
+        
+        const listrOpts = [];
         for (const contract of matchedContracts) {
-            const result = await callback(contract);
-            if (!result) {
-                throw new Exception(
-                    `Unable to execute action for ${contract} contract`,
-                    1667022951192
-                );
-            }
+            listrOpts.push({
+                title: chalk.cyan(contract),
+                task: () => callback(contract),
+            });
         }
         
         if (watch) {
             const contractsBasePath = this.runtimeContext.paths.contracts;
-        
+            
             const patternsToWatch = matchedContracts.map(contract => {
                 return path.join(contractsBasePath, contract);
             });
@@ -70,11 +68,14 @@ export class MultiContractExecutor
                 const relPath = path.relative(contractsBasePath, _path);
                 const contractName = relPath.split('/')[0];
                 
-                this._logger.log('Change detected in', chalk.blueBright(contractName));
+                ux.debug(chalk.yellow('Change detected in'));
+                ux.debug(chalk.blueBright(contractName));
                 
                 callback(contractName);
             });
         }
+        
+        return new Listr(listrOpts);
     }
     
     public matchContracts (contractName? : string) : string[]

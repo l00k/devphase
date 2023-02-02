@@ -2,19 +2,16 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { AbiTypeBindingProcessor } from '@/service/type-binding/AbiTypeBindingProcessor';
 import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
+import { ux } from '@oclif/core';
 
 
 export class TypeBinder
 {
-    
-    protected _logger = new Logger(TypeBinder.name);
-    
     
     public constructor (
         public runtimeContext : RuntimeContext
@@ -23,7 +20,7 @@ export class TypeBinder
     
     public async createBindings (contractName : string) : Promise<boolean>
     {
-        this._logger.log('Generating type bindings for:', chalk.blueBright(contractName));
+        ux.debug('Generating type bindings for:', chalk.blueBright(contractName));
         
         // load & parse metadata
         const artifactsPath = path.join(

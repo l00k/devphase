@@ -1,16 +1,17 @@
 import { ContractType } from '@/def';
 import { DeployOptions, InstantiateOptions } from '@/service/api/ContractFactory';
-import { Compiler } from '@/service/project/Compiler';
+import { CompilationResult, Compiler } from '@/service/project/Compiler';
 import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { TypeBinder } from '@/service/project/TypeBinder';
 import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
+import chalk from 'chalk';
 import fs from 'fs';
+import Listr from 'listr';
 import _ from 'lodash';
 import path from 'path';
-import prompts from 'prompts';
 
 
 export type ContractDefinition = {
@@ -51,7 +52,6 @@ export class ContractManager
         'lib.rs'
     ];
     
-    protected _logger = new Logger(ContractManager.name);
     
     public constructor (
         protected _runtimeContext : RuntimeContext
@@ -118,20 +118,9 @@ export class ContractManager
     )
     {
         const contractNameValidator = value => /^[a-z][a-z0-9_]+$/.test(value);
-        
-        if (!options.name) {
-            const { name } = await prompts({
-                type: 'text',
-                name: 'name',
-                message: `Contract name:`,
-                validate: contractNameValidator
-            });
-            options.name = name;
-        }
-        
         if (!contractNameValidator(options.name)) {
             throw new Exception(
-                'Unallowed characters in contract name',
+                'Unallowed characters in contract name ^[a-z][a-z0-9_]+$',
                 1673533712922
             );
         }
@@ -161,9 +150,12 @@ export class ContractManager
         );
         
         // replace placeholders
+        const nameSnakeCase = options.name;
+        const namePascalCase = _.startCase(_.camelCase(options.name)).replaceAll(' ', '');
+        
         const placeholders = {
-            '{{contract_name}}': options.name,
-            '{{ContractName}}': _.startCase(_.camelCase(options.name)),
+            '{{contract_name}}': nameSnakeCase,
+            '{{ContractName}}': namePascalCase
         };
         
         for (const file of ContractManager.TEMPLATE_FILES) {
@@ -178,10 +170,16 @@ export class ContractManager
             );
         }
         
-        this._logger.log(
-            'Contract created in',
-            targetContractPath
-        );
+        ux.debug(chalk.green('Contract created in:'));
+        ux.debug(targetContractPath);
+        
+        return {
+            name: {
+                snakeCase: nameSnakeCase,
+                pascalCase: namePascalCase,
+            },
+            path: targetContractPath,
+        };
     }
     
     protected async _replacePlaceholdersInFile (
@@ -200,31 +198,51 @@ export class ContractManager
     
     public async compile (
         options : ContractCompileOptions
-    )
+    ) : Promise<Record<string, CompilationResult>>
     {
-        this._logger.log('Contracts compilation');
+        ux.action.start('Contracts compilation');
         
         const contractCompiler = new Compiler(this._runtimeContext);
         const typeBinder = new TypeBinder(this._runtimeContext);
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
         
-        return multiContractExecutor.exec(
+        const compilationResults : Record<string, CompilationResult> = {};
+        
+        const listr = await multiContractExecutor.exec(
             options.contractName,
             options.watch,
             async(contractName) => {
-                // compile
-                const result = await contractCompiler.compile(
-                    contractName,
-                    options.release
-                );
-                if (!result) {
-                    return false;
-                }
-                
-                // generate typing binding
-                return typeBinder.createBindings(contractName);
+                return new Listr([
+                    {
+                        title: 'Compilation',
+                        task: async() => {
+                            const result = await contractCompiler.compile(
+                                contractName,
+                                options.release
+                            );
+                            if (!result.result) {
+                                throw new Exception(
+                                    'Unable to compile',
+                                    1675312571299
+                                );
+                            }
+                            
+                            compilationResults[contractName] = result;
+                        }
+                    },
+                    {
+                        title: 'Type binding',
+                        task: () => typeBinder.createBindings(contractName)
+                    }
+                ]);
             }
         );
+        
+        await listr.run();
+        
+        ux.action.stop();
+        
+        return compilationResults;
     }
     
     public async deploy (
@@ -278,11 +296,13 @@ export class ContractManager
             clusterId: instance.clusterId,
         });
         
-        this._logger.log('Contract deployed');
-        console.log('Contract Id:', instance.contractId);
-        console.log('Cluster Id: ', instance.clusterId);
+        ux.debug(chalk.green('Contract deployed'));
+        ux.debug('Contract Id:', instance.contractId);
+        ux.debug('Cluster Id: ', instance.clusterId);
         
         await devPhase.cleanup();
+        
+        return instance;
     }
     
     public async contractCall (

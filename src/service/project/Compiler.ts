@@ -1,16 +1,19 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess from 'child_process';
 import * as fs from 'fs';
 import path from 'path';
 
 
+export type CompilationResult = {
+    result : boolean,
+    path? : string,
+}
+
+
 export class Compiler
 {
-    
-    protected _logger = new Logger(Compiler.name);
-    
     
     public constructor (
         protected _runtimeContext : RuntimeContext
@@ -20,7 +23,7 @@ export class Compiler
     public async compile (
         contractName : string,
         releaseMode : boolean
-    ) : Promise<boolean>
+    ) : Promise<CompilationResult>
     {
         const contractPath = path.join(
             this._runtimeContext.paths.contracts,
@@ -30,8 +33,6 @@ export class Compiler
             this._runtimeContext.paths.artifacts,
             contractName
         );
-        
-        this._logger.log('Building:', chalk.blueBright(contractName));
         
         const args = [ '+nightly', 'contract', 'build' ];
         if (releaseMode) {
@@ -48,6 +49,7 @@ export class Compiler
         
         // analyzing contracts output
         let outputDirectory : string;
+        let compilationTextOutput = '';
         
         const analyzeOutput = (text : string) => {
             const lines = text.split('\n').map(line => line.trim());
@@ -57,7 +59,7 @@ export class Compiler
                 outputDirectory = lines[lineIdx + 1];
             }
             
-            process.stdout.write(text);
+            compilationTextOutput += text;
         };
         
         child.stdout.setEncoding('utf-8');
@@ -71,13 +73,15 @@ export class Compiler
         });
         
         if (resultCode !== 0) {
-            this._logger.error('Failed building contract');
-            return false;
+            ux.debug(compilationTextOutput);
+            ux.error('Failed building contract');
+            return { result: false };
         }
         
         if (!outputDirectory) {
-            this._logger.error('Unable to detect output directory');
-            return false;
+            ux.debug(compilationTextOutput);
+            ux.error('Unable to detect output directory');
+            return { result: false };
         }
         
         // create artifacts directory
@@ -86,7 +90,7 @@ export class Compiler
         }
         
         // check & copy artifact files
-        this._logger.log('Files generated under:');
+        ux.debug(chalk.green('Files generated under:'));
         
         const artifactFiles : string[] = [
             `${contractName}.contract`,
@@ -96,13 +100,8 @@ export class Compiler
         for (const artifactFile of artifactFiles) {
             const sourceArtifactFilePath = path.join(outputDirectory, artifactFile);
             if (!fs.existsSync(sourceArtifactFilePath)) {
-                this._logger.error(
-                    'File',
-                    artifactFile,
-                    'not generated under',
-                    sourceArtifactFilePath
-                );
-                return false;
+                ux.error(`File ${artifactFile} not generated under ${sourceArtifactFilePath}`);
+                return { result: false };
             }
             
             const artifactFilePath = path.join(artifactsDirPath, artifactFile);
@@ -111,12 +110,17 @@ export class Compiler
                 artifactFilePath
             );
             
-            console.log(
+            ux.debug(
                 path.relative(this._runtimeContext.paths.project, artifactFilePath)
             );
         }
         
-        return true;
+        ux.debug('');
+        
+        return {
+            result: true,
+            path: artifactsDirPath
+        };
     }
     
 }
