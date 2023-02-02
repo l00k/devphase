@@ -1,9 +1,10 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
 import axios from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
+import Listr from 'listr';
 import path from 'path';
 
 
@@ -28,8 +29,6 @@ export class StackBinaryDownloader
         'pherry',
     ];
     
-    
-    protected _logger : Logger = new Logger(StackBinaryDownloader.name);
     
     protected _releases : Release[];
     
@@ -107,69 +106,91 @@ export class StackBinaryDownloader
     
     public async downloadIfRequired () : Promise<void>
     {
-        // create releases dir
-        const releaseStackPath = this._context.paths.currentStack;
-        if (!fs.existsSync(releaseStackPath)) {
-            this._logger.log('Creating stack directory');
-            
-            fs.mkdirSync(releaseStackPath, { recursive: true });
-        }
-        
-        let needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
-        if (!needsDownload) {
-            return;
-        }
-        
-        // find release
-        const release = await this.findRelease(this._context.config.stack.version);
-        
-        // download assets
-        this._logger.log(
-            'Downloading stack binaries',
-            chalk.cyan(release.name)
-        );
-        
-        for (const asset of release.assets) {
-            const isBinary = StackBinaryDownloader.EXECUTABLES.includes(asset.name);
-            
-            const filePath = path.join(
-                releaseStackPath,
-                asset.name
-            );
-            if (fs.existsSync(filePath)) {
-                continue;
-            }
-            
-            this._logger.log(
-                isBinary
-                    ? chalk.greenBright(asset.name)
-                    : chalk.blueBright(asset.name)
-            );
-            
-            const { status, data } = await axios.get(
-                asset.browser_download_url,
-                {
-                    responseType: 'arraybuffer',
-                    headers: {
-                        'Content-Type': 'application/gzip'
-                    },
-                    validateStatus: () => true,
+        const listr = new Listr([
+            {
+                title: 'Checking releases directory',
+                task: () => {
+                    const releaseStackPath = this._context.paths.currentStack;
+                    if (!fs.existsSync(releaseStackPath)) {
+                        ux.debug('Creating stack directory');
+                        fs.mkdirSync(releaseStackPath, { recursive: true });
+                    }
                 }
-            );
-            if (status !== 200) {
-                throw new Exception(
-                    'Unable to download release',
-                    1668572702020
-                );
+            },
+            {
+                title: 'Checking target release binaries',
+                task: async() => {
+                    const releaseStackPath = this._context.paths.currentStack;
+                    
+                    let needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
+                    if (!needsDownload) {
+                        return;
+                    }
+                    
+                    // find release
+                    const release = await this.findRelease(this._context.config.stack.version);
+                    
+                    const subListrOpts = [];
+                    for (const asset of release.assets) {
+                        const isBinary = StackBinaryDownloader.EXECUTABLES.includes(asset.name);
+                        
+                        const filePath = path.join(
+                            releaseStackPath,
+                            asset.name
+                        );
+                        if (fs.existsSync(filePath)) {
+                            continue;
+                        }
+                        
+                        const title = isBinary
+                            ? chalk.greenBright(asset.name)
+                            : chalk.blueBright(asset.name)
+                        ;
+                        
+                        subListrOpts.push({
+                            title,
+                            task: async() => {
+                                // download single file
+                                const { status, data } = await axios.get(
+                                    asset.browser_download_url,
+                                    {
+                                        responseType: 'arraybuffer',
+                                        headers: {
+                                            'Content-Type': 'application/gzip'
+                                        },
+                                        validateStatus: () => true,
+                                    }
+                                );
+                                if (status !== 200) {
+                                    throw new Exception(
+                                        'Unable to download release',
+                                        1668572702020
+                                    );
+                                }
+                                
+                                fs.writeFileSync(filePath, data, { encoding: 'binary' });
+                                
+                                // make binary executable
+                                if (isBinary) {
+                                    fs.chmodSync(filePath, 0o755);
+                                }
+                            }
+                        });
+                    }
+                    
+                    if (subListrOpts.length) {
+                        return new Listr([
+                            {
+                                title: `Downloading stack binaries ${chalk.cyan(release.name)}`,
+                                task: () => new Listr(subListrOpts, { concurrent: true }),
+                            }
+                        ]);
+                    }
+                }
             }
-            
-            fs.writeFileSync(filePath, data, { encoding: 'binary' });
-            
-            // make binary executable
-            if (isBinary) {
-                fs.chmodSync(filePath, 0o755);
-            }
-        }
+        ]);
+        
+        return listr.run();
     }
     
 }

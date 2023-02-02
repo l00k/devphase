@@ -9,6 +9,8 @@ export class AccountListCommand
     extends BaseCommand<typeof AccountListCommand>
 {
     
+    public static summary : string = 'Lists managed accounts';
+    
     public static flags = {
         ...ux.table.flags(),
     };

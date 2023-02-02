@@ -10,6 +10,8 @@ export class AccountCreateCommand
     extends BaseCommand<typeof AccountCreateCommand>
 {
     
+    public static summary : string = 'Creates new managed account';
+    
     public static flags = {
         alias: Flags.string({
             summary: 'Account alias',

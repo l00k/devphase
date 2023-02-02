@@ -7,6 +7,8 @@ import { Flags, ux } from '@oclif/core';
 export class InitCommand
     extends BaseCommand<typeof InitCommand>
 {
+
+    public static summary : string = 'Initiate devPHAse project';
     
     public async run ()
     {
