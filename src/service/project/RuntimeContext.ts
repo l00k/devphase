@@ -1,5 +1,6 @@
-import { NetworkConfig, ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
+import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
+import { BaseCommand } from '@/service/BaseCommand';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
@@ -9,7 +10,6 @@ import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import findUp from 'find-up';
 import fs from 'fs';
 import path from 'path';
-
 
 
 export class RuntimeContext
@@ -24,7 +24,7 @@ export class RuntimeContext
     public readonly config : ProjectConfig;
     public readonly paths : RuntimePaths = {
         devphase: null,
-        templates : null,
+        templates: null,
         project: null,
         context: null,
         
@@ -152,7 +152,7 @@ export class RuntimeContext
         }
     }
     
-    public async initDevPhase(
+    public async initDevPhase (
         network : string = RuntimeContext.NETWORK_LOCAL
     ) : Promise<DevPhase>
     {
@@ -168,7 +168,7 @@ export class RuntimeContext
         return this._devPhases[network];
     }
     
-    public getDevPhase(
+    public getDevPhase (
         network : string = RuntimeContext.NETWORK_LOCAL
     ) : DevPhase
     {

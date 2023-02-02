@@ -25,10 +25,13 @@
         "lint": "eslint .",
         "test": "ts-mocha",
         "coverage:badge": "coverage-badge-creator --config './.badge-coverage-config.json'",
-        "compile": "tsup",
+        "compile": "ttsc -p ./tsconfig.build.json",
         "build": "yarn lint && yarn test && yarn coverage:badge && yarn compile"
     },
     "dependencies": {
+        "@oclif/core": "^2.0.7",
+        "@oclif/plugin-help": "^5.2.2",
+        "@oclif/plugin-plugins": "^2.2.4",
         "@phala/sdk": "^0.3.5-beta.9",
         "@phala/typedefs": "^0.2.32",
         "@polkadot/api-contract": "^9.8.2",
@@ -44,7 +47,6 @@
         "glob": "^8.0.3",
         "lodash": "^4.17.21",
         "mocha": "^10.0.0",
-        "prompts": "^2.4.2",
         "table": "^6.8.1",
         "ts-morph": "^16.0.0",
         "tsconfig-paths": "^4.1.0"
@@ -67,10 +69,28 @@
         "eslint": "^8.27.0",
         "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
-        "tsup": "^6.2.3",
-        "typescript": "^4.8.4"
+        "ttypescript": "^1.5.15",
+        "typescript": "^4.8.4",
+        "typescript-transform-paths": "^3.4.6"
     },
     "engines": {
         "node": ">=16"
+    },
+    "oclif": {
+        "bin": "devphase",
+        "dirname": "devphase",
+        "commands": "./dist/cli/commands",
+        "topicSeparator": " ",
+        "topics": {
+            "account": {
+                "description": "Accounts management"
+            },
+            "contract": {
+                "description": "Contracts management"
+            },
+            "stack": {
+                "description": "Phala stack related commands"
+            }
+        }
     }
 }

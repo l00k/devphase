@@ -1,5 +1,5 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
@@ -7,8 +7,6 @@ import path from 'path';
 
 export class Initializer
 {
-    
-    protected _logger = new Logger(Initializer.name);
     
     protected _templates : Record<string, string> = {
         'gitignore': '.gitignore',
@@ -31,12 +29,12 @@ export class Initializer
     {
         const inProjectDirectory = await this._runtimeContext.isInProjectDirectory();
         if (inProjectDirectory) {
-            this._logger.log('Project already initiated');
-            return true;
+            ux.debug('Project already initiated');
+            return false;
         }
         
         // copy templates
-        this._logger.log('Creating files');
+        ux.debug('Creating files');
         
         for (const [ fromTemplateFile, toTemplateFile ] of Object.entries(this._templates)) {
             const sourceTemplatePath = path.join(
@@ -49,7 +47,7 @@ export class Initializer
                 continue;
             }
             
-            this._logger.log(chalk.cyan(toTemplateFile));
+            ux.log(chalk.cyan(toTemplateFile));
             
             fs.copyFileSync(
                 sourceTemplatePath,
@@ -58,7 +56,7 @@ export class Initializer
         }
         
         // create directories
-        this._logger.log('Creating directories');
+        ux.debug('Creating directories');
         
         for (const directory of this._directories) {
             const targetDirectoryPath = `./${directory}`;
@@ -66,7 +64,7 @@ export class Initializer
                 continue;
             }
             
-            this._logger.log(chalk.cyan(directory));
+            ux.log(chalk.cyan(directory));
             
             fs.mkdirSync(targetDirectoryPath);
         }

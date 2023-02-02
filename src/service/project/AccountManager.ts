@@ -2,6 +2,7 @@ import { AccountKeyringsConfig, Accounts } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
+import { ux } from '@oclif/core';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
@@ -9,12 +10,12 @@ import { waitReady } from '@polkadot/wasm-crypto';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import prompts from 'prompts';
 
 
 export type AccountCreateOptions = {
     alias : string,
-    
+    passphrase? : string,
+    noPassphrase? : boolean,
 }
 
 export type CreatedAccount = {
@@ -83,11 +84,10 @@ export class AccountManager
         if (unlock) {
             for (const [ alias, keyring ] of Object.entries(accounts)) {
                 if (keyring.isLocked) {
-                    const { password } = await prompts({
-                        type: 'password',
-                        name: 'password',
-                        message: `Account ${chalk.cyan(alias)} is locked. Provide password:`
-                    });
+                    const password = await ux.prompt(
+                        `Account ${chalk.cyan(alias)} is locked. Provide password:`,
+                        { type: 'mask'}
+                    );
                     
                     try {
                         keyring.unlock(password);
@@ -142,14 +142,18 @@ export class AccountManager
         const mnemonic : string = mnemonicGenerate();
         account.keyring = keyring.addFromMnemonic(mnemonic);
         
-        const { password } = await prompts({
-            type: 'password',
-            name: 'password',
-            message: `Account password (leave empty if to save as plain text)`,
-        });
+        if (
+            !options.passphrase
+            && !options.noPassphrase
+        ) {
+            options.passphrase = await ux.prompt(
+                'Account passphrase (leave empty if to save as plain text)',
+                { type: 'mask'}
+            );
+        }
         
-        const exported : any = !!password
-            ? account.keyring.toJson(password)
+        const exported : any = !!options.passphrase
+            ? account.keyring.toJson(options.passphrase)
             : mnemonic
         ;
         
@@ -173,6 +177,11 @@ export class AccountManager
             JSON.stringify(accountsJson, undefined, 4),
             { encoding: 'utf-8' }
         );
+        
+        // lock account
+        if (options.passphrase) {
+            account.keyring.lock();
+        }
         
         return account;
     }
