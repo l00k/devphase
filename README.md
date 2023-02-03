@@ -23,12 +23,12 @@ yarn devphase init
 
 - Starting local stack (node + pruntime + pherry)
 ```shell
-yarn devphase stack
+yarn devphase stack run
 ```
 
 - Setup local stack (register gatekeeper, create cluster, deploy system contract etc.)
 ```shell
-yarn devphase stack:setup
+yarn devphase stack setup
 ```
 
 - Accounts management
@@ -40,7 +40,7 @@ yarn devphase account create
 - Contracts management
 ```shell
 yarn devphase contract list
-yarn devphase contract new
+yarn devphase contract create
 yarn devphase contract compile
 yarn devphase contract deploy
 yarn devphase contract call
@@ -48,12 +48,12 @@ yarn devphase contract call
 
 - Contracts TS bindings creation
 ```shell
-yarn devphase typings [contractName]
+yarn devphase contract typings
 ```
 
 - Testing with mocha
 ```shell
-yarn devphase test
+yarn devphase contract test
 ```
 
 ### Configuration
@@ -196,6 +196,3 @@ Check [usage sample](https://github.com/l00k/devphase-usage-sample) repo
 
 ### Sandbox
 Check [sandbox environment](https://github.com/l00k/devphase-sandbox) repo for easy testing with up-to-date code
-
-### TODO
-[check here](./TODO.md)
