@@ -12,6 +12,7 @@ import fs from 'fs';
 import Listr from 'listr';
 import _ from 'lodash';
 import path from 'path';
+import * as PhalaSdk from '@phala/sdk';
 
 
 export type ContractDefinition = {
@@ -36,11 +37,20 @@ export type ContractDeployOptions = {
     contractType? : ContractType,
     clusterId? : string,
     network? : string,
-    account? : string,
+    account : string,
 };
 
 export type ContractCallOptions = {
+    contractType? : ContractType,
+    clusterId? : string,
     network? : string,
+    account : string,
+};
+
+export enum ContractCallType
+{
+    Query = 'query',
+    Tx = 'tx',
 };
 
 
@@ -105,9 +115,11 @@ export class ContractManager
         const devPhase = this._runtimeContext.getDevPhase();
         
         const contractFactory = await devPhase.getFactory(
-            contractDef.type,
             contractDef.name,
-            { clusterId: contractDef.clusterId }
+            {
+                clusterId: contractDef.clusterId,
+                contractType: contractDef.type,
+            }
         );
         
         return contractFactory.attach(contractDef.contractId);
@@ -261,9 +273,11 @@ export class ContractManager
         const devPhase = await this._runtimeContext.initDevPhase(options.network);
         
         const contractFactory = await devPhase.getFactory(
-            options.contractType,
             contractName,
-            { clusterId: options.clusterId }
+            {
+                clusterId: options.clusterId,
+                contractType: options.contractType,
+            }
         );
         
         // deploy
@@ -303,10 +317,79 @@ export class ContractManager
     
     public async contractCall (
         contractName : string,
+        contractId : string,
+        callType : ContractCallType = ContractCallType.Query,
+        methodName : string,
+        args : string[],
         options : ContractCallOptions
-    )
+    ) : Promise<any>
     {
-    
+        options = {
+            network: RuntimeContext.NETWORK_LOCAL,
+            contractType: ContractType.InkCode,
+            ...options
+        };
+        
+        const devPhase = await this._runtimeContext.initDevPhase(options.network);
+        
+        const contractFactory = await devPhase.getFactory(
+            contractName,
+            {
+                clusterId: options.clusterId,
+                contractType: options.contractType,
+            }
+        );
+        
+        // get instance
+        const instance = await contractFactory.attach(contractId);
+        
+        // prepare certifiacte
+        const signer = devPhase.accounts[options.account];
+        if (!signer) {
+            throw new Exception(
+                `Undefined account ${options.account}`,
+                1675412062711
+            );
+        }
+        
+        const certificate : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({
+            api: devPhase.api,
+            pair: signer,
+        });
+        
+        // prepare method call
+        if (!instance[callType][methodName]) {
+            throw new Exception(
+                `Undefined method ${callType}.${methodName}`,
+                1675411765889
+            );
+        }
+        
+        let result : any;
+        
+        if (callType === ContractCallType.Query) {
+            const contractCall = instance.query[methodName];
+            const outcome = await contractCall(<any> certificate, {}, ...args);
+            
+            result = {
+                output: outcome.output.toJSON(),
+                debugMessage: outcome.debugMessage.toJSON(),
+                result: outcome.result.toJSON(),
+                gasConsumed: outcome.gasConsumed.toJSON(),
+                gasRequired: outcome.gasRequired.toJSON(),
+                storageDeposit: outcome.storageDeposit.toJSON(),
+            };
+        }
+        else {
+            const contractCall = instance.tx[methodName];
+            const outcome = await contractCall({}, ...args).signAndSend(signer);
+            
+            result = outcome.toJSON();
+        }
+        
+        await devPhase.cleanup();
+        
+        return result;
     }
     
 }

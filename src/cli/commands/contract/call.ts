@@ -1,6 +1,6 @@
 import { ContractType, RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
-import { ContractManager } from '@/service/project/ContractManager';
+import { ContractCallType, ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Args, Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
@@ -20,16 +20,27 @@ export class ContractCallCommand
             char: 'c',
             required: true,
         }),
-        constructor: Flags.string({
-            summary: 'Contract constructor to call (name)',
-            char: 'o',
-            required: true,
-        }),
         type: Flags.string({
             summary: '',
             char: 't',
             default: ContractType.InkCode,
             options: Object.values(ContractType)
+        }),
+        id: Flags.string({
+            summary: 'Contract ID',
+            char: 'i',
+            required: true,
+        }),
+        accessor: Flags.string({
+            summary: 'Method type: transaction or query',
+            char: 'a',
+            default: ContractCallType.Query,
+            options: Object.values(ContractCallType)
+        }),
+        method: Flags.string({
+            summary: 'Contract method to call (name)',
+            char: 'm',
+            required: true,
         }),
         network: Flags.string({
             summary: 'Target network to deploy (local default)',
@@ -41,10 +52,17 @@ export class ContractCallCommand
             char: 'l'
         }),
         account: Flags.string({
-            summary: 'Account used to deploy (managed account key)',
+            summary: 'Account used to call (managed account key)',
             char: 'a',
             default: 'alice'
         }),
+    };
+    
+    public static args = {
+        args: Args.string({
+            description: 'Call arguments',
+            multiple: true,
+        })
     };
     
     
@@ -55,9 +73,11 @@ export class ContractCallCommand
         
         const contractManager = new ContractManager(this.runtimeContext);
         
-        const instance = await contractManager.deploy(
+        const outcome = await contractManager.contractCall(
             this.flags.contract,
-            this.flags.constructor,
+            this.flags.id,
+            <any>this.flags.accessor,
+            this.flags.method,
             this.argsRaw,
             {
                 contractType: <any>this.flags.type,
@@ -68,15 +88,11 @@ export class ContractCallCommand
         );
         
         if (!this.flags.json) {
-            ux.debug(chalk.green('Contract deployed'));
-            ux.debug('Contract Id:', instance.contractId);
-            ux.debug('Cluster Id: ', instance.clusterId);
+            ux.debug(chalk.blue('Call result'));
+            console.dir(outcome);
         }
         
-        return {
-            contractId: instance.contractId,
-            clusterId: instance.clusterId,
-        };
+        return outcome;
     }
     
 }

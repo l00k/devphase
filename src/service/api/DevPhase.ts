@@ -6,7 +6,6 @@ import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
@@ -22,7 +21,8 @@ type WorkerInfo = {
 }
 
 export type GetFactoryOptions = {
-    clusterId? : string
+    clusterId? : string,
+    contractType? : ContractType,
 }
 
 
@@ -41,7 +41,6 @@ export class DevPhase
     
     public readonly runtimeContext : RuntimeContext;
     
-    protected _logger : Logger = new Logger(DevPhase.name);
     
     protected _apiProvider : WsProvider;
     protected _apiOptions : ApiOptions;
@@ -145,7 +144,6 @@ export class DevPhase
     
     
     public async getFactory<T extends ContractFactory> (
-        type : ContractType,
         artifactPathOrName : string,
         options : GetFactoryOptions = {}
     ) : Promise<T>
@@ -184,9 +182,8 @@ export class DevPhase
             
             return ContractFactory.create(
                 this,
-                type,
                 metadata,
-                options.clusterId
+                options
             );
         }
         catch (e) {

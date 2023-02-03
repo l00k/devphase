@@ -7,7 +7,7 @@ chai.use(chaiAsPromised);
 (<any>global).expect = chai.expect;
 
 
-const logger = new Logger('Test / Mocha');
+const logger = new Logger('Test');
 
 before(async function() {
     this.runtimeContext = await RuntimeContext.getSingleton();

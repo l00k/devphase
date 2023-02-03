@@ -4,8 +4,8 @@ import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
 import type { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
+import { ux } from '@oclif/core';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
@@ -13,8 +13,13 @@ import type { IEvent } from '@polkadot/types/types';
 import chalk from 'chalk';
 
 
+export type CreateOptions = {
+    contractType? : ContractType,
+    clusterId? : string,
+}
 
 export type DeployOptions = {
+    contractType? : ContractType,
     asAccount? : AccountKey,
 }
 
@@ -37,7 +42,6 @@ export class ContractFactory
     public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
     
-    protected _logger : Logger = new Logger(ContractFactory.name);
     protected _devPhase : DevPhase;
     protected _eventQueue : EventQueue = new EventQueue();
     
@@ -56,23 +60,22 @@ export class ContractFactory
     
     public static async create<T extends ContractFactory> (
         devPhase : DevPhase,
-        contractType : ContractType,
         metadata : ContractMetadata.Metadata,
-        clusterId : string
+        options : CreateOptions = {}
     ) : Promise<T>
     {
         const instance = new ContractFactory();
         
         instance._devPhase = devPhase;
         
-        if (!clusterId) {
-            clusterId = devPhase.mainClusterId;
+        if (!options.clusterId) {
+            options.clusterId = devPhase.mainClusterId;
         }
         
         Object.assign(instance, {
-            contractType,
             metadata,
-            clusterId,
+            contractType: options.contractType,
+            clusterId: options.clusterId,
         });
         
         await instance.init();
@@ -96,7 +99,7 @@ export class ContractFactory
         await TxHandler.handle(
             this.api.tx.phalaFatContracts.clusterUploadResource(
                 this.clusterId,
-                this.contractType,
+                options.contractType || this.contractType,
                 this.metadata.source.wasm
             ),
             this._devPhase.accounts[options.asAccount],
@@ -259,7 +262,7 @@ export class ContractFactory
         }
         
         if (options.message) {
-            this._logger.debug('Waiting for', chalk.cyan(options.message));
+            ux.debug('Waiting for', chalk.cyan(options.message));
         }
         
         const result = waitFor(
@@ -268,7 +271,7 @@ export class ContractFactory
             options
         );
         
-        this._logger.debug(chalk.green('Ready'));
+        ux.debug(chalk.green('Ready'));
         
         return result;
     }

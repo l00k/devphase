@@ -20,16 +20,16 @@ export class ContractDeployCommand
             char: 'c',
             required: true,
         }),
-        constructor: Flags.string({
-            summary: 'Contract constructor to call (name)',
-            char: 'o',
-            required: true,
-        }),
         type: Flags.string({
             summary: '',
             char: 't',
             default: ContractType.InkCode,
             options: Object.values(ContractType)
+        }),
+        constructor: Flags.string({
+            summary: 'Contract constructor to call (name)',
+            char: 'o',
+            required: true,
         }),
         network: Flags.string({
             summary: 'Target network to deploy (local default)',
@@ -43,8 +43,15 @@ export class ContractDeployCommand
         account: Flags.string({
             summary: 'Account used to deploy (managed account key)',
             char: 'a',
-            default: 'alice'
+            default: 'alice',
         }),
+    };
+    
+    public static args = {
+        args: Args.string({
+            description: 'Constructor arguments',
+            multiple: true,
+        })
     };
     
     
