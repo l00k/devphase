@@ -4,14 +4,15 @@ import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
+import { ux } from '@oclif/core';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
 import axios from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
+import Listr from 'listr';
 import path from 'path';
 
 
@@ -24,8 +25,6 @@ export class StackSetupService
 {
     
     protected static readonly MAP_STACK_TO_SETUP : Record<string, string> = {};
-    
-    protected _logger : Logger = new Logger(StackSetupService.name);
     
     protected _context : RuntimeContext;
     protected _api : ApiPromise;
@@ -49,7 +48,7 @@ export class StackSetupService
         this._accounts = this._devPhase.accounts;
         this._suAccount = this._devPhase.suAccount;
         this._blockTime = this._devPhase.runtimeContext.config.stack.blockTime;
-        this._waitTime = Math.max(20_000, 4 * this._blockTime)
+        this._waitTime = Math.max(20_000, 4 * this._blockTime);
     }
     
     
@@ -75,40 +74,54 @@ export class StackSetupService
      */
     protected async setupStack_default (options : StackSetupOptions) : Promise<StackSetupResult>
     {
-        // check worker
-        await this.prepareWorker(options.workerUrl);
-        
-        // wait for gatekeeper
-        await this.prepareGatekeeper();
-        
-        // prepare contracts system
-        await this.preparePhatContractsSystem();
-        
-        // create cluster if needed
-        if (options.clusterId === undefined) {
-            const clustersNum : number = <any>(
-                await this._api.query
-                    .phalaFatContracts.clusterCounter()
-            ).toJSON();
-            
-            if (clustersNum == 0) {
-                options.clusterId = null;
+        const listr = new Listr([
+            {
+                title: 'Prepare worker',
+                task: () => this.prepareWorker(options.workerUrl),
+            },
+            {
+                title: 'Prepare gatekeeper',
+                task: () => this.prepareGatekeeper(),
+            },
+            {
+                title: 'Prepare Phat Contract system',
+                task: () => this.preparePhatContractsSystem(),
+            },
+            {
+                title: 'Create cluster',
+                skip: async() => {
+                    if (options.clusterId === undefined) {
+                        const clustersNum : number = <any>(
+                            await this._api.query
+                                .phalaFatContracts.clusterCounter()
+                        ).toJSON();
+                        
+                        if (clustersNum == 0) {
+                            options.clusterId = null;
+                        }
+                        else {
+                            options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+                        }
+                    }
+                    
+                    return options.clusterId !== null;
+                },
+                task: async() => {
+                    options.clusterId = await this.createCluster();
+                }
+            },
+            {
+                title: 'Wait for cluster to be ready',
+                task: async() => {
+                    await this.waitForClusterReady(options.clusterId);
+                }
             }
-            else {
-                options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
-            }
-        }
+        ]);
         
-        const clusterId = options.clusterId === null
-            ? await this.createCluster()
-            : options.clusterId
-        ;
-        
-        // wait for cluster
-        await this.waitForClusterReady(options.clusterId);
+        await listr.run();
         
         return {
-            clusterId
+            clusterId: options.clusterId,
         };
     }
     
@@ -257,7 +270,7 @@ export class StackSetupService
             return;
         }
         
-        this._logger.log('Preparing Phat Contracts system');
+        ux.debug('Preparing Phat Contracts system');
         
         const tx = this._api.tx.sudo.sudo(
             this._api.tx.phalaFatContracts.setPinkSystemCode(systemCode)
@@ -280,7 +293,7 @@ export class StackSetupService
      */
     public async createCluster () : Promise<string>
     {
-        this._logger.log('Creating cluster');
+        ux.debug('Creating cluster');
         
         // create cluster
         const tx = this._api.tx.sudo.sudo(
@@ -313,12 +326,7 @@ export class StackSetupService
             );
         }
         
-        const clusterId = clusterCreatedEvent.event.data[0].toString();
-        
-        this._logger.log(chalk.green('Cluster created'));
-        this._logger.log(clusterId);
-        
-        return clusterId;
+        return clusterCreatedEvent.event.data[0].toString();
     }
     
     /**
@@ -361,7 +369,7 @@ export class StackSetupService
         }
         
         if (options.message) {
-            this._logger.debug('Waiting for', chalk.cyan(options.message));
+            ux.debug('Waiting for', chalk.cyan(options.message));
         }
         
         const result = waitFor(
@@ -370,7 +378,7 @@ export class StackSetupService
             options
         );
         
-        this._logger.debug(chalk.green('Ready'));
+        ux.debug(chalk.green('Ready'));
         
         return result;
     }

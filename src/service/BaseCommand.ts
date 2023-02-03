@@ -21,6 +21,7 @@ export abstract class BaseCommand<T extends typeof Command>
     
     protected flags : Flags<T>;
     protected args : Args<T>;
+    protected argsRaw : any[] = [];
     
     protected runtimeContext : RuntimeContext;
     
@@ -43,8 +44,12 @@ export abstract class BaseCommand<T extends typeof Command>
         const { flags } = await this.parse(this.ctor);
         this.flags = <any> flags;
         
-        const { args } = await this.parse(this.ctor);
+        const { args, raw } = await this.parse(this.ctor);
         this.args = <any> args;
+        this.argsRaw = Object.values(raw)
+            .filter(arg => arg.type === 'arg')
+            .map(arg => arg.input)
+            ;
         
         ux.config.outputLevel = 'debug';
         if (this.flags.json) {

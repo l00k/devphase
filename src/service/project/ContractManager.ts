@@ -296,10 +296,6 @@ export class ContractManager
             clusterId: instance.clusterId,
         });
         
-        ux.debug(chalk.green('Contract deployed'));
-        ux.debug('Contract Id:', instance.contractId);
-        ux.debug('Cluster Id: ', instance.clusterId);
-        
         await devPhase.cleanup();
         
         return instance;

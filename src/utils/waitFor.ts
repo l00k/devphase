@@ -13,7 +13,7 @@ export async function waitFor<T> (
 {
     options = {
         checkInterval: 500,
-        message: 'Timeout',
+        message: '<blank>',
         ...options,
     };
     
@@ -40,7 +40,7 @@ export async function waitFor<T> (
         
         _timeoutHandle = setTimeout(() => {
             clearInterval(_intervalHandle);
-            reject(new Exception(options.message, 1663946414394));
+            reject(new Exception('Timeouted: ' + options.message, 1663946414394));
         }, timeLimit);
     });
 }

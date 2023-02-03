@@ -11,9 +11,9 @@ export class ContractCompileCommand
     public static summary : string = 'Compile contract';
     
     public static flags = {
-        name: Flags.string({
+        contract: Flags.string({
             summary: 'Contract name',
-            char: 'n'
+            char: 'c'
         }),
         watch: Flags.boolean({
             summary: 'Watch changes',
@@ -35,7 +35,7 @@ export class ContractCompileCommand
         const contractManager = new ContractManager(this.runtimeContext);
         
         const result = await contractManager.compile({
-            contractName: this.flags.name,
+            contractName: this.flags.contract,
             watch: this.flags.watch,
             release: this.flags.release,
         });

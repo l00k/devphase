@@ -124,7 +124,7 @@ export class StackBinaryDownloader
                     
                     let needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
                     if (!needsDownload) {
-                        return;
+                        return null;
                     }
                     
                     // find release
@@ -186,6 +186,8 @@ export class StackBinaryDownloader
                             }
                         ]);
                     }
+                    
+                    return null;
                 }
             }
         ]);

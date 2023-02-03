@@ -2,6 +2,7 @@ import { RunMode } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { BaseCommand } from '@/service/BaseCommand';
+import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
@@ -16,7 +17,7 @@ export class StackSetupCommand
         network: Flags.string({
             summary: 'Network key',
             char: 'n',
-            default: 'local'
+            default: RuntimeContext.NETWORK_LOCAL
         }),
     };
     
@@ -33,14 +34,22 @@ export class StackSetupCommand
         );
         
         const stackSetupService = new StackSetupService(devPhase);
-        await stackSetupService.setupStack(this.runtimeContext.config.stack.setupOptions);
+        const result = await stackSetupService.setupStack(
+            this.runtimeContext.config.stack.setupOptions
+        );
+        
+        if (!this.flags.json) {
+            ux.debug(chalk.green('Stack is ready'));
+            
+            ux.debug(chalk.blue('Cluster Id'));
+            ux.debug(result.clusterId);
+        }
         
         await devPhase.cleanup();
         
         ux.action.stop();
         
-        ux.debug(chalk.green('Stack is ready'));
-        
+        return result;
     }
     
 }
