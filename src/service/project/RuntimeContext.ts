@@ -9,6 +9,7 @@ import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import findUp from 'find-up';
 import fs from 'fs';
+import Listr from 'listr';
 import path from 'path';
 
 
@@ -186,9 +187,11 @@ export class RuntimeContext
     
     
     
-    public async requestStackBinaries ()
+    public async requestStackBinaries (
+        execute: boolean = true
+    ) : Promise<Listr>
     {
-        await this._stackBinaryDownloader.downloadIfRequired();
+        return this._stackBinaryDownloader.downloadIfRequired(execute);
     }
     
     protected async _getRunConfiguration (

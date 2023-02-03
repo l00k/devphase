@@ -104,7 +104,9 @@ export class StackBinaryDownloader
         return targetRelease;
     }
     
-    public async downloadIfRequired () : Promise<void>
+    public async downloadIfRequired (
+        execute: boolean = true
+    ) : Promise<Listr>
     {
         const listr = new Listr([
             {
@@ -192,8 +194,15 @@ export class StackBinaryDownloader
             }
         ]);
         
-        ux.debug('Preparing Phala stack release');
-        return listr.run();
+        if (execute) {
+            ux.debug('Preparing Phala stack release');
+            await listr.run();
+            
+            return listr;
+        }
+        else {
+            return listr;
+        }
     }
     
 }
