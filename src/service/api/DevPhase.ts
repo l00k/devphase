@@ -109,6 +109,7 @@ export class DevPhase
     {
         return ApiPromise.create({
             provider: this._apiProvider,
+            noInitWarn: true,
             ...this._apiOptions
         });
     }

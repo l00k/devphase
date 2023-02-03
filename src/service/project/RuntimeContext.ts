@@ -281,6 +281,9 @@ export class RuntimeContext
                         types: {
                             ...KhalaTypes,
                             ...PhalaSDKTypes,
+                        },
+                        signedExtensions: {
+                            CheckMqSequence: {} // fix debug output
                         }
                     },
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
