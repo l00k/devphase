@@ -192,6 +192,7 @@ export class StackBinaryDownloader
             }
         ]);
         
+        ux.debug('Preparing Phala stack release');
         return listr.run();
     }
     

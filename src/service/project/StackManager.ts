@@ -1,9 +1,9 @@
 import { ComponentName, RunMode, StackComponentOptions } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import { timeout } from '@/utils/timeout';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess, { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
@@ -13,8 +13,6 @@ import path from 'path';
 
 export class StackManager
 {
-    
-    protected _logger : Logger = new Logger(StackManager.name);
     
     protected _processes : Record<ComponentName, ChildProcess>;
     protected _killFlag : boolean = false;
@@ -165,13 +163,13 @@ export class StackManager
         
         // wait for process to be ready
         const binaryName = path.basename(binaryPath);
-        this._logger.log(
+        ux.debug([
             'Waiting for',
             chalk.cyan(binaryName),
             'to start with',
             (options.timeout / 1000).toFixed(1),
             's timeout.'
-        );
+        ].join(' '));
         
         // spawn child process
         const child = childProcess.spawn(
@@ -239,7 +237,11 @@ export class StackManager
                     
                     if (!settled) {
                         if (waitForReady(text)) {
-                            this._logger.log('Binary', chalk.cyan(binaryName), 'started');
+                            ux.debug([
+                                'Binary',
+                                chalk.cyan(binaryName),
+                                'started'
+                            ].join(' '));
                             
                             cleanup();
                             resolve(child);
@@ -279,7 +281,7 @@ export class StackManager
     {
         return runMode === RunMode.Testing
             && context.config.testing.stackLogOutput
-        ;
+            ;
     }
     
 }

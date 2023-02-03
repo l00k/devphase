@@ -47,13 +47,6 @@ export class ContractDeployCommand
         }),
     };
     
-    public static args = {
-        ctorArgs: Args.string({
-            description: 'Constructor arguments',
-            multiple: true,
-        })
-    };
-    
     
     public async run ()
     {

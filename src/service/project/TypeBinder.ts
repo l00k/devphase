@@ -2,12 +2,12 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { AbiTypeBindingProcessor } from '@/service/type-binding/AbiTypeBindingProcessor';
 import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
-import { ux } from '@oclif/core';
 
 
 export class TypeBinder

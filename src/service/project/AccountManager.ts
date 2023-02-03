@@ -1,7 +1,6 @@
 import { AccountKeyringsConfig, Accounts } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
-import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
@@ -26,8 +25,6 @@ export type CreatedAccount = {
 
 export class AccountManager
 {
-    
-    protected _logger = new Logger(AccountManager.name);
     
     public constructor (
         protected _runtimeContext : RuntimeContext
