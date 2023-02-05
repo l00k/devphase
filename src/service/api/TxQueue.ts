@@ -1,23 +1,59 @@
 import { Exception } from '@/utils/Exception';
 import { sleep } from '@/utils/sleep';
+import { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
-import type { KeyringPair } from '@polkadot/keyring/types';
+import { KeyringPair } from '@polkadot/keyring/types';
 import type { ISubmittableResult } from '@polkadot/types/types';
 
 
-export class TxHandler
+export class TxQueue
 {
     
-    public static async handle (
+    protected _api : ApiPromise;
+    
+    public nonceTracker : Record<number, any> = {};
+    
+    
+    public constructor (api)
+    {
+        this._api = api;
+    }
+    
+    public async nextNonce (address)
+    {
+        const byCache = this.nonceTracker[address] || 0;
+        const byRpc = (
+            await this._api.rpc.system.accountNextIndex(address)
+        ).toNumber();
+        
+        return Math.max(byCache, byRpc);
+    }
+    
+    protected _markNonceFailed (address, nonce)
+    {
+        if (!this.nonceTracker[address]) {
+            return;
+        }
+        if (nonce < this.nonceTracker[address]) {
+            this.nonceTracker[address] = nonce;
+        }
+    }
+    
+    async submit (
         transaction : SubmittableExtrinsic<any>,
         signer : KeyringPair,
-        waitForFinalization : boolean = false
+        waitForFinalization = false
     ) : Promise<ISubmittableResult>
     {
+        const address = signer.address;
+        
+        let nonce = await this.nextNonce(address);
+        this.nonceTracker[address] = nonce + 1;
+        
         const submit : any = () => new Promise(async(resolve, reject) => {
             try {
                 await transaction
-                    .signAndSend(signer, {}, (result, extra) => {
+                    .signAndSend(signer, { nonce }, (result, extra) => {
                         if (result.status.isInBlock) {
                             for (const e of result.events) {
                                 const { event: { data, method, section } } = e;
@@ -54,6 +90,10 @@ export class TxHandler
                         continue;
                     }
                     else if(e.message.includes('Transaction is outdated')) {
+                        // increase nonce
+                        nonce = await this.nextNonce(address);
+                        this.nonceTracker[address] = nonce + 1;
+                    
                         // try again
                         await sleep(250);
                         continue;
@@ -69,5 +109,4 @@ export class TxHandler
             1675571324720
         );
     }
-    
 }

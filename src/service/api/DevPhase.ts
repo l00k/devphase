@@ -1,9 +1,11 @@
-import type { Accounts, AccountsConfig, ContractType, DevPhaseOptions, NetworkConfig } from '@/def';
+import type { Accounts, AccountsConfig, DevPhaseOptions, NetworkConfig } from '@/def';
+import { ContractType } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Contract } from '@/typings';
 import type { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { replaceRecursive } from '@/utils/replaceRecursive';
@@ -46,6 +48,7 @@ export class DevPhase
     protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
+    protected _systemContracts : Record<string, Promise<Contract>> = {};
     
     
     private constructor () {}
@@ -193,6 +196,52 @@ export class DevPhase
                 e
             );
         }
+    }
+    
+    public async getSystemContract(
+        clusterId? : string
+    ) : Promise<Contract>
+    {
+        if (!clusterId) {
+            clusterId = this.mainClusterId;
+        }
+        
+        if (!this._systemContracts[clusterId]) {
+            this._systemContracts[clusterId] = new Promise(async(resolve, reject) => {
+                try {
+                    const onChainClusterInfo : any = await this.api.query
+                        .phalaFatContracts.clusters(clusterId);
+                    const systemContractId = onChainClusterInfo.unwrap().systemContract.toHex();
+                    if (!systemContractId) {
+                        throw new Exception(
+                            'Required system contract is not ready',
+                            1675566610093
+                        );
+                    }
+                    
+                    const systemContractPath = path.join(
+                        this.runtimeContext.paths.currentStack,
+                        'system.contract'
+                    );
+                    
+                    const systemContractFactory = await this.getFactory(
+                        systemContractPath,
+                        {
+                            clusterId,
+                            contractType: ContractType.InkCode,
+                        }
+                    );
+                    
+                    const systemContract = await systemContractFactory.attach(systemContractId);
+                    resolve(systemContract);
+                }
+                catch (e) {
+                    reject(e);
+                }
+            });
+        }
+        
+        return this._systemContracts[clusterId];
     }
     
 }

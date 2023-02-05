@@ -1,4 +1,5 @@
-import type { AccountKey, ContractType } from '@/def';
+import type { AccountKey } from '@/def';
+import { ContractType } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
@@ -9,8 +10,9 @@ import { ux } from '@oclif/core';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
-import type { IEvent } from '@polkadot/types/types';
+import { KeyringPair } from '@polkadot/keyring/types';
 import chalk from 'chalk';
+import path from 'path';
 
 
 export type CreateOptions = {
@@ -20,12 +22,12 @@ export type CreateOptions = {
 
 export type DeployOptions = {
     contractType? : ContractType,
-    asAccount? : AccountKey,
+    asAccount? : AccountKey | KeyringPair,
 }
 
 export type InstantiateOptions = {
-    salt? : number,
-    asAccount? : AccountKey,
+    salt? : string | number,
+    asAccount? : AccountKey | KeyringPair,
     transfer? : number,
     gasLimit? : number,
     storageDepositLimit? : number,
@@ -43,6 +45,7 @@ export class ContractFactory
     public readonly clusterId : string;
     
     protected _devPhase : DevPhase;
+    protected _systemContract : Contract;
     protected _eventQueue : EventQueue = new EventQueue();
     
     
@@ -96,14 +99,18 @@ export class ContractFactory
             ...options
         };
         
+        const keyringPair : any = typeof options.asAccount === 'string'
+            ? this._devPhase.accounts[options.asAccount]
+            : options.asAccount;
+        
         await TxHandler.handle(
             this.api.tx.phalaFatContracts.clusterUploadResource(
                 this.clusterId,
                 options.contractType || this.contractType,
                 this.metadata.source.wasm
             ),
-            this._devPhase.accounts[options.asAccount],
-            'phalaFatContracts.clusterUploadResource'
+            keyringPair,
+            true
         );
     }
     
@@ -131,20 +138,28 @@ export class ContractFactory
         
         const abi = new Abi(this.metadata);
         const callData = abi.findConstructor(constructor).toU8a(params);
+        const salt = typeof options.salt == 'number'
+            ? '0x' + options.salt.toString(16)
+            : options.salt
+        ;
+        
+        const keyringPair : any = typeof options.asAccount === 'string'
+            ? this._devPhase.accounts[options.asAccount]
+            : options.asAccount;
         
         const result = await TxHandler.handle(
             this.api.tx.phalaFatContracts.instantiateContract(
                 { WasmCode: this.metadata.source.hash },
                 callData,
-                '0x' + options.salt.toString(16),
+                salt,
                 this.clusterId,
                 options.transfer,
                 options.gasLimit,
                 options.storageDepositLimit,
                 options.deposit
             ),
-            this._devPhase.accounts[options.asAccount],
-            'phalaFatContracts.instantiateContract'
+            keyringPair,
+            true
         );
         
         const instantiateEvent = result.events.find(({ event }) => {
@@ -152,38 +167,23 @@ export class ContractFactory
                 && event.method === 'Instantiating';
         });
         if (!instantiateEvent) {
-            throw 'Error while instantiating contract';
+            throw new Exception(
+                'Error while instantiating contract',
+                1675502920365
+            );
         }
         
         const contractId = instantiateEvent.event.data[0].toString();
         
         // wait for instantation
-        let instantiated : boolean = false;
-        let publicKey : string = null;
-        
-        this._eventQueue.registerHandler(
-            'phalaFatContracts.Instantiated',
-            { 0: contractId },
-            async(event : IEvent<any>) => {
-                instantiated = true;
-            }
-        );
-        this._eventQueue.registerHandler(
-            'phalaFatContracts.ContractPubkeyAvailable',
-            { 0: contractId },
-            async(event : IEvent<any>) => {
-                const eventData = event.data.toJSON();
-                publicKey = eventData[2];
-            }
-        );
-        
         try {
             await this._waitFor(
                 async() => {
-                    return instantiated && !!publicKey;
+                    const key = await this.api.query
+                        .phalaRegistry.contractKeys(contractId);
+                    return !key.isEmpty;
                 },
-                20_000,
-                { message: 'Contract instantiation' }
+                20_000
             );
         }
         catch (e) {
@@ -202,8 +202,8 @@ export class ContractFactory
                     this.clusterId,
                     contractId
                 ),
-                this._devPhase.accounts[options.asAccount],
-                'phalaFatContracts.transferToCluster'
+                keyringPair,
+                true
             );
         }
         
@@ -214,29 +214,73 @@ export class ContractFactory
                     contractId,
                     options.adjustStake
                 ),
-                this._devPhase.accounts[options.asAccount],
-                'phalaFatTokenomic.adjustStake'
+                keyringPair,
+                true
             );
         }
         
         return this.attach(contractId);
     }
     
+    
+    public async estimateInstatiationFee (
+        constructor : string,
+        params : any[] = [],
+        options : InstantiateOptions
+    )
+    {
+        const systemContract = await this._devPhase.getSystemContract(this.clusterId);
+    
+        const abi = new Abi(this.metadata);
+        const callData = abi.findConstructor(constructor).toU8a(params);
+        const salt = typeof options.salt == 'number'
+            ? '0x' + options.salt.toString(16)
+            : options.salt
+        ;
+        
+        const keyringPair : any = typeof options.asAccount === 'string'
+            ? this._devPhase.accounts[options.asAccount]
+            : options.asAccount;
+        
+        const cert = await PhalaSdk.signCertificate({
+            api: this.api,
+            pair: keyringPair
+        });
+        
+        const instantiateReturn = await systemContract.instantiate({
+            codeHash: this.metadata.source.hash,
+            salt,
+            instantiateData: callData,
+            deposit: options.deposit,
+            transfer: options.transfer
+        }, cert);
+        
+        console.log(instantiateReturn);
+        
+        const queryResponse : any = this.api.createType('InkResponse', instantiateReturn);
+        const queryResult = queryResponse.result.toHuman();
+        
+        const instantiateResult = this.api.createType('ContractInstantiateResult', queryResult.Ok.InkMessageReturn);
+        
+        return instantiateResult;
+    }
+    
+    
     public async attach<T extends Contract> (
         contractId : string
     ) : Promise<T>
     {
-        const api = await this._devPhase.createApiPromise();
+        const api : any = await this._devPhase.createApiPromise();
         
-        const { api: workerApi } = await PhalaSdk.create({
-            api: <any>api,
+        const phala : any = await PhalaSdk.create({
+            api: api,
             baseURL: this._devPhase.workerUrl,
             contractId,
             autoDeposit: true,
         });
         
         const instance = new ContractPromise(
-            <any>workerApi,
+            phala.api,
             this.metadata,
             contractId,
         );
@@ -244,6 +288,8 @@ export class ContractFactory
         Object.assign(instance, {
             contractId,
             clusterId: this.clusterId,
+            sidevmQuery: phala.sidevmQuery,
+            instantiate: phala.instantiate,
         });
         
         return <any>instance;

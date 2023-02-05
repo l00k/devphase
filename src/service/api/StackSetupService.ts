@@ -1,24 +1,33 @@
-import { Accounts, StackSetupOptions, StackSetupResult } from '@/def';
+import { Accounts, ContractType, StackSetupOptions, StackSetupResult } from '@/def';
+import { ContractFactory } from '@/service/api/ContractFactory';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
+import { TxQueue } from '@/service/api/TxQueue';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
-import { ux } from '@oclif/core';
-import { khalaDev as KhalaTypes } from '@phala/typedefs';
+import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
-import axios from 'axios';
-import chalk from 'chalk';
+import axios, { AxiosInstance } from 'axios';
 import fs from 'fs';
 import Listr from 'listr';
 import path from 'path';
 
 
 type WorkerInfo = {
+    workerUrl : string,
+    api : AxiosInstance,
+    initalized : boolean,
     publicKey : string,
     ecdhPublicKey : string,
+}
+
+type ClusterInfo = {
+    id : string,
+    systemContract : string,
 }
 
 export class StackSetupService
@@ -28,15 +37,27 @@ export class StackSetupService
     
     protected _context : RuntimeContext;
     protected _api : ApiPromise;
+    protected _txQueue : TxQueue;
     
     protected _accounts : Accounts = {};
     protected _suAccount : KeyringPair;
+    protected _suAccountCert : PhalaSdk.CertificateData;
     protected _mainClusterId : string;
     protected _blockTime : number;
     protected _waitTime : number;
     
-    protected _eventQueue : EventQueue = new EventQueue();
+    protected _pinkSystemMetadata : ContractMetadata.Metadata;
+    protected _tokenomicsMetatadata : ContractMetadata.Metadata;
+    protected _sidevmopMetadata : ContractMetadata.Metadata;
+    protected _logServerMetadata : ContractMetadata.Metadata;
+    protected _logServerSideVmWasm : string;
+    
     protected _workerInfo : WorkerInfo;
+    protected _clusterInfo : ClusterInfo;
+    
+    protected _systemContract : Contract;
+    
+    protected _eventQueue : EventQueue = new EventQueue();
     
     
     public constructor (
@@ -55,6 +76,12 @@ export class StackSetupService
     public async setupStack (options : StackSetupOptions) : Promise<StackSetupResult>
     {
         this._api = this._devPhase.api;
+        this._txQueue = new TxQueue(this._api);
+        
+        this._suAccountCert = await PhalaSdk.signCertificate({
+            api: this._api,
+            pair: this._suAccount,
+        });
         
         const setupStackVersion = StackSetupService.MAP_STACK_TO_SETUP[this._context.config.stack.version] ?? 'default';
         const setupStackMethod = 'setupStack_' + setupStackVersion;
@@ -76,122 +103,174 @@ export class StackSetupService
     {
         const listr = new Listr([
             {
-                title: 'Prepare worker',
-                task: () => this.prepareWorker(options.workerUrl),
+                title: 'Fetch worker info',
+                task: async() => {
+                    this._workerInfo = await this.getWorkerInfo(options.workerUrl);
+                }
             },
             {
-                title: 'Prepare gatekeeper',
-                task: () => this.prepareGatekeeper(),
-            },
-            {
-                title: 'Prepare Phat Contract system',
-                task: () => this.preparePhatContractsSystem(),
-            },
-            {
-                title: 'Create cluster',
+                title: 'Register worker',
                 skip: async() => {
+                    if (!this._workerInfo.initalized) {
+                        return false;
+                    }
+                    
+                    const onChainInfo = await this._api.query
+                        .phalaRegistry.workers(this._workerInfo.ecdhPublicKey);
+                    return !onChainInfo.isEmpty;
+                },
+                task: () => this.registerWorker(),
+            },
+            {
+                title: 'Register gatekeeper',
+                skip: async() => {
+                    const gatekeepers : string[] = <any>(
+                        await this._api.query
+                            .phalaRegistry.gatekeeper()
+                    ).toJSON();
+                    
+                    return gatekeepers.includes(this._workerInfo.publicKey);
+                },
+                task: () => this.registerGatekeeper(),
+            },
+            {
+                title: 'Load system contracts',
+                task: async() => {
+                    this._pinkSystemMetadata = await this.loadContract('system');
+                    this._tokenomicsMetatadata = await this.loadContract('tokenomic');
+                    this._sidevmopMetadata = await this.loadContract('sidevm_deployer');
+                    this._logServerMetadata = await this.loadContract('log_server');
+                    this._logServerSideVmWasm = await this.loadWasm('log_server.sidevm');
+                }
+            },
+            {
+                title: 'Upload Pink system code',
+                skip: async() => {
+                    const requiredPinkSystemCode = this._pinkSystemMetadata.source.wasm;
+                    const onChainPinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
+                    return onChainPinkSystemCode[1].toString() === requiredPinkSystemCode;
+                },
+                task: () => this.uploadPinkSystemCode(),
+            },
+            {
+                title: 'Verify cluster',
+                task: async() => {
                     if (options.clusterId === undefined) {
                         const clustersNum : number = <any>(
                             await this._api.query
                                 .phalaFatContracts.clusterCounter()
                         ).toJSON();
                         
-                        if (clustersNum == 0) {
+                        if (clustersNum === 0) {
                             options.clusterId = null;
                         }
                         else {
-                            options.clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+                            const clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+                            const onChainClusterInfo : any = await this._api.query
+                                .phalaFatContracts.clusters(clusterId);
+                            
+                            this._clusterInfo = {
+                                id: clusterId,
+                                systemContract: onChainClusterInfo.unwrap().systemContract.toHex()
+                            };
                         }
                     }
-                    
-                    return options.clusterId !== null;
-                },
+                }
+            },
+            {
+                title: 'Create cluster',
+                skip: () => !!this._clusterInfo,
                 task: async() => {
-                    options.clusterId = await this.createCluster();
+                    this._clusterInfo = await this.createCluster();
                 }
             },
             {
                 title: 'Wait for cluster to be ready',
+                task: () => this.waitForClusterReady()
+            },
+            {
+                title: 'Create system contract API',
                 task: async() => {
-                    await this.waitForClusterReady(options.clusterId);
+                    this._systemContract = await this._devPhase.getSystemContract(this._clusterInfo.id);
                 }
+            },
+            {
+                title: 'Deploy tokenomic contract',
+                skip: () => this.checkDriverContract('ContractDeposit'),
+                task: () => this.deployDriverContract(
+                    this._tokenomicsMetatadata,
+                    'ContractDeposit'
+                )
             }
         ]);
         
         await listr.run();
         
         return {
-            clusterId: options.clusterId,
+            clusterId: this._clusterInfo.id,
         };
     }
     
     
-    /**
-     * Prepare DEV worker
-     */
-    public async prepareWorker (workerUrl : string)
+    public async getWorkerInfo (workerUrl : string) : Promise<WorkerInfo>
     {
-        const workerApi = axios.create({ baseURL: workerUrl });
+        const workerInfo : WorkerInfo = {
+            workerUrl,
+            api: axios.create({ baseURL: workerUrl }),
+            initalized: false,
+            publicKey: null,
+            ecdhPublicKey: null,
+        };
         
-        this._workerInfo = await this._waitFor(
-            async() => {
-                const { status, data } = await workerApi.get('/get_info', { validateStatus: () => true });
-                if (status === 200) {
-                    const payload : any = JSON.parse(data.payload);
-                    if (!payload.initialized) {
-                        return false;
-                    }
-                    
-                    return {
-                        publicKey: '0x' + payload.public_key,
-                        ecdhPublicKey: '0x' + payload.ecdh_public_key,
-                    };
-                }
-                
-                throw new Exception(
-                    'Unable to get worker info',
-                    1663941402827
-                );
-            },
-            this._waitTime,
-            { message: 'pRuntime initialization' }
-        );
+        const { status, data } = await workerInfo.api.get('/get_info', { validateStatus: () => true });
+        if (status !== 200) {
+            throw new Exception(
+                'Unable to get worker info',
+                1663941402827
+            );
+        }
         
-        const workerInfo : typeof KhalaTypes.WorkerInfo = <any>(
-            await this._api.query
-                .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
-        ).toJSON();
+        const payload : any = JSON.parse(data.payload);
         
-        if (!workerInfo) {
-            // register worker
-            const tx = this._api.tx.sudo.sudo(
+        workerInfo.initalized = payload.initialized;
+        
+        if (!workerInfo.initalized) {
+            return workerInfo;
+        }
+        
+        workerInfo.publicKey = '0x' + payload.public_key;
+        workerInfo.ecdhPublicKey = '0x' + payload.ecdh_public_key;
+        
+        return workerInfo;
+    }
+    
+    public async registerWorker ()
+    {
+        // register worker
+        const result = await this._txQueue.submit(
+            this._api.tx.sudo.sudo(
                 this._api.tx.phalaRegistry.forceRegisterWorker(
                     this._workerInfo.publicKey,
                     this._workerInfo.ecdhPublicKey,
                     null
                 )
-            );
-            
-            const result = await TxHandler.handle(
-                tx,
-                this._suAccount,
-                'sudo(phalaRegistry.forceRegisterWorker)'
-            );
-            
-            await this._waitFor(
-                async() => {
-                    return (
-                        await this._api.query
-                            .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
-                    ).toJSON();
-                },
-                this._waitTime,
-                { message: 'Worker registration' }
-            );
-        }
+            ),
+            this._suAccount,
+            true
+        );
+        
+        await this._waitFor(
+            async() => {
+                return (
+                    await this._api.query
+                        .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
+                ).toJSON();
+            },
+            this._waitTime
+        );
     }
     
-    public async prepareGatekeeper ()
+    public async registerGatekeeper ()
     {
         // check gatekeeper
         const gatekeepers : string[] = <any>(
@@ -201,16 +280,14 @@ export class StackSetupService
         
         if (!gatekeepers.includes(this._workerInfo.publicKey)) {
             // register gatekeeper
-            const tx = this._api.tx.sudo.sudo(
-                this._api.tx.phalaRegistry.registerGatekeeper(
-                    this._workerInfo.publicKey
-                )
-            );
-            
-            const result = await TxHandler.handle(
-                tx,
+            const result = await this._txQueue.submit(
+                this._api.tx.sudo.sudo(
+                    this._api.tx.phalaRegistry.registerGatekeeper(
+                        this._workerInfo.publicKey
+                    )
+                ),
                 this._suAccount,
-                'sudo(phalaRegistry.registerGatekeeper)'
+                true
             );
         }
         
@@ -223,8 +300,7 @@ export class StackSetupService
                             .phalaRegistry.gatekeeperMasterPubkey()
                     ).isEmpty;
                 },
-                this._waitTime,
-                { message: 'GK master key generation' }
+                this._waitTime
             );
         }
         catch (e) {
@@ -235,84 +311,81 @@ export class StackSetupService
         }
     }
     
-    /**
-     * Prepare Phat Contract system
-     */
-    public async preparePhatContractsSystem () : Promise<void>
+    public async loadContract (name : string) : Promise<any>
     {
-        if (!this._context) {
-            throw new Exception(
-                'Non available out of runtime context environment',
-                1668658002543
-            );
-        }
-        
-        const systemContractPath = path.join(
+        const contractPath = path.join(
             this._context.paths.currentStack,
-            'system.contract'
+            `${name}.contract`
         );
-        if (!fs.existsSync(systemContractPath)) {
+        if (!fs.existsSync(contractPath)) {
             throw new Exception(
-                'Phat contracts system not found in stacks',
+                `${name} contract not found in stacks directory`,
                 1668748436052
             );
         }
         
-        const systemContract = JSON.parse(
-            fs.readFileSync(systemContractPath, { encoding: 'utf-8' })
+        return JSON.parse(
+            fs.readFileSync(contractPath, { encoding: 'utf-8' })
         );
-        
-        const systemCode = systemContract.source.wasm;
-        
-        const pinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
-        const isPinkSystemCodeReady = pinkSystemCode[1].toString() === systemCode;
-        if (isPinkSystemCodeReady) {
-            return;
-        }
-        
-        ux.debug('Preparing Phat Contracts system');
-        
-        const tx = this._api.tx.sudo.sudo(
-            this._api.tx.phalaFatContracts.setPinkSystemCode(systemCode)
-        );
-        
-        const result = await TxHandler.handle(
-            tx,
-            this._suAccount,
-            'sudo(phalaFatContracts.setPinkSystemCode)'
-        );
-        
-        await this._waitFor(async() => {
-            const code = await this._api.query.phalaFatContracts.pinkSystemCode();
-            return code[1].toString() === systemCode;
-        }, this._waitTime, { message: 'PinkSystemCode setup' });
     }
     
-    /**
-     * Creates new cluster
-     */
-    public async createCluster () : Promise<string>
+    public async loadWasm (name : string) : Promise<any>
     {
-        ux.debug('Creating cluster');
+        const systemContractPath = path.join(
+            this._context.paths.currentStack,
+            `${name}.wasm`
+        );
+        if (!fs.existsSync(systemContractPath)) {
+            throw new Exception(
+                `${name} wasm not found in stacks directory`,
+                1675500668420
+            );
+        }
         
+        return fs.readFileSync(systemContractPath, { encoding: 'hex' });
+    }
+    
+    public async uploadPinkSystemCode () : Promise<void>
+    {
+        const systemCode = this._pinkSystemMetadata.source.wasm;
+        
+        const result = await this._txQueue.submit(
+            this._api.tx.sudo.sudo(
+                this._api.tx.phalaFatContracts.setPinkSystemCode(systemCode)
+            ),
+            this._suAccount,
+            true
+        );
+        
+        await this._waitFor(
+            async() => {
+                const code = await this._api.query.phalaFatContracts.pinkSystemCode();
+                return code[1].toString() === systemCode;
+            },
+            this._waitTime
+        );
+    }
+    
+    public async createCluster () : Promise<ClusterInfo>
+    {
         // create cluster
         const tx = this._api.tx.sudo.sudo(
             this._api.tx.phalaFatContracts.addCluster(
-                this._accounts.alice.address,            // owner
+                this._accounts.alice.address,           // owner
                 { Public: null },                       // access rights
                 [ this._workerInfo.publicKey ],         // workers keys
                 1e12,                                   // deposit
                 1,                                      // gas price
                 1,                                      // gas per item
                 1,                                      // gas per byte
-                this._accounts.alice.address             // treasury account
+                this._accounts.alice.address            // treasury account
             )
         );
         
-        const result = await TxHandler.handle(
+        const result = await this._txQueue.submit(
             tx,
             this._suAccount,
-            'sudo(phalaFatContracts.addCluster)'
+            true
         );
         
         const clusterCreatedEvent = result.events.find(({ event }) => {
@@ -326,35 +399,142 @@ export class StackSetupService
             );
         }
         
-        return clusterCreatedEvent.event.data[0].toString();
+        const eventData = clusterCreatedEvent.event.data;
+        const clusterId = eventData[0].toString();
+        
+        // deposit funds to cluster
+        await this._txQueue.submit(
+            this._api.tx
+                .phalaFatContracts.transferToCluster(
+                100e12,
+                clusterId,
+                this._suAccount.address
+            ),
+            this._suAccount,
+            true
+        );
+        
+        return {
+            id: clusterId,
+            systemContract: eventData[1].toString(),
+        };
     }
     
-    /**
-     * Wait for cluster to be ready
-     */
-    public async waitForClusterReady (clusterId : string) : Promise<boolean>
+    public async waitForClusterReady () : Promise<boolean>
     {
         return this._waitFor(
             async() => {
                 // cluster exists
                 const cluster = await this._api.query
-                    .phalaFatContracts.clusters(clusterId);
+                    .phalaFatContracts.clusters(this._clusterInfo.id);
                 if (cluster.isEmpty) {
                     return false;
                 }
                 
                 // cluster key set
                 const clusterKey = await this._api.query
-                    .phalaRegistry.clusterKeys(clusterId);
+                    .phalaRegistry.clusterKeys(this._clusterInfo.id);
                 if (clusterKey.isEmpty) {
+                    return false;
+                }
+                
+                // system contract key
+                const contractKey = await this._api.query
+                    .phalaRegistry.contractKeys(this._clusterInfo.systemContract);
+                if (contractKey.isEmpty) {
                     return false;
                 }
                 
                 return true;
             },
-            this._waitTime,
-            { message: 'Cluster ready' }
+            this._waitTime
         );
+    }
+    
+    public async checkDriverContract (name : string)
+    {
+        const { output } = await this._systemContract.query['system::getDriver'](
+            this._suAccountCert,
+            {},
+            name
+        );
+        return !output.isEmpty;
+    }
+    
+    public async deployDriverContract (
+        contract : ContractMetadata.Metadata,
+        name : string
+    )
+    {
+        const contractFactory = await ContractFactory.create(
+            this._devPhase,
+            this._pinkSystemMetadata,
+            {
+                contractType: ContractType.InkCode,
+                clusterId: this._clusterInfo.id,
+            }
+        );
+        
+        await contractFactory.deploy();
+        
+        // create instance
+        const instantiationEst = await contractFactory.estimateInstatiationFee(
+            'default',
+            [],
+            { asAccount: this._suAccount }
+        );
+        
+        const instance = await contractFactory.instantiate(
+            'default',
+            [],
+            {
+                asAccount: this._suAccount,
+                gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
+                storageDepositLimit: instantiationEst.storageDeposit.asCharge.toNumber(),
+            }
+        );
+        
+        // set driver
+        const { gasRequired, storageDeposit } = await this._systemContract.query
+            ['system::setDriver'](
+            this._suAccountCert,
+            {},
+            name,
+            instance.contractId
+        );
+        
+        const options = {
+            value: 0,
+            gasLimit: gasRequired,
+            storageDepositLimit: storageDeposit.isCharge ? storageDeposit.asCharge : null
+        };
+        await this._txQueue.submit(
+            this._systemContract.tx['system::setDriver'](
+                options,
+                name,
+                instance.contractId
+            ),
+            this._suAccount
+        );
+        
+        // grant admin
+        await this._txQueue.submit(
+            this._systemContract.tx['system::grantAdmin'](
+                { gasLimit: 10e12 },
+                instance.contractId
+            ),
+            this._suAccount
+        );
+        
+        await this._waitFor(async() => {
+            const { output } = await this._systemContract.query['system::getDriver'](
+                this._suAccountCert,
+                {},
+                name
+            );
+            
+            return !output.isEmpty && output.unwrap().eq(instance.contractId);
+        }, this._waitTime);
     }
     
     protected async _waitFor (
@@ -368,17 +548,11 @@ export class StackSetupService
             return firstTry;
         }
         
-        if (options.message) {
-            ux.debug('Waiting for', chalk.cyan(options.message));
-        }
-        
         const result = waitFor(
             callback,
             timeLimit,
             options
         );
-        
-        ux.debug(chalk.green('Ready'));
         
         return result;
     }

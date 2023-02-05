@@ -5,8 +5,8 @@ import { TypeBinder } from '@/service/project/TypeBinder';
 import { Flags } from '@oclif/core';
 
 
-export class ContractTypingCommand
-    extends BaseCommand<typeof ContractTypingCommand>
+export class ContractTypegenCommand
+    extends BaseCommand<typeof ContractTypegenCommand>
 {
     
     public static summary : string = 'Generate type bindings for compiled contract';
