@@ -255,8 +255,6 @@ export class ContractFactory
             transfer: options.transfer
         }, cert);
         
-        console.log(instantiateReturn);
-        
         const queryResponse : any = this.api.createType('InkResponse', instantiateReturn);
         const queryResult = queryResponse.result.toHuman();
         
@@ -307,17 +305,11 @@ export class ContractFactory
             return firstTry;
         }
         
-        if (options.message) {
-            ux.debug('Waiting for', chalk.cyan(options.message));
-        }
-        
         const result = waitFor(
             callback,
             timeLimit,
             options
         );
-        
-        ux.debug(chalk.green('Ready'));
         
         return result;
     }

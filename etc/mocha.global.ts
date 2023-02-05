@@ -40,6 +40,7 @@ before(async function() {
     }
     
     logger.log('Global setup done');
+    logger.log('Starting tests');
 });
 
 after(async function() {

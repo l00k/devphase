@@ -28,8 +28,6 @@ export class ContractTestCommand
     
     public async run ()
     {
-        ux.action.start('Running tests');
-        
         await this.runtimeContext.initContext(
             RunMode.Testing,
             this.flags.network
@@ -75,8 +73,6 @@ export class ContractTestCommand
         });
         
         mocha.dispose();
-        
-        ux.action.stop();
     }
     
 }

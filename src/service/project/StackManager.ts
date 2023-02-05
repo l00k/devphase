@@ -7,6 +7,7 @@ import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess, { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
+import Listr from 'listr';
 import cloneDeep from 'lodash/cloneDeep';
 import path from 'path';
 
@@ -47,17 +48,58 @@ export class StackManager
             pherry: null,
         };
         
-        this._processes.node = await this.startNode(runMode);
-        if (this._killFlag) {
-            return this._processes;
-        }
+        const listr = new Listr([
+            {
+                title: 'Start node component',
+                task: async() => {
+                    this._processes.node = await this.startNode(runMode);
+                    if (this._killFlag) {
+                        throw new Exception(
+                            'Stack killed',
+                            1675571773657
+                        );
+                    }
+                }
+            },
+            {
+                title: 'Start pRuntime component',
+                task: async() => {
+                    this._processes.pruntime = await this.startPruntime(runMode);
+                    if (this._killFlag) {
+                        throw new Exception(
+                            'Stack killed',
+                            1675571821163
+                        );
+                    }
+                }
+            },
+            {
+                title: 'Start pherry component',
+                task: async() => {
+                    this._processes.pherry = await this.startPherry(runMode);
+                    if (this._killFlag) {
+                        throw new Exception(
+                            'Stack killed',
+                            1675571845146
+                        );
+                    }
+                }
+            }
+        ]);
         
-        this._processes.pruntime = await this.startPruntime(runMode);
-        if (this._killFlag) {
-            return this._processes;
+        try {
+            await listr.run();
         }
-        
-        this._processes.pherry = await this.startPherry(runMode);
+        catch (e : any) {
+            if (
+                e?.message
+                && e.message.includes('Stack killed')
+            ) {
+                return this._processes;
+            }
+            
+            throw e;
+        }
         
         return this._processes;
     }
@@ -163,13 +205,6 @@ export class StackManager
         
         // wait for process to be ready
         const binaryName = path.basename(binaryPath);
-        ux.debug([
-            'Waiting for',
-            chalk.cyan(binaryName),
-            'to start with',
-            (options.timeout / 1000).toFixed(1),
-            's timeout.'
-        ].join(' '));
         
         // spawn child process
         const child = childProcess.spawn(
@@ -237,12 +272,6 @@ export class StackManager
                     
                     if (!settled) {
                         if (waitForReady(text)) {
-                            ux.debug([
-                                'Binary',
-                                chalk.cyan(binaryName),
-                                'started'
-                            ].join(' '));
-                            
                             cleanup();
                             resolve(child);
                         }
