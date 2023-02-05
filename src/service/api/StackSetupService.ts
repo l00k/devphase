@@ -3,7 +3,6 @@ import { ContractFactory } from '@/service/api/ContractFactory';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
 import { PRuntimeApi } from '@/service/api/PRuntimeApi';
-import { TxHandler } from '@/service/api/TxHandler';
 import { TxQueue } from '@/service/api/TxQueue';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Contract, ContractMetadata } from '@/typings';
@@ -16,7 +15,6 @@ import axios, { AxiosInstance } from 'axios';
 import fs from 'fs';
 import Listr from 'listr';
 import path from 'path';
-import crypto from 'crypto';
 
 
 type WorkerInfo = {
@@ -62,8 +60,8 @@ export class StackSetupService
     
     protected _systemContract : Contract;
     protected _driverContracts : {
-        ContractDeposit: Contract,
-        SidevmOperation: Contract,
+        ContractDeposit : Contract,
+        SidevmOperation : Contract,
     } = {
         ContractDeposit: null,
         SidevmOperation: null,
@@ -90,8 +88,8 @@ export class StackSetupService
         options = {
             renderer: 'default',
             ...options
-        }
-    
+        };
+        
         this._api = this._devPhase.api;
         this._txQueue = new TxQueue(this._api);
         
@@ -250,10 +248,10 @@ export class StackSetupService
                 skip: async() => {
                     const result = await this._driverContracts.SidevmOperation
                         .query['sidevmOperation::canDeploy'](
-                            this._suAccountCert,
-                            {},
-                            this._loggerId
-                        );
+                        this._suAccountCert,
+                        {},
+                        this._loggerId
+                    );
                     return result.output.toPrimitive();
                 },
                 task: () => this.prepareLoggerServer()
@@ -295,11 +293,11 @@ export class StackSetupService
         const response = await workerInfo.rpc.getInfo();
         
         workerInfo.initalized = response.initialized;
-
+        
         if (!workerInfo.initalized) {
             return workerInfo;
         }
-
+        
         workerInfo.publicKey = '0x' + response.publicKey;
         workerInfo.ecdhPublicKey = '0x' + response.ecdhPublicKey;
         
@@ -623,7 +621,7 @@ export class StackSetupService
         }, this._waitTime);
     }
     
-    public async prepareLoggerServer() : Promise<any>
+    public async prepareLoggerServer () : Promise<any>
     {
         await this._txQueue.submit(
             this._driverContracts.SidevmOperation.tx.allow(
@@ -637,10 +635,10 @@ export class StackSetupService
         await this._waitFor(async() => {
             const result = await this._driverContracts.SidevmOperation
                 .query['sidevmOperation::canDeploy'](
-                    this._suAccountCert,
-                    {},
-                    this._loggerId
-                );
+                this._suAccountCert,
+                {},
+                this._loggerId
+            );
             return result.output.toPrimitive();
         }, this._waitTime);
         
