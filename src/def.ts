@@ -1,5 +1,6 @@
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types';
+import Listr from 'listr';
 import type { MochaOptions } from 'mocha';
 
 export type RecursivePartial<T> = {
@@ -84,6 +85,7 @@ export type NetworkConfig = {
 export type StackSetupOptions = {
     workerUrl? : string,
     clusterId? : string,
+    renderer? : Listr.ListrRendererValue<any>,
 };
 
 export type StackSetupResult = {

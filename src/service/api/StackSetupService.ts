@@ -2,6 +2,7 @@ import { Accounts, ContractType, StackSetupOptions, StackSetupResult } from '@/d
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
+import { PRuntimeApi } from '@/service/api/PRuntimeApi';
 import { TxHandler } from '@/service/api/TxHandler';
 import { TxQueue } from '@/service/api/TxQueue';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
@@ -15,11 +16,13 @@ import axios, { AxiosInstance } from 'axios';
 import fs from 'fs';
 import Listr from 'listr';
 import path from 'path';
+import crypto from 'crypto';
 
 
 type WorkerInfo = {
     workerUrl : string,
     api : AxiosInstance,
+    rpc : PRuntimeApi,
     initalized : boolean,
     publicKey : string,
     ecdhPublicKey : string,
@@ -33,16 +36,18 @@ type ClusterInfo = {
 export class StackSetupService
 {
     
+    public static readonly LOGGER_SALT : string = '0x0000000000000000000000000000000000000000000000000000000000000123';
+    
     protected static readonly MAP_STACK_TO_SETUP : Record<string, string> = {};
     
     protected _context : RuntimeContext;
     protected _api : ApiPromise;
     protected _txQueue : TxQueue;
+    protected _eventQueue : EventQueue = new EventQueue();
     
     protected _accounts : Accounts = {};
     protected _suAccount : KeyringPair;
     protected _suAccountCert : PhalaSdk.CertificateData;
-    protected _mainClusterId : string;
     protected _blockTime : number;
     protected _waitTime : number;
     
@@ -56,8 +61,15 @@ export class StackSetupService
     protected _clusterInfo : ClusterInfo;
     
     protected _systemContract : Contract;
+    protected _driverContracts : {
+        ContractDeposit: Contract,
+        SidevmOperation: Contract,
+    } = {
+        ContractDeposit: null,
+        SidevmOperation: null,
+    };
     
-    protected _eventQueue : EventQueue = new EventQueue();
+    protected _loggerId : string;
     
     
     public constructor (
@@ -75,6 +87,11 @@ export class StackSetupService
     
     public async setupStack (options : StackSetupOptions) : Promise<StackSetupResult>
     {
+        options = {
+            renderer: 'default',
+            ...options
+        }
+    
         this._api = this._devPhase.api;
         this._txQueue = new TxQueue(this._api);
         
@@ -195,14 +212,66 @@ export class StackSetupService
                 }
             },
             {
-                title: 'Deploy tokenomic contract',
-                skip: () => this.checkDriverContract('ContractDeposit'),
+                title: 'Deploy tokenomic driver',
+                skip: () => this.checkDriverContract(
+                    this._tokenomicsMetatadata,
+                    'ContractDeposit'
+                ),
                 task: () => this.deployDriverContract(
                     this._tokenomicsMetatadata,
                     'ContractDeposit'
                 )
+            },
+            {
+                title: 'Deploy SideVM driver',
+                skip: () => this.checkDriverContract(
+                    this._sidevmopMetadata,
+                    'SidevmOperation'
+                ),
+                task: () => this.deployDriverContract(
+                    this._sidevmopMetadata,
+                    'SidevmOperation'
+                )
+            },
+            {
+                title: 'Calculate logger server contract ID',
+                task: async() => {
+                    const { id } = await this._workerInfo.rpc.calculateContractId({
+                        deployer: '0x' + Buffer.from(this._suAccount.publicKey).toString('hex'),
+                        clusterId: this._clusterInfo.id,
+                        codeHash: this._logServerMetadata.source.hash,
+                        salt: StackSetupService.LOGGER_SALT,
+                    });
+                    this._loggerId = id;
+                }
+            },
+            {
+                title: 'Prepare chain for logger server',
+                skip: async() => {
+                    const result = await this._driverContracts.SidevmOperation
+                        .query['sidevmOperation::canDeploy'](
+                            this._suAccountCert,
+                            {},
+                            this._loggerId
+                        );
+                    return result.output.toPrimitive();
+                },
+                task: () => this.prepareLoggerServer()
+            },
+            {
+                title: 'Deploy logger server',
+                skip: () => this.checkDriverContract(
+                    this._logServerMetadata,
+                    'PinkLogger'
+                ),
+                task: () => this.deployDriverContract(
+                    this._logServerMetadata,
+                    'PinkLogger'
+                )
             }
-        ]);
+        ], {
+            renderer: options.renderer
+        });
         
         await listr.run();
         
@@ -217,29 +286,22 @@ export class StackSetupService
         const workerInfo : WorkerInfo = {
             workerUrl,
             api: axios.create({ baseURL: workerUrl }),
+            rpc: new PRuntimeApi(workerUrl),
             initalized: false,
             publicKey: null,
             ecdhPublicKey: null,
         };
         
-        const { status, data } = await workerInfo.api.get('/get_info', { validateStatus: () => true });
-        if (status !== 200) {
-            throw new Exception(
-                'Unable to get worker info',
-                1663941402827
-            );
-        }
+        const response = await workerInfo.rpc.getInfo();
         
-        const payload : any = JSON.parse(data.payload);
-        
-        workerInfo.initalized = payload.initialized;
-        
+        workerInfo.initalized = response.initialized;
+
         if (!workerInfo.initalized) {
             return workerInfo;
         }
-        
-        workerInfo.publicKey = '0x' + payload.public_key;
-        workerInfo.ecdhPublicKey = '0x' + payload.ecdh_public_key;
+
+        workerInfo.publicKey = '0x' + response.publicKey;
+        workerInfo.ecdhPublicKey = '0x' + response.ecdhPublicKey;
         
         return workerInfo;
     }
@@ -451,24 +513,45 @@ export class StackSetupService
         );
     }
     
-    public async checkDriverContract (name : string)
+    public async checkDriverContract (
+        contractMetadata : ContractMetadata.Metadata,
+        name : string
+    ) : Promise<boolean>
     {
         const { output } = await this._systemContract.query['system::getDriver'](
             this._suAccountCert,
             {},
             name
         );
-        return !output.isEmpty;
+        
+        if (output.isEmpty) {
+            return false;
+        }
+        
+        const contractId = '0x' + Buffer.from(output.unwrap()).toString('hex');
+        
+        const contractFactory = await ContractFactory.create(
+            this._devPhase,
+            contractMetadata,
+            {
+                contractType: ContractType.InkCode,
+                clusterId: this._clusterInfo.id,
+            }
+        );
+        
+        this._driverContracts[name] = await contractFactory.attach(contractId);
+        
+        return true;
     }
     
     public async deployDriverContract (
-        contract : ContractMetadata.Metadata,
+        contractMetadata : ContractMetadata.Metadata,
         name : string
     )
     {
         const contractFactory = await ContractFactory.create(
             this._devPhase,
-            this._pinkSystemMetadata,
+            contractMetadata,
             {
                 contractType: ContractType.InkCode,
                 clusterId: this._clusterInfo.id,
@@ -491,8 +574,11 @@ export class StackSetupService
                 asAccount: this._suAccount,
                 gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
                 storageDepositLimit: instantiationEst.storageDeposit.asCharge.toNumber(),
+                adjustStake: 10e12,
             }
         );
+        
+        this._driverContracts[name] = instance;
         
         // set driver
         const { gasRequired, storageDeposit } = await this._systemContract.query
@@ -535,6 +621,38 @@ export class StackSetupService
             
             return !output.isEmpty && output.unwrap().eq(instance.contractId);
         }, this._waitTime);
+    }
+    
+    public async prepareLoggerServer() : Promise<any>
+    {
+        await this._txQueue.submit(
+            this._driverContracts.SidevmOperation.tx.allow(
+                { gasLimit: 10e12 },
+                this._loggerId
+            ),
+            this._suAccount,
+            true
+        );
+        
+        await this._waitFor(async() => {
+            const result = await this._driverContracts.SidevmOperation
+                .query['sidevmOperation::canDeploy'](
+                    this._suAccountCert,
+                    {},
+                    this._loggerId
+                );
+            return result.output.toPrimitive();
+        }, this._waitTime);
+        
+        await this._txQueue.submit(
+            this._api.tx.phalaFatContracts.clusterUploadResource(
+                this._clusterInfo.id,
+                ContractType.SidevmCode,
+                '0x' + this._logServerSideVmWasm
+            ),
+            this._suAccount,
+            true
+        );
     }
     
     protected async _waitFor (

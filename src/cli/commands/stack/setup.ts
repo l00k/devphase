@@ -34,9 +34,12 @@ export class StackSetupCommand
         );
         
         const stackSetupService = new StackSetupService(devPhase);
-        const result = await stackSetupService.setupStack(
-            this.runtimeContext.config.stack.setupOptions
-        );
+        
+        const renderer = this.getListrVerbosity();
+        const result = await stackSetupService.setupStack({
+            renderer,
+            ...this.runtimeContext.config.stack.setupOptions,
+        });
         
         if (!this.flags.json) {
             ux.debug(chalk.green('Stack is ready'));

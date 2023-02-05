@@ -19,6 +19,13 @@ export class CheckCommand
                 task: () => this.runtimeContext.requestProjectDirectory(),
             },
             {
+                title: 'Check dependencies',
+                task: async() => {
+                    // todo ld 2023-02-05 05:47:20
+                    // check rust etc dependencies
+                },
+            },
+            {
                 title: 'Checking Phala stack binaries',
                 task: () => this.runtimeContext.requestStackBinaries(false),
             }

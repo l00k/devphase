@@ -1,7 +1,8 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { getClassesFromChain } from '@/utils/getClassesFromChain';
 import { Args, Command, Flags, Interfaces, ux } from '@oclif/core';
-import { FlagProps, Input } from '@oclif/core/lib/interfaces/parser';
+import { FlagProps } from '@oclif/core/lib/interfaces/parser';
+import Listr from 'listr';
 
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>
@@ -16,6 +17,12 @@ export abstract class BaseCommand<T extends typeof Command>
     public static flags : Record<string, FlagProps & any> = {
         json: Flags.boolean({
             summary: 'Output in JSON format'
+        }),
+        verbosity: Flags.string({
+            summary: 'Verbosity level',
+            char: 'v',
+            default: '1',
+            options: [ '0', '1', '2' ]
         }),
     };
     
@@ -42,14 +49,14 @@ export abstract class BaseCommand<T extends typeof Command>
         }
         
         const { flags } = await this.parse(this.ctor);
-        this.flags = <any> flags;
+        this.flags = <any>flags;
         
         const { args, raw } = await this.parse(this.ctor);
-        this.args = <any> args;
+        this.args = <any>args;
         this.argsRaw = Object.values(raw)
             .filter(arg => arg.type === 'arg')
             .map(arg => arg.input)
-            ;
+        ;
         
         ux.config.outputLevel = 'debug';
         if (this.flags.json) {
@@ -63,6 +70,18 @@ export abstract class BaseCommand<T extends typeof Command>
     public async run () : Promise<void | Record<string, any>>
     {
         return {};
+    }
+    
+    public getListrVerbosity () : Listr.ListrRendererValue<any>
+    {
+        switch (this.flags.verbosity) {
+            case '0':
+                return 'silent';
+            case '2':
+                return 'verbose';
+            default:
+                return 'default';
+        }
     }
     
 }

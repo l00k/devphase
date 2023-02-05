@@ -3,7 +3,6 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import { timeout } from '@/utils/timeout';
-import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess, { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
@@ -48,6 +47,11 @@ export class StackManager
             pherry: null,
         };
         
+        const renderer = runMode == RunMode.Simple
+            ? 'silent'
+            : 'default'
+        ;
+        
         const listr = new Listr([
             {
                 title: 'Start node component',
@@ -85,7 +89,7 @@ export class StackManager
                     }
                 }
             }
-        ]);
+        ], { renderer });
         
         try {
             await listr.run();
