@@ -85,11 +85,6 @@ export class StackSetupService
     
     public async setupStack (options : StackSetupOptions) : Promise<StackSetupResult>
     {
-        options = {
-            renderer: 'default',
-            ...options
-        };
-        
         this._api = this._devPhase.api;
         this._txQueue = new TxQueue(this._api);
         
@@ -268,7 +263,7 @@ export class StackSetupService
                 )
             }
         ], {
-            renderer: options.renderer
+            renderer: this._context.listrRenderer
         });
         
         await listr.run();

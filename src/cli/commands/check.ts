@@ -1,5 +1,7 @@
 import { RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
+import { DependenciesChecker } from '@/service/project/DependenciesChecker';
+import { Exception } from '@/utils/Exception';
 import Listr from 'listr';
 
 
@@ -21,15 +23,23 @@ export class CheckCommand
             {
                 title: 'Check dependencies',
                 task: async() => {
-                    // todo ld 2023-02-05 05:47:20
-                    // check rust etc dependencies
+                    const dependenciesChecker = new DependenciesChecker(this.runtimeContext);
+                    const result = await dependenciesChecker.check();
+                    if (!result.valid) {
+                        throw new Exception(
+                            'Dependencies check failed',
+                            1675583898739
+                        );
+                    }
                 },
             },
             {
                 title: 'Checking Phala stack binaries',
                 task: () => this.runtimeContext.requestStackBinaries(false),
             }
-        ]);
+        ], {
+            renderer: this.runtimeContext.listrRenderer
+        });
         
         await listr.run();
     }

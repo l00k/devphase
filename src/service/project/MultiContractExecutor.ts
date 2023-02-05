@@ -75,7 +75,9 @@ export class MultiContractExecutor
             });
         }
         
-        return new Listr(listrOpts);
+        return new Listr(listrOpts, {
+            renderer: this.runtimeContext.listrRenderer
+        });
     }
     
     public matchContracts (contractName? : string) : string[]

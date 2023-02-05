@@ -25,6 +25,13 @@ export enum RunMode
     Testing = 'Testing',
 }
 
+export enum VerbosityLevel
+{
+    Silent = 0,
+    Default = 1,
+    Verbose = 2,
+}
+
 export interface StackComponentOptions
 {
     binary : string,
@@ -85,7 +92,6 @@ export type NetworkConfig = {
 export type StackSetupOptions = {
     workerUrl? : string,
     clusterId? : string,
-    renderer? : Listr.ListrRendererValue<any>,
 };
 
 export type StackSetupResult = {

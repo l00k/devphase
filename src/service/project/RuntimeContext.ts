@@ -1,6 +1,5 @@
-import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths } from '@/def';
+import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths, VerbosityLevel } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
-import { BaseCommand } from '@/service/BaseCommand';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
@@ -13,6 +12,7 @@ import Listr from 'listr';
 import path from 'path';
 
 
+
 export class RuntimeContext
 {
     
@@ -21,6 +21,9 @@ export class RuntimeContext
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
     protected _devPhases : Record<string, DevPhase> = {};
+    
+    public readonly verbosity : VerbosityLevel = VerbosityLevel.Default;
+    public readonly listrRenderer : Listr.ListrRendererValue<any> = 'default';
     
     public readonly config : ProjectConfig;
     public readonly paths : RuntimePaths = {
@@ -186,9 +189,23 @@ export class RuntimeContext
     }
     
     
+    public setVerbosityLevel (level : VerbosityLevel)
+    {
+        const renderer : Listr.ListrRendererValue<any> = level == VerbosityLevel.Verbose
+            ? 'verbose'
+            : level == VerbosityLevel.Silent
+                ? 'silent'
+                : 'default'
+        ;
+        
+        Object.assign(this, {
+            verbosity: level,
+            renderer,
+        });
+    }
     
     public async requestStackBinaries (
-        execute: boolean = true
+        execute : boolean = true
     ) : Promise<Listr>
     {
         return this._stackBinaryDownloader.downloadIfRequired(execute);

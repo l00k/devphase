@@ -1,3 +1,4 @@
+import { VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { getClassesFromChain } from '@/utils/getClassesFromChain';
 import { Args, Command, Flags, Interfaces, ux } from '@oclif/core';
@@ -21,8 +22,8 @@ export abstract class BaseCommand<T extends typeof Command>
         verbosity: Flags.string({
             summary: 'Verbosity level',
             char: 'v',
-            default: '1',
-            options: [ '0', '1', '2' ]
+            default: <any> VerbosityLevel.Default,
+            options: <any> Object.values(VerbosityLevel)
         }),
     };
     
@@ -59,29 +60,21 @@ export abstract class BaseCommand<T extends typeof Command>
         ;
         
         ux.config.outputLevel = 'debug';
-        if (this.flags.json) {
+        if (
+            this.flags.json
+            || this.flags.verbosity == VerbosityLevel.Silent
+        ) {
             ux.config.action.std = 'stderr';
             ux.config.outputLevel = 'fatal';
         }
         
         this.runtimeContext = await RuntimeContext.getSingleton();
+        this.runtimeContext.setVerbosityLevel(this.flags.verbosity);
     }
     
     public async run () : Promise<void | Record<string, any>>
     {
         return {};
-    }
-    
-    public getListrVerbosity () : Listr.ListrRendererValue<any>
-    {
-        switch (this.flags.verbosity) {
-            case '0':
-                return 'silent';
-            case '2':
-                return 'verbose';
-            default:
-                return 'default';
-        }
     }
     
 }

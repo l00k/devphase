@@ -246,7 +246,9 @@ export class ContractManager
                         title: 'Type binding',
                         task: () => typeBinder.createBindings(contractName)
                     }
-                ]);
+                ], {
+                    renderer: this._runtimeContext.listrRenderer
+                });
             }
         );
         

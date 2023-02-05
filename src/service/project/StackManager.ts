@@ -49,7 +49,7 @@ export class StackManager
         
         const renderer = runMode == RunMode.Simple
             ? 'silent'
-            : 'default'
+            : this._context.listrRenderer
         ;
         
         const listr = new Listr([
