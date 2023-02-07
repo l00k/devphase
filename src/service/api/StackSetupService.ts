@@ -1,4 +1,11 @@
-import { Accounts, ContractType, StackSetupOptions, StackSetupResult } from '@/def';
+import {
+    Accounts,
+    ContractType,
+    StackSetupOptions,
+    StackSetupResult,
+    SystemContract,
+    SystemContractFileMap
+} from '@/def';
 import { ContractFactory, InstantiateOptions } from '@/service/api/ContractFactory';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
@@ -59,11 +66,7 @@ export class StackSetupService
     protected _clusterInfo : ClusterInfo;
     
     protected _systemContract : Contract;
-    protected _driverContracts : {
-        ContractDeposit : Contract,
-        SidevmOperation : Contract,
-        PinkLogger : Contract,
-    } = {
+    protected _driverContracts : Record<SystemContract, Contract> = {
         ContractDeposit: null,
         SidevmOperation: null,
         PinkLogger: null,
@@ -149,9 +152,9 @@ export class StackSetupService
                 title: 'Load system contracts',
                 task: async() => {
                     this._pinkSystemMetadata = await this.loadContract('system');
-                    this._tokenomicsMetatadata = await this.loadContract('tokenomic');
-                    this._sidevmopMetadata = await this.loadContract('sidevm_deployer');
-                    this._logServerMetadata = await this.loadContract('log_server');
+                    this._tokenomicsMetatadata = await this.loadContract(SystemContractFileMap[SystemContract.ContractDeposit]);
+                    this._sidevmopMetadata = await this.loadContract(SystemContractFileMap[SystemContract.SidevmOperation]);
+                    this._logServerMetadata = await this.loadContract(SystemContractFileMap[SystemContract.PinkLogger]);
                     this._logServerSideVmWasm = await this.loadWasm('log_server.sidevm');
                 }
             },
@@ -210,22 +213,22 @@ export class StackSetupService
                 title: 'Deploy tokenomic driver',
                 skip: () => this.checkDriverContract(
                     this._tokenomicsMetatadata,
-                    'ContractDeposit'
+                    SystemContract.ContractDeposit
                 ),
                 task: () => this.deployDriverContract(
                     this._tokenomicsMetatadata,
-                    'ContractDeposit'
+                    SystemContract.ContractDeposit
                 )
             },
             {
                 title: 'Deploy SideVM driver',
                 skip: () => this.checkDriverContract(
                     this._sidevmopMetadata,
-                    'SidevmOperation'
+                    SystemContract.SidevmOperation
                 ),
                 task: () => this.deployDriverContract(
                     this._sidevmopMetadata,
-                    'SidevmOperation'
+                    SystemContract.SidevmOperation
                 )
             },
             {
@@ -257,11 +260,11 @@ export class StackSetupService
                 title: 'Deploy logger server',
                 skip: () => this.checkDriverContract(
                     this._logServerMetadata,
-                    'PinkLogger'
+                    SystemContract.PinkLogger
                 ),
                 task: () => this.deployDriverContract(
                     this._logServerMetadata,
-                    'PinkLogger',
+                    SystemContract.PinkLogger,
                     { salt: StackSetupService.LOGGER_SALT }
                 )
             },
@@ -429,14 +432,14 @@ export class StackSetupService
         // create cluster
         const tx = this._api.tx.sudo.sudo(
             this._api.tx.phalaFatContracts.addCluster(
-                this._accounts.alice.address,           // owner
-                { Public: null },                       // access rights
-                [ this._workerInfo.publicKey ],         // workers keys
-                1e12,                                   // deposit
-                1,                                      // gas price
-                1,                                      // gas per item
-                1,                                      // gas per byte
-                this._accounts.alice.address            // treasury account
+                this._accounts.alice.address,   // owner
+                { Public: null },               // access rights
+                [ this._workerInfo.publicKey ], // workers keys
+                1e12,                           // deposit
+                1,                              // gas price
+                1,                              // gas per item
+                1,                              // gas per byte
+                this._accounts.alice.address    // treasury account
             )
         );
         
@@ -511,7 +514,7 @@ export class StackSetupService
     
     public async checkDriverContract (
         contractMetadata : ContractMetadata.Metadata,
-        name : string
+        name : SystemContract
     ) : Promise<boolean>
     {
         const { output } = await this._systemContract.query['system::getDriver'](
@@ -542,7 +545,7 @@ export class StackSetupService
     
     public async deployDriverContract (
         contractMetadata : ContractMetadata.Metadata,
-        name : string,
+        name : SystemContract,
         instantiateOpts : InstantiateOptions = {}
     )
     {

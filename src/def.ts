@@ -1,6 +1,5 @@
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types';
-import Listr from 'listr';
 import type { MochaOptions } from 'mocha';
 
 export type RecursivePartial<T> = {
@@ -30,6 +29,20 @@ export enum VerbosityLevel
     Silent = '0',
     Default = '1',
     Verbose = '2',
+}
+
+export enum SystemContract
+{
+    ContractDeposit = 'ContractDeposit',
+    SidevmOperation = 'SidevmOperation',
+    PinkLogger = 'PinkLogger',
+}
+
+export enum SystemContractFileMap
+{
+    ContractDeposit = 'tokenomic',
+    SidevmOperation = 'sidevm_deployer',
+    PinkLogger = 'log_server',
 }
 
 export type Accounts = {

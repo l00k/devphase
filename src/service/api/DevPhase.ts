@@ -1,19 +1,19 @@
-import type { Accounts, AccountsConfig, DevPhaseOptions, NetworkConfig } from '@/def';
-import { ContractType } from '@/def';
+import type { Accounts, AccountsConfig, NetworkConfig } from '@/def';
+import { ContractType, SystemContract, SystemContractFileMap } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Contract } from '@/typings';
 import type { ContractMetadata } from '@/typings';
+import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { replaceRecursive } from '@/utils/replaceRecursive';
+import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import fs from 'fs';
-import * as net from 'net';
 import path from 'path';
 
 
@@ -38,17 +38,19 @@ export class DevPhase
     
     public readonly accounts : Accounts = {};
     public readonly suAccount : KeyringPair;
+    public readonly suAccountCert : PhalaSdk.CertificateData;
     
     public readonly mainClusterId : string = '0x0000000000000000000000000000000000000000000000000000000000000000';
     
     public readonly runtimeContext : RuntimeContext;
-    
     
     protected _apiProvider : WsProvider;
     protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
     protected _workerInfo : WorkerInfo;
     protected _systemContracts : Record<string, Promise<Contract>> = {};
+    // clusterId => driverName => Contract
+    protected _driverContracts : Record<string, Record<string, Promise<Contract>>> = {};
     
     
     private constructor () {}
@@ -99,9 +101,23 @@ export class DevPhase
             true
         );
         
+        const suAccount = accounts[accountsConfig.suAccount];
+        if (!suAccount) {
+            throw new Exception(
+                'Undefined su account',
+                1675762335735
+            );
+        }
+        
+        const suAccountCert = await PhalaSdk.signCertificate({
+            api,
+            pair: suAccount,
+        });
+        
         Object.assign(instance, {
             accounts,
-            suAccount: accounts[accountsConfig.suAccount],
+            suAccount,
+            suAccountCert,
         });
         
         return instance;
@@ -198,8 +214,66 @@ export class DevPhase
         }
     }
     
-    public async getSystemContract(
-        clusterId? : string
+    public async getDriverContract (
+        driverName : SystemContract,
+        clusterId? : string,
+    ) : Promise<Contract>
+    {
+        if (!clusterId) {
+            clusterId = this.mainClusterId;
+        }
+        
+        const systemContract = await this.getSystemContract(clusterId);
+        
+        if (!this._driverContracts[clusterId]) {
+            this._driverContracts[clusterId] = {};
+            
+            if (!this._driverContracts[clusterId][driverName]) {
+                this._driverContracts[clusterId][driverName] = new Promise(async(resolve, reject) => {
+                    try {
+                        const { output } = await systemContract.query['system::getDriver'](
+                            this.suAccountCert,
+                            {},
+                            name
+                        );
+                        
+                        if (output.isEmpty) {
+                            throw new Exception(
+                                'Driver contract is not ready',
+                                1675762897876
+                            );
+                        }
+                        
+                        const contractId = '0x' + Buffer.from(output.unwrap()).toString('hex');
+                        
+                        const driverContractPath = path.join(
+                            this.runtimeContext.paths.currentStack,
+                            SystemContractFileMap[driverName]
+                        );
+                        
+                        const driverContractFactory = await this.getFactory(
+                            driverContractPath,
+                            {
+                                clusterId,
+                                contractType: ContractType.InkCode,
+                            }
+                        );
+                        
+                        const driverContract = await driverContractFactory.attach(contractId);
+                        resolve(driverContract);
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                });
+            }
+        }
+        
+        return this._driverContracts[clusterId][driverName];
+    }
+    
+    public async getSystemContract (
+        clusterId? : string,
     ) : Promise<Contract>
     {
         if (!clusterId) {
