@@ -14,7 +14,7 @@ yarn add -D devphase
 yarn add -D typescript ts-node # required peer dependencies
 ```
 
-## Features
+## Commands
 
 - Init project (creates required files and directories)
 ```shell
@@ -56,7 +56,7 @@ yarn devphase contract typings
 yarn devphase contract test
 ```
 
-### Configuration
+## Configuration
 Create `devphase.config.ts` in root directory (`init` command in TODO)
 
 Here is default configuration. All values are optional (merged recuresivly)

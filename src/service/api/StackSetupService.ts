@@ -1,5 +1,5 @@
 import { Accounts, ContractType, StackSetupOptions, StackSetupResult } from '@/def';
-import { ContractFactory } from '@/service/api/ContractFactory';
+import { ContractFactory, InstantiateOptions } from '@/service/api/ContractFactory';
 import { DevPhase } from '@/service/api/DevPhase';
 import { EventQueue } from '@/service/api/EventQueue';
 import { PRuntimeApi } from '@/service/api/PRuntimeApi';
@@ -62,9 +62,11 @@ export class StackSetupService
     protected _driverContracts : {
         ContractDeposit : Contract,
         SidevmOperation : Contract,
+        PinkLogger : Contract,
     } = {
         ContractDeposit: null,
         SidevmOperation: null,
+        PinkLogger: null,
     };
     
     protected _loggerId : string;
@@ -259,9 +261,10 @@ export class StackSetupService
                 ),
                 task: () => this.deployDriverContract(
                     this._logServerMetadata,
-                    'PinkLogger'
+                    'PinkLogger',
+                    { salt: StackSetupService.LOGGER_SALT }
                 )
-            }
+            },
         ], {
             renderer: this._context.listrRenderer
         });
@@ -539,7 +542,8 @@ export class StackSetupService
     
     public async deployDriverContract (
         contractMetadata : ContractMetadata.Metadata,
-        name : string
+        name : string,
+        instantiateOpts : InstantiateOptions = {}
     )
     {
         const contractFactory = await ContractFactory.create(
@@ -557,18 +561,25 @@ export class StackSetupService
         const instantiationEst = await contractFactory.estimateInstatiationFee(
             'default',
             [],
-            { asAccount: this._suAccount }
+            {
+                asAccount: this._suAccount,
+                ...instantiateOpts
+            }
         );
+        
+        instantiateOpts = {
+            asAccount: this._suAccount,
+            gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
+            storageDepositLimit: instantiationEst.storageDeposit.asCharge.toNumber(),
+            adjustStake: 10e12,
+            ...instantiateOpts
+        };
+        instantiateOpts.gasLimit = instantiateOpts.gasLimit * 100;
         
         const instance = await contractFactory.instantiate(
             'default',
             [],
-            {
-                asAccount: this._suAccount,
-                gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
-                storageDepositLimit: instantiationEst.storageDeposit.asCharge.toNumber(),
-                adjustStake: 10e12,
-            }
+            instantiateOpts
         );
         
         this._driverContracts[name] = instance;

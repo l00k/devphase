@@ -1,7 +1,7 @@
-import { RunMode } from '@/def';
+import { RunMode, VerbosityLevel } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
 import { StackManager } from '@/service/project/StackManager';
-import { ux } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 
 
 export class StackRunCommand
@@ -9,6 +9,13 @@ export class StackRunCommand
 {
 
     public static summary : string = 'Starts local development stack';
+    
+    public static flags = {
+        'save-logs': Flags.boolean({
+            summary: 'Save logs to file',
+            default: false
+        }),
+    };
     
     public async run ()
     {
@@ -21,7 +28,12 @@ export class StackRunCommand
         const stackManager = new StackManager(this.runtimeContext);
         
         try {
-            await stackManager.startStack(RunMode.Simple);
+            await stackManager.startStack(
+                RunMode.Simple,
+                {
+                    saveLogs: this.flags['save-logs'],
+                }
+            );
         }
         catch (e) {
             await stackManager.stopStack();

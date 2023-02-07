@@ -176,10 +176,10 @@
     tslib "^2.4.1"
     yarn "^1.22.18"
 
-"@phala/sdk@^0.3.6-beta.0":
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/@phala/sdk/-/sdk-0.3.6.tgz#7af4cafa7dd311e0841f07c54eb37214e318717b"
-  integrity sha512-G2iqCb09VtRJFt//V82y3G5HxS+ifjTqx2RCTCrdSk8UheMj6zMjWVAHELavIJyDqCS5EI/VAJL+JdQeYaceRg==
+"@phala/sdk@^0.3.7":
+  version "0.3.7"
+  resolved "https://registry.yarnpkg.com/@phala/sdk/-/sdk-0.3.7.tgz#905838c56e15d5a1097970cc956b97c5b89e6d1b"
+  integrity sha512-kXdYAQEB+qjhoJFmwiD68Gnik1ya+zs1qt72tRjG9HNUCLegZDB8mARs453vGXwjzhBlqmxQdsY+I0grtQ0RUg==
   dependencies:
     "@esbuild-plugins/node-modules-polyfill" "^0.1.4"
     "@phala/typedefs" "^0.2.32"
@@ -194,7 +194,7 @@
     protobufjs "^6.11.3"
     rxjs "^7.5.7"
 
-"@phala/typedefs@^0.2.32":
+"@phala/typedefs@^0.2.32", "@phala/typedefs@^0.2.33":
   version "0.2.33"
   resolved "https://registry.yarnpkg.com/@phala/typedefs/-/typedefs-0.2.33.tgz#6f18d73b5104db6a594d08be571954385b3e509b"
   integrity sha512-CaRzIGfU6CUIKLPswYtOw/xbtTttqmJZpr3fhkxLvkBQMXIH14iISD763OFXtWui7DrAMBKo/bHawvFNgWGKTg==

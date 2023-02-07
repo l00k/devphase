@@ -32,7 +32,7 @@
         "@oclif/core": "^2.0.7",
         "@oclif/plugin-help": "^5.2.2",
         "@oclif/plugin-plugins": "^2.2.4",
-        "@phala/sdk": "^0.3.6-beta.0",
+        "@phala/sdk": "^0.3.7",
         "@phala/typedefs": "^0.2.33",
         "@polkadot/api-contract": "^9.8.2",
         "@types/chai": "^4.3.3",

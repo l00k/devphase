@@ -1,5 +1,5 @@
 import axios from 'axios';
-const { pruntime_rpc } = require('./proto/pruntime_rpc');
+import * as PhalaSdk from '@phala/sdk';
 
 export class PRuntimeApi
 {
@@ -19,7 +19,7 @@ export class PRuntimeApi
             responseType: 'arraybuffer',
         });
         
-        this.rpc = new pruntime_rpc.PhactoryAPI((method, data, callback) => {
+        this.rpc = new PhalaSdk.PhactoryAPI((method, data, callback) => {
             client.post('/prpc/PhactoryAPI.' + method.name, data)
                 .then((r) => callback(null, r.data))
                 .catch((error) => callback(error));

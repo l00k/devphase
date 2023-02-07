@@ -27,38 +27,10 @@ export enum RunMode
 
 export enum VerbosityLevel
 {
-    Silent = 0,
-    Default = 1,
-    Verbose = 2,
+    Silent = '0',
+    Default = '1',
+    Verbose = '2',
 }
-
-export interface StackComponentOptions
-{
-    binary : string,
-    workingDir : string,
-    args : Record<string, any>,
-    envs : NodeJS.ProcessEnv,
-    timeout : number,
-}
-
-export interface NodeComponentOptions
-    extends StackComponentOptions
-{
-    port : number,
-}
-
-export interface PruntimeComponentOptions
-    extends StackComponentOptions
-{
-    port : number,
-}
-
-export interface PherryComponentOptions
-    extends StackComponentOptions
-{
-    gkMnemonic : string,
-}
-
 
 export type Accounts = {
     alice? : KeyringPair,
@@ -88,6 +60,37 @@ export type NetworkConfig = {
     workerUrl : string,
     blockTime : number,
 };
+
+export type StartStackOptions = {
+    saveLogs? : boolean,
+};
+
+export interface StackComponentOptions
+{
+    binary : string,
+    workingDir : string,
+    args : Record<string, any>,
+    envs : NodeJS.ProcessEnv,
+    timeout : number,
+}
+
+export interface NodeComponentOptions
+    extends StackComponentOptions
+{
+    port : number,
+}
+
+export interface PruntimeComponentOptions
+    extends StackComponentOptions
+{
+    port : number,
+}
+
+export interface PherryComponentOptions
+    extends StackComponentOptions
+{
+    gkMnemonic : string,
+}
 
 export type StackSetupOptions = {
     workerUrl? : string,

@@ -1,8 +1,9 @@
-import { ComponentName, RunMode, StackComponentOptions } from '@/def';
+import { ComponentName, RunMode, StackComponentOptions, StartStackOptions, VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import { timeout } from '@/utils/timeout';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess, { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
@@ -27,7 +28,10 @@ export class StackManager
     }
     
     
-    public async startStack (runMode : RunMode) : Promise<Record<ComponentName, ChildProcess>>
+    public async startStack (
+        runMode : RunMode,
+        options : StartStackOptions = {}
+    ) : Promise<Record<ComponentName, ChildProcess>>
     {
         if (this._processes) {
             throw new Exception(
@@ -37,7 +41,7 @@ export class StackManager
         }
         
         // prepare logs directory if required
-        if (this.isLogOutputUsed(runMode, this._context)) {
+        if (options.saveLogs) {
             fs.mkdirSync(this._runLogsPath, { recursive: true });
         }
         
@@ -47,16 +51,11 @@ export class StackManager
             pherry: null,
         };
         
-        const renderer = runMode == RunMode.Simple
-            ? 'silent'
-            : this._context.listrRenderer
-        ;
-        
         const listr = new Listr([
             {
                 title: 'Start node component',
                 task: async() => {
-                    this._processes.node = await this.startNode(runMode);
+                    this._processes.node = await this.startNode(runMode, options);
                     if (this._killFlag) {
                         throw new Exception(
                             'Stack killed',
@@ -68,7 +67,7 @@ export class StackManager
             {
                 title: 'Start pRuntime component',
                 task: async() => {
-                    this._processes.pruntime = await this.startPruntime(runMode);
+                    this._processes.pruntime = await this.startPruntime(runMode, options);
                     if (this._killFlag) {
                         throw new Exception(
                             'Stack killed',
@@ -80,7 +79,7 @@ export class StackManager
             {
                 title: 'Start pherry component',
                 task: async() => {
-                    this._processes.pherry = await this.startPherry(runMode);
+                    this._processes.pherry = await this.startPherry(runMode, options);
                     if (this._killFlag) {
                         throw new Exception(
                             'Stack killed',
@@ -89,7 +88,9 @@ export class StackManager
                     }
                 }
             }
-        ], { renderer });
+        ], {
+            renderer: this._context.listrRenderer
+        });
         
         try {
             await listr.run();
@@ -139,39 +140,51 @@ export class StackManager
         }
     }
     
-    public async startNode (runMode : RunMode) : Promise<ChildProcess>
+    public async startNode (
+        runMode : RunMode,
+        stackOptions : StartStackOptions
+    ) : Promise<ChildProcess>
     {
-        const options : StackComponentOptions = cloneDeep(this._context.config.stack.node);
+        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.node);
         
         return this.startComponent(
             'node',
-            options,
+            stackOptions,
+            compOptions,
             runMode,
             text => text.includes('Running JSON-RPC'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPruntime (runMode : RunMode) : Promise<ChildProcess>
+    public async startPruntime (
+        runMode : RunMode,
+        stackOptions : StartStackOptions
+    ) : Promise<ChildProcess>
     {
-        const options : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
+        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
         
         return this.startComponent(
             'pruntime',
-            options,
+            stackOptions,
+            compOptions,
             runMode,
             text => text.includes('Rocket has launched from'),
             text => text.toLowerCase().includes('error'),
         );
     }
     
-    public async startPherry (runMode : RunMode) : Promise<ChildProcess>
+    public async startPherry (
+        runMode : RunMode,
+        stackOptions : StartStackOptions
+    ) : Promise<ChildProcess>
     {
-        const options : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
+        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
         
         return this.startComponent(
             'pherry',
-            options,
+            stackOptions,
+            compOptions,
             runMode,
             text => text.includes('pRuntime get_info response: PhactoryInfo'),
             text => text.toLowerCase().includes('error'),
@@ -181,16 +194,17 @@ export class StackManager
     
     public async startComponent (
         componentName : string,
-        options : StackComponentOptions,
+        stackOptions : StartStackOptions,
+        componentOptions : StackComponentOptions,
         runMode : RunMode,
         waitForReady : (text : string) => boolean = () => true,
         waitForError : (text : string) => boolean = () => false,
     ) : Promise<ChildProcess>
     {
         // prepare paths and working directory
-        const binaryPath = this.getComponentPath(options.binary);
+        const binaryPath = this.getComponentPath(componentOptions.binary);
         
-        const workingDirPath = this.getComponentPath(options.workingDir);
+        const workingDirPath = this.getComponentPath(componentOptions.workingDir);
         if (fs.existsSync(workingDirPath)) {
             fs.rmSync(workingDirPath, { recursive: true, force: true });
         }
@@ -202,7 +216,7 @@ export class StackManager
             cwd: workingDirPath,
             env: {
                 ...process.env,
-                ...options.envs,
+                ...componentOptions.envs,
             },
             stdio: [ 'ignore', 'pipe', 'pipe' ]
         };
@@ -211,9 +225,17 @@ export class StackManager
         const binaryName = path.basename(binaryPath);
         
         // spawn child process
+        if (this._context.verbosity == VerbosityLevel.Verbose) {
+            ux.debug(`Starting ${componentName}`);
+            ux.debug('Args:');
+            console.dir(componentOptions.args);
+            ux.debug('Env:');
+            console.dir(spawnOptions.env);
+        }
+        
         const child = childProcess.spawn(
             binaryPath,
-            serializeProcessArgs(options.args),
+            serializeProcessArgs(componentOptions.args),
             spawnOptions
         );
         
@@ -223,7 +245,7 @@ export class StackManager
         
         // pipe output to file
         let logFileDscr : number;
-        if (this.isLogOutputUsed(runMode, this._context)) {
+        if (stackOptions.saveLogs) {
             const logFilePath = path.join(
                 this._runLogsPath,
                 `${componentName}.log`
@@ -262,11 +284,11 @@ export class StackManager
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
                     
-                    if (runMode === RunMode.Simple) {
+                    if (this._context.verbosity == VerbosityLevel.Verbose) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
                         process.stdout.write(text);
                     }
-                    else if (this.isLogOutputUsed(runMode, this._context)) {
+                    if (stackOptions.saveLogs) {
                         fs.appendFileSync(
                             logFileDscr,
                             text,
@@ -294,7 +316,7 @@ export class StackManager
                 stdout.on('data', watchFn);
                 stderr.on('data', watchFn);
             });
-        }, options.timeout);
+        }, componentOptions.timeout);
         
         return child;
     }
@@ -305,16 +327,6 @@ export class StackManager
             this._context.paths.project,
             _path
         );
-    }
-    
-    public isLogOutputUsed (
-        runMode : RunMode,
-        context : RuntimeContext
-    ) : boolean
-    {
-        return runMode === RunMode.Testing
-            && context.config.testing.stackLogOutput
-            ;
     }
     
 }

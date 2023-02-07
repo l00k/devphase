@@ -23,7 +23,10 @@ before(async function() {
     logger.log('Global setup start');
     if (spawnStack) {
         logger.log('Preparing dev stack');
-        await this.stackManager.startStack(RunMode.Testing);
+        await this.stackManager.startStack(
+            RunMode.Testing,
+            { saveLogs: true }
+        );
     }
     
     logger.log('Init API');

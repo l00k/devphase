@@ -22,8 +22,8 @@ export abstract class BaseCommand<T extends typeof Command>
         verbosity: Flags.string({
             summary: 'Verbosity level',
             char: 'v',
-            default: <any> VerbosityLevel.Default,
-            options: <any> Object.values(VerbosityLevel)
+            default: '1',
+            options: [ '0', '1', '2' ]
         }),
     };
     

@@ -191,7 +191,7 @@ export class RuntimeContext
     
     public setVerbosityLevel (level : VerbosityLevel)
     {
-        const renderer : Listr.ListrRendererValue<any> = level == VerbosityLevel.Verbose
+        const listrRenderer : Listr.ListrRendererValue<any> = level == VerbosityLevel.Verbose
             ? 'verbose'
             : level == VerbosityLevel.Silent
                 ? 'silent'
@@ -200,7 +200,7 @@ export class RuntimeContext
         
         Object.assign(this, {
             verbosity: level,
-            renderer,
+            listrRenderer,
         });
     }
     
