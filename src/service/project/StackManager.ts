@@ -54,6 +54,8 @@ export class StackManager
             pherry: null,
         };
         
+        this._logger.log('Starting stack');
+        
         const listr = new Listr([
             {
                 title: 'Start node component',

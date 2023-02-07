@@ -14,11 +14,13 @@ import { TxQueue } from '@/service/api/TxQueue';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
 import axios, { AxiosInstance } from 'axios';
+import chalk from 'chalk';
 import fs from 'fs';
 import Listr from 'listr';
 import path from 'path';
@@ -44,6 +46,8 @@ export class StackSetupService
     public static readonly LOGGER_SALT : string = '0x0000000000000000000000000000000000000000000000000000000000000123';
     
     protected static readonly MAP_STACK_TO_SETUP : Record<string, string> = {};
+    
+    protected _logger : Logger = new Logger('StackSetupService');
     
     protected _context : RuntimeContext;
     protected _api : ApiPromise;
@@ -100,6 +104,8 @@ export class StackSetupService
         
         const setupStackVersion = StackSetupService.MAP_STACK_TO_SETUP[this._context.config.stack.version] ?? 'default';
         const setupStackMethod = 'setupStack_' + setupStackVersion;
+        
+        this._logger.log('Starting stack setup with', chalk.cyan(setupStackVersion), 'version');
         
         if (!this[setupStackMethod]) {
             throw new Exception(
