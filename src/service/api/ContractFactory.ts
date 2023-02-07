@@ -6,13 +6,11 @@ import { TxHandler } from '@/service/api/TxHandler';
 import type { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
-import { ux } from '@oclif/core';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import { KeyringPair } from '@polkadot/keyring/types';
-import chalk from 'chalk';
-import path from 'path';
+import type { ContractInstantiateResult } from '@polkadot/types/interfaces/contracts';
 
 
 export type CreateOptions = {
@@ -227,10 +225,10 @@ export class ContractFactory
         constructor : string,
         params : any[] = [],
         options : InstantiateOptions
-    )
+    ) : Promise<ContractInstantiateResult>
     {
         const systemContract = await this._devPhase.getSystemContract(this.clusterId);
-    
+        
         const abi = new Abi(this.metadata);
         const callData = abi.findConstructor(constructor).toU8a(params);
         const salt = typeof options.salt == 'number'
@@ -259,8 +257,7 @@ export class ContractFactory
         const queryResult = queryResponse.result.toHuman();
         
         const instantiateResult = this.api.createType('ContractInstantiateResult', queryResult.Ok.InkMessageReturn);
-        
-        return instantiateResult;
+        return <any>instantiateResult;
     }
     
     
