@@ -45,46 +45,28 @@ export class DependenciesChecker
         
         // rustc
         {
-            this._logger.log('Checking rustc version');
-        
             result.rustc.version = await this._exec('rustc -V');
             const match = result.rustc.version.match(/^rustc ([0-9]+\.[0-9]+\.[0-9]+)/);
             if (match) {
                 result.rustc.valid = compareVersions(match[1], '1.59.0') >= 0;
             }
-            
-            if (result.rustc.valid) {
-                this._logger.error('Failed');
-            }
         }
         
         // cargo
         {
-            this._logger.log('Checking cargo version');
-            
             result.cargo.version = await this._exec('cargo +nightly -V');
             const match = result.cargo.version.match(/^cargo ([0-9]+\.[0-9]+\.[0-9]+)/);
             if (match) {
                 result.cargo.valid = compareVersions(match[1], '1.59.0') >= 0;
             }
-            
-            if (result.cargo.valid) {
-                this._logger.error('Failed');
-            }
         }
         
         // wasm32
         {
-            this._logger.log('Checking wasm32 target');
-            
             const targets = await this._exec('rustup target list');
             const match = targets.match(/wasm32-unknown-unknown/);
             if (match) {
                 result.wasm32 = true;
-            }
-            
-            if (result.wasm32) {
-                this._logger.error('Failed');
             }
         }
         
