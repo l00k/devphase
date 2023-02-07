@@ -1,4 +1,5 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess from 'child_process';
@@ -14,6 +15,9 @@ export type CompilationResult = {
 
 export class Compiler
 {
+    
+    protected _logger : Logger = new Logger('Compiler');
+    
     
     public constructor (
         protected _runtimeContext : RuntimeContext
@@ -73,14 +77,14 @@ export class Compiler
         });
         
         if (resultCode !== 0) {
-            ux.debug(compilationTextOutput);
-            ux.error('Failed building contract');
+            this._logger.log(compilationTextOutput);
+            this._logger.error('Failed building contract');
             return { result: false };
         }
         
         if (!outputDirectory) {
-            ux.debug(compilationTextOutput);
-            ux.error('Unable to detect output directory');
+            this._logger.log(compilationTextOutput);
+            this._logger.error('Unable to detect output directory');
             return { result: false };
         }
         
@@ -90,7 +94,7 @@ export class Compiler
         }
         
         // check & copy artifact files
-        ux.debug(chalk.green('Files generated under:'));
+        this._logger.log(chalk.green('Files generated under:'));
         
         const artifactFiles : string[] = [
             `${contractName}.contract`,
@@ -100,7 +104,7 @@ export class Compiler
         for (const artifactFile of artifactFiles) {
             const sourceArtifactFilePath = path.join(outputDirectory, artifactFile);
             if (!fs.existsSync(sourceArtifactFilePath)) {
-                ux.error(`File ${artifactFile} not generated under ${sourceArtifactFilePath}`);
+                this._logger.error(`File ${artifactFile} not generated under ${sourceArtifactFilePath}`);
                 return { result: false };
             }
             
@@ -110,12 +114,12 @@ export class Compiler
                 artifactFilePath
             );
             
-            ux.debug(
+            this._logger.log(
                 path.relative(this._runtimeContext.paths.project, artifactFilePath)
             );
         }
         
-        ux.debug('');
+        this._logger.log('');
         
         return {
             result: true,

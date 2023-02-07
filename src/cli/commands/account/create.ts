@@ -1,6 +1,7 @@
 import { RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
 import { AccountManager } from '@/service/project/AccountManager';
+import { Logger } from '@/utils/Logger';
 import { Flags, ux } from '@oclif/core';
 import { table } from '@oclif/core/lib/cli-ux/styled/table';
 import chalk from 'chalk';
@@ -28,6 +29,7 @@ export class AccountCreateCommand
         })
     };
     
+    
     public async run ()
     {
         await this.runtimeContext.initContext(RunMode.Simple);
@@ -46,8 +48,7 @@ export class AccountCreateCommand
         
         // display
         if (!this.flags.json) {
-            ux.debug(chalk.green('Account created'));
-            ux.debug('');
+            this._logger.log(chalk.green('Account created\n'));
             
             const columns : table.Columns<any> = {
                 alias: {},

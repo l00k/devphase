@@ -2,6 +2,7 @@ import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths, VerbosityLe
 import { DevPhase } from '@/service/api/DevPhase';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import { types as PhalaSDKTypes } from '@phala/sdk';

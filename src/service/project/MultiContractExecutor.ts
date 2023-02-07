@@ -1,4 +1,5 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
@@ -13,6 +14,8 @@ type ExecCallback = (contractName : string) => Promise<Listr>;
 export class MultiContractExecutor
 {
     
+    protected _logger : Logger = new Logger('MultiContractExecutor');
+    
     public constructor (
         public runtimeContext : RuntimeContext
     )
@@ -26,21 +29,21 @@ export class MultiContractExecutor
     ) : Promise<Listr>
     {
         if (contractNamePattern) {
-            ux.debug('Criteria:', chalk.cyan(contractNamePattern));
+            this._logger.log('Criteria:', chalk.cyan(contractNamePattern));
         }
         else {
-            ux.debug('Criteria:', chalk.yellow('any'));
+            this._logger.log('Criteria:', chalk.yellow('any'));
         }
         
         const matchedContracts = this.matchContracts(contractNamePattern);
         if (!matchedContracts.length) {
-            ux.debug('Nothing to do');
+            this._logger.log('Nothing to do');
             return null;
         }
         
-        ux.debug('Matched contracts:');
-        ux.debug(matchedContracts.map(name => chalk.cyan(name)).join(', '));
-        ux.debug('');
+        this._logger.log('Matched contracts:');
+        this._logger.log(matchedContracts.map(name => chalk.cyan(name)).join(', '));
+        this._logger.log('');
         
         const listrOpts = [];
         for (const contract of matchedContracts) {
@@ -68,8 +71,8 @@ export class MultiContractExecutor
                 const relPath = path.relative(contractsBasePath, _path);
                 const contractName = relPath.split('/')[0];
                 
-                ux.debug(chalk.yellow('Change detected in'));
-                ux.debug(chalk.blueBright(contractName));
+                this._logger.log(chalk.yellow('Change detected in'));
+                this._logger.log(chalk.blueBright(contractName));
                 
                 callback(contractName);
             });

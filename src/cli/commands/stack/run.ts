@@ -1,6 +1,7 @@
 import { RunMode, VerbosityLevel } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
 import { StackManager } from '@/service/project/StackManager';
+import { Logger } from '@/utils/Logger';
 import { Flags, ux } from '@oclif/core';
 
 
@@ -16,6 +17,7 @@ export class StackRunCommand
             default: false
         }),
     };
+    
     
     public async run ()
     {
@@ -43,7 +45,7 @@ export class StackRunCommand
         ux.action.stop();
         
         process.on('SIGINT', async() => {
-            ux.debug('Got SIGINT - shutting down');
+            this._logger.warn('Got SIGINT - shutting down');
             
             await stackManager.stopStack();
         });

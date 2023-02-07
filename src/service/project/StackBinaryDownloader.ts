@@ -1,5 +1,6 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import axios from 'axios';
 import chalk from 'chalk';
@@ -29,6 +30,8 @@ export class StackBinaryDownloader
         'pherry',
     ];
     
+    
+    protected _logger : Logger = new Logger('StackBinaryDownloader');
     
     protected _releases : Release[];
     
@@ -114,7 +117,7 @@ export class StackBinaryDownloader
                 task: () => {
                     const releaseStackPath = this._context.paths.currentStack;
                     if (!fs.existsSync(releaseStackPath)) {
-                        ux.debug('Creating stack directory');
+                        this._logger.log('Creating stack directory');
                         fs.mkdirSync(releaseStackPath, { recursive: true });
                     }
                 }
@@ -197,7 +200,7 @@ export class StackBinaryDownloader
         });
         
         if (execute) {
-            ux.debug('Preparing Phala stack release');
+            this._logger.log('Preparing Phala stack release');
             await listr.run();
             
             return listr;

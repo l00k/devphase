@@ -2,7 +2,8 @@ import { ContractType, RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
 import { ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Args, Flags, ux } from '@oclif/core';
+import { Logger } from '@/utils/Logger';
+import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 
@@ -74,11 +75,9 @@ export class ContractDeployCommand
             }
         );
         
-        if (!this.flags.json) {
-            ux.debug(chalk.green('Contract deployed'));
-            ux.debug('Contract Id:', instance.contractId);
-            ux.debug('Cluster Id: ', instance.clusterId);
-        }
+        this._logger.info(chalk.green('Contract deployed'));
+        this._logger.log('Contract Id:', instance.contractId);
+        this._logger.log('Cluster Id: ', instance.clusterId);
         
         return {
             contractId: instance.contractId,

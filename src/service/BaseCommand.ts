@@ -1,9 +1,9 @@
 import { VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { getClassesFromChain } from '@/utils/getClassesFromChain';
-import { Args, Command, Flags, Interfaces, ux } from '@oclif/core';
+import { Logger } from '@/utils/Logger';
+import { Args, Command, Config, Flags, Interfaces, ux } from '@oclif/core';
 import { FlagProps } from '@oclif/core/lib/interfaces/parser';
-import Listr from 'listr';
 
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>
@@ -19,13 +19,16 @@ export abstract class BaseCommand<T extends typeof Command>
         json: Flags.boolean({
             summary: 'Output in JSON format'
         }),
-        verbosity: Flags.string({
+        verbosity: Flags.integer({
             summary: 'Verbosity level',
             char: 'v',
-            default: '1',
-            options: [ '0', '1', '2' ]
+            min: 0,
+            max: 2,
         }),
     };
+    
+    protected _logger : Logger = new Logger('StackRun');
+    
     
     protected flags : Flags<T>;
     protected args : Args<T>;
@@ -33,6 +36,13 @@ export abstract class BaseCommand<T extends typeof Command>
     
     protected runtimeContext : RuntimeContext;
     
+    
+    public constructor (argv: string[], config: Config)
+    {
+        super(argv, config);
+        
+        this._logger = new Logger(this.constructor.name.replace('Command', ''))
+    }
     
     public async init () : Promise<void>
     {
@@ -59,11 +69,16 @@ export abstract class BaseCommand<T extends typeof Command>
             .map(arg => arg.input)
         ;
         
+        if (this.flags.verbosity === undefined) {
+            (<any>this.flags).verbosity = this.flags.json
+                ? VerbosityLevel.Silent
+                : VerbosityLevel.Default
+            ;
+        }
+        Logger.LOGGER_LEVEL = this.flags.verbosity;
+        
         ux.config.outputLevel = 'debug';
-        if (
-            this.flags.json
-            || this.flags.verbosity == VerbosityLevel.Silent
-        ) {
+        if (this.flags.verbosity == VerbosityLevel.Silent) {
             ux.config.action.std = 'stderr';
             ux.config.outputLevel = 'fatal';
         }

@@ -6,6 +6,7 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { TypeBinder } from '@/service/project/TypeBinder';
 import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
@@ -61,6 +62,8 @@ export class ContractManager
         'Cargo.toml',
         'lib.rs'
     ];
+    
+    protected _logger : Logger = new Logger('ContractManager');
     
     
     public constructor (
@@ -182,8 +185,8 @@ export class ContractManager
             );
         }
         
-        ux.debug(chalk.green('Contract created in:'));
-        ux.debug(targetContractPath);
+        this._logger.info(chalk.green('Contract created in:'));
+        this._logger.log(targetContractPath);
         
         return {
             name: {

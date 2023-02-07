@@ -2,7 +2,8 @@ import { ContractType, RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
 import { ContractCallType, ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { Args, Flags, ux } from '@oclif/core';
+import { Logger } from '@/utils/Logger';
+import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 
@@ -87,10 +88,8 @@ export class ContractCallCommand
             }
         );
         
-        if (!this.flags.json) {
-            ux.debug(chalk.blue('Call result'));
-            console.dir(outcome);
-        }
+        this._logger.info(chalk.blue('Call result'));
+        this._logger.infoDir(outcome);
         
         return outcome;
     }

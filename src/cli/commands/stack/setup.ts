@@ -39,12 +39,10 @@ export class StackSetupCommand
             this.runtimeContext.config.stack.setupOptions,
         );
         
-        if (!this.flags.json) {
-            ux.debug(chalk.green('Stack is ready'));
-            
-            ux.debug(chalk.blue('Cluster Id'));
-            ux.debug(result.clusterId);
-        }
+        
+        this._logger.info(chalk.green('Stack is ready'));
+        this._logger.log(chalk.blue('Cluster Id'));
+        this._logger.log(result.clusterId);
         
         await devPhase.cleanup();
         

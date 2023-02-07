@@ -1,21 +1,12 @@
+import { VerbosityLevel } from '@/def';
 import chalk from 'chalk';
-
-export enum LoggerLevel
-{
-    Debug = 0,
-    Log = 1,
-    Info = 2,
-    Warn = 3,
-    Error = 4,
-    NoLogging = 5,
-}
 
 
 /* istanbul ignore next */
 export class Logger
 {
     
-    public static LOGGER_LEVEL : LoggerLevel = LoggerLevel.Log;
+    public static LOGGER_LEVEL : VerbosityLevel = VerbosityLevel.Default;
     
     
     public constructor (
@@ -23,114 +14,137 @@ export class Logger
     )
     {}
     
-    public log (...args : any[])
+    
+    protected _log (
+        verbosity : VerbosityLevel,
+        color : typeof chalk.Color,
+        ...args : any[]
+    )
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+        if (Logger.LOGGER_LEVEL < verbosity) {
             return;
         }
         
         const logArgs = [ ...args ];
-        logArgs.unshift(chalk.white(`[${this.serviceName}]`));
+        if (this.serviceName) {
+            logArgs.unshift(chalk[color](`[${this.serviceName}]`));
+        }
         
         console.log(...logArgs);
     }
     
-    public time (label : string)
+    protected _dir (
+        verbosity : VerbosityLevel,
+        color : typeof chalk.Color,
+        object : any,
+        options? : any
+    )
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
+        if (Logger.LOGGER_LEVEL < verbosity) {
             return;
         }
         
-        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
-        console.time(text);
-    }
-    
-    public timeEnd (label : string)
-    {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
-            return;
+        if (this.serviceName) {
+            console.log(chalk[color](`[${this.serviceName}]`));
         }
         
-        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
-        console.timeEnd(text);
-    }
-    
-    public timeLog (label : string)
-    {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
-            return;
-        }
-        
-        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
-        console.timeLog(text);
-    }
-    
-    public timeStamp (label : string)
-    {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Log) {
-            return;
-        }
-        
-        const text = chalk.white(`[${this.serviceName}]`) + ' ' + label;
-        console.timeStamp(text);
-    }
-    
-    
-    public dir (object : any, options? : any)
-    {
-        const serviceName = chalk.white(`[${this.serviceName}]`);
-        
-        console.log(serviceName);
         console.dir(object, options);
     }
     
     
+    public log (...args : any[])
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'white',
+            ...args
+        );
+    }
+    
+    public logDir (object : any, options? : any)
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'white',
+            object,
+            options
+        );
+    }
+    
     public debug (...args : any[])
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Debug) {
-            return;
-        }
-        
-        const logArgs = [ ...args ];
-        logArgs.unshift(chalk.grey(`[${this.serviceName}]`));
-        
-        console.debug(...logArgs);
+        return this._log(
+            VerbosityLevel.Default,
+            'gray',
+            ...args
+        );
+    }
+    
+    public debugDir (object : any, options? : any)
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'gray',
+            object,
+            options
+        );
     }
     
     public info (...args : any[])
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Info) {
-            return;
-        }
-        
-        const logArgs = [ ...args ];
-        logArgs.unshift(chalk.cyan(`[${this.serviceName}]`));
-        
-        console.info(...logArgs);
+        return this._log(
+            VerbosityLevel.Default,
+            'cyan',
+            ...args
+        );
+    }
+    
+    public infoDir (object : any, options? : any)
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'cyan',
+            object,
+            options
+        );
     }
     
     public warn (...args : any[])
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Warn) {
-            return;
-        }
-        
-        const logArgs = [ ...args ];
-        logArgs.unshift(chalk.yellow(`[${this.serviceName}]`));
-        
-        console.warn(...logArgs);
+        return this._log(
+            VerbosityLevel.Default,
+            'yellow',
+            ...args
+        );
+    }
+    
+    public warnDir (object : any, options? : any)
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'yellow',
+            object,
+            options
+        );
     }
     
     public error (...args : any[])
     {
-        if (Logger.LOGGER_LEVEL > LoggerLevel.Error) {
-            return;
-        }
-        
-        const logArgs = [ ...args ];
-        logArgs.unshift(chalk.red(`[${this.serviceName}]`));
-        
-        console.error(...logArgs);
+        return this._log(
+            VerbosityLevel.Default,
+            'red',
+            ...args
+        );
+    }
+    
+    public errorDir (object : any, options? : any)
+    {
+        return this._log(
+            VerbosityLevel.Default,
+            'red',
+            object,
+            options
+        );
     }
     
 }

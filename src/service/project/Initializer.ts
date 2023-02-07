@@ -1,4 +1,5 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
@@ -19,6 +20,8 @@ export class Initializer
         'tests',
     ];
     
+    protected _logger : Logger = new Logger('Initializer');
+    
     
     public constructor (
         protected _runtimeContext : RuntimeContext
@@ -29,12 +32,12 @@ export class Initializer
     {
         const inProjectDirectory = await this._runtimeContext.isInProjectDirectory();
         if (inProjectDirectory) {
-            ux.debug('Project already initiated');
+            this._logger.log('Project already initiated');
             return false;
         }
         
         // copy templates
-        ux.debug('Creating files');
+        this._logger.log('Creating files');
         
         for (const [ fromTemplateFile, toTemplateFile ] of Object.entries(this._templates)) {
             const sourceTemplatePath = path.join(
@@ -56,7 +59,7 @@ export class Initializer
         }
         
         // create directories
-        ux.debug('Creating directories');
+        this._logger.log('Creating directories');
         
         for (const directory of this._directories) {
             const targetDirectoryPath = `./${directory}`;
@@ -64,7 +67,7 @@ export class Initializer
                 continue;
             }
             
-            ux.log(chalk.cyan(directory));
+            this._logger.log(chalk.cyan(directory));
             
             fs.mkdirSync(targetDirectoryPath);
         }

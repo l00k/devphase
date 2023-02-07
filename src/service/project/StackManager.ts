@@ -1,6 +1,7 @@
 import { ComponentName, RunMode, StackComponentOptions, StartStackOptions, VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import { timeout } from '@/utils/timeout';
 import { ux } from '@oclif/core';
@@ -14,6 +15,8 @@ import path from 'path';
 
 export class StackManager
 {
+    
+    protected _logger : Logger = new Logger('StackManager');
     
     protected _processes : Record<ComponentName, ChildProcess>;
     protected _killFlag : boolean = false;
@@ -226,11 +229,11 @@ export class StackManager
         
         // spawn child process
         if (this._context.verbosity == VerbosityLevel.Verbose) {
-            ux.debug(`Starting ${componentName}`);
-            ux.debug('Args:');
-            console.dir(componentOptions.args);
-            ux.debug('Env:');
-            console.dir(spawnOptions.env);
+            this._logger.log(`Starting ${componentName}`);
+            this._logger.log('Args:');
+            this._logger.logDir(componentOptions.args);
+            this._logger.log('Env:');
+            this._logger.logDir(spawnOptions.env);
         }
         
         const child = childProcess.spawn(

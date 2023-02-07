@@ -26,9 +26,9 @@ export enum RunMode
 
 export enum VerbosityLevel
 {
-    Silent = '0',
-    Default = '1',
-    Verbose = '2',
+    Silent = 0,
+    Default = 1,
+    Verbose = 2,
 }
 
 export enum SystemContract
