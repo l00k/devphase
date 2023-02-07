@@ -16,44 +16,103 @@ yarn add -D typescript ts-node # required peer dependencies
 
 ## Commands
 
+### Global flags
+```shell
+--json                      # Prints result of command in json format
+--verbosity=X               # Adjusts verbosity (0 - silent, 1 - default, 2 - verbose)
+```
+
+#### Project commands
 - Init project (creates required files and directories)
 ```shell
 yarn devphase init
 ```
 
+- Check project configuration and dependencies
+```shell
+yarn devphase check
+```
+
+#### Stack related commands
 - Starting local stack (node + pruntime + pherry)
 ```shell
-yarn devphase stack run
+yarn devphase stack run [--save-log]
+--save-log                  # Saves logs to file
 ```
 
 - Setup local stack (register gatekeeper, create cluster, deploy system contract etc.)
 ```shell
 yarn devphase stack setup
+-n, --network               # Switch network (local - by default)
 ```
 
-- Accounts management
+#### Accounts management
+- Prints list of managed accounts (from `./accounts.json`)
 ```shell
-yarn devphase account list
-yarn devphase account create
+yarn devphase account list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml] [--csv | --no-truncate] [--no-header]
 ```
-
-- Contracts management
+- Creates new managed account
 ```shell
-yarn devphase contract list
-yarn devphase contract create
-yarn devphase contract compile
-yarn devphase contract deploy
-yarn devphase contract call
+yarn devphase account create -a <value> [-p <value>] [-n]
+
+-a, --alias=<value>         # (required) Account alias
+-n, --no-passphrase         # Force no passphrase (prompted if not specified)
+-p, --passphrase=<value>    # Passphrase used to protect keyring
+
 ```
 
+#### Contracts management
+- Prints list of managed contracts (from `./contracts.json`)
+```shell
+yarn devphase contract list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml] [--csv | --no-truncate] [--no-header]
+```
+- Creates new contract project from template
+```shell
+yarn devphase contract create -n <value>
+-n, --name=<value>          # (required) Contract name
+```
+- Compiles contract using system `cargo` binary
+```shell
+yarn devphase contract compile [-c <value>] [-w] [-r]
+-c, --contract=<value>      # Contract name
+-r, --release               # Compile in release mode
+-w, --watch                 # Watch changes
+```
+- Deployes contract to network
+```shell
+yarn devphase contract deploy [ARGS] -c <value> -o <value> [-t InkCode|SidevmCode] [-n <value>] [-l <value>] [-a <value>]
+ARGS                        # Constructor arguments
+-a, --account=<value>       # [default: alice] Account used to deploy (managed account key)
+-c, --contract=<value>      # (required) Contract name
+-l, --cluster=<value>       # Target cluster Id
+-n, --network=<value>       # [default: local] Target network to deploy (local default)
+-o, --constructor=<value>   # (required) Contract constructor to call (name)
+-t, --type=<option>         # [default: InkCode] <options: InkCode|SidevmCode>
+```
+- Executes contract call
+```shell
+yarn devphase contract call [ARGS] -c <value> -i <value> -m <value> [-t InkCode|SidevmCode] [-a query|tx] [-n <value>] [-l <value>] [-a <value>]
+ARGS                        # Call arguments
+-a, --accessor=<option>     # [default: query] Method type: transaction or query <options: query|tx>
+-a, --account=<value>       # [default: alice] Account used to call (managed account key)
+-c, --contract=<value>      # (required) Contract name
+-i, --id=<value>            # (required) Contract ID
+-l, --cluster=<value>       # Target cluster Id
+-m, --method=<value>        # (required) Contract method to call (name)
+-n, --network=<value>       # [default: local] Target network to deploy (local default)
+-t, --type=<option>         # [default: InkCode] <options: InkCode|SidevmCode>
+```
 - Contracts TS bindings creation
 ```shell
-yarn devphase contract typings
+yarn devphase contract typegen -c <value>
+-c, --contract=<value>      # (required) Contract name
 ```
-
 - Testing with mocha
 ```shell
-yarn devphase contract test
+yarn devphase contract test [-s <value>] [-n <value>]
+-n, --network=<value>       # [default: local] Network key
+-s, --suite=<value>         # Test suite name (directory)
+
 ```
 
 ## Configuration
