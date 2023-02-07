@@ -287,7 +287,7 @@ export class RuntimeContext
                 envSetup: {
                     setup: {
                         custom: undefined,
-                        timeout: 60 * 1000,
+                        timeout: 2 * 60 * 1000,
                     },
                     teardown: {
                         custom: undefined,
