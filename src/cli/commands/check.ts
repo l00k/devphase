@@ -1,19 +1,32 @@
 import { RunMode } from '@/def';
 import { BaseCommand } from '@/service/BaseCommand';
-import { DependenciesChecker } from '@/service/project/DependenciesChecker';
+import { DependenciesChecker, DependenciesCheckResult } from '@/service/project/DependenciesChecker';
 import { Exception } from '@/utils/Exception';
 import Listr from 'listr';
+
+
+type CheckResult = {
+    configurationFile : boolean,
+    dependencies : DependenciesCheckResult,
+    stackBinaries : boolean,
+}
 
 
 export class CheckCommand
     extends BaseCommand<typeof CheckCommand>
 {
-
+    
     public static summary : string = 'Check project';
     
     public async run ()
     {
         await this.runtimeContext.initContext(RunMode.Simple);
+        
+        const checkResult : CheckResult = {
+            configurationFile: false,
+            dependencies: null,
+            stackBinaries: false,
+        };
         
         const listr = new Listr([
             {
@@ -25,6 +38,8 @@ export class CheckCommand
                 task: async() => {
                     const dependenciesChecker = new DependenciesChecker(this.runtimeContext);
                     const result = await dependenciesChecker.check();
+                    checkResult.dependencies = result;
+                    
                     if (!result.valid) {
                         throw new Exception(
                             'Dependencies check failed',
@@ -41,7 +56,17 @@ export class CheckCommand
             renderer: this.runtimeContext.listrRenderer
         });
         
-        await listr.run();
+        try {
+            await listr.run();
+            
+            checkResult.configurationFile = true;
+            checkResult.stackBinaries = true;
+        }
+        catch (e) {
+            this._logger.error(e);
+        }
+        
+        return checkResult;
     }
     
 }
