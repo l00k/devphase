@@ -11,7 +11,7 @@ export class ContractCallCommand
     extends BaseCommand<typeof ContractCallCommand>
 {
     
-    public static summary : string = 'Deploy contract';
+    public static summary : string = 'Call contract';
     
     public static strict : boolean = false;
     
