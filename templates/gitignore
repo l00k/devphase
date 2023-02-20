@@ -7,4 +7,5 @@
 /accounts.json
 /contracts.json
 
-node_modules
+/.yarn
+/node_modules

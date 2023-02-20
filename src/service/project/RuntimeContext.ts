@@ -111,8 +111,7 @@ export class RuntimeContext
         let userConfig : ProjectConfigOptions = {};
         if (configFilePath) {
             this.paths.project = path.dirname(configFilePath);
-            const userConfigPackage = await import(configFilePath);
-            userConfig = userConfigPackage.default;
+            userConfig = require(configFilePath).default;
         }
         else {
             this.paths.project = process.cwd();
