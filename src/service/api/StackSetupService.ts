@@ -656,7 +656,8 @@ export class StackSetupService
                 {},
                 this._loggerId
             );
-            return result.output.toPrimitive();
+            const output = result.output.toJSON();
+            return output?.ok;
         }, this._waitTime);
         
         await this._txQueue.submit(
