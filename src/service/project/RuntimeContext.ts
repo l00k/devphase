@@ -111,7 +111,8 @@ export class RuntimeContext
         let userConfig : ProjectConfigOptions = {};
         if (configFilePath) {
             this.paths.project = path.dirname(configFilePath);
-            userConfig = require(configFilePath).default;
+            const userConfigPackage = await import(configFilePath);
+            userConfig = userConfigPackage.default;
         }
         else {
             this.paths.project = process.cwd();
@@ -260,7 +261,7 @@ export class RuntimeContext
                         '--cores': 0,
                         '--port': '{{stack.pruntime.port}}'
                     },
-                    timeout: 2000,
+                    timeout: 5000,
                 },
                 pherry: {
                     gkMnemonic: '//Alice',
