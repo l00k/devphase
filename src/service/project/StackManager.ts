@@ -4,7 +4,6 @@ import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import { serializeProcessArgs } from '@/utils/serializeProcessArgs';
 import { timeout } from '@/utils/timeout';
-import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess, { ChildProcess, SpawnOptions } from 'child_process';
 import fs from 'fs';
@@ -262,6 +261,10 @@ export class StackManager
             });
         }
         
+        const displayLogs = this._context.verbosity == VerbosityLevel.Verbose
+            && runMode != RunMode.Testing
+            ;
+        
         let settled : boolean = false;
         
         await timeout(() => {
@@ -289,7 +292,7 @@ export class StackManager
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
                     
-                    if (this._context.verbosity == VerbosityLevel.Verbose) {
+                    if (displayLogs) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
                         process.stdout.write(text);
                     }

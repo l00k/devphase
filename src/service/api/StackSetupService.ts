@@ -258,7 +258,9 @@ export class StackSetupService
                         {},
                         this._loggerId
                     );
-                    return result.output.toPrimitive();
+                    
+                    const output = result.output.toJSON();
+                    return output?.ok;
                 },
                 task: () => this.prepareLoggerServer()
             },
@@ -529,11 +531,11 @@ export class StackSetupService
             name
         );
         
-        if (output.isEmpty) {
+        if (output.isEmpty || !output.asOk) {
             return false;
         }
         
-        const contractId = '0x' + Buffer.from(output.unwrap()).toString('hex');
+        const contractId = output?.asOk.unwrap().toHex();
         
         const contractFactory = await ContractFactory.create(
             this._devPhase,
@@ -632,7 +634,7 @@ export class StackSetupService
                 name
             );
             
-            return !output.isEmpty && output.unwrap().eq(instance.contractId);
+            return !output.isEmpty && output?.asOk.isSome && output?.asOk.unwrap().eq(instance.contractId);
         }, this._waitTime);
     }
     
