@@ -1,6 +1,9 @@
 import type { ProjectConfigOptions } from 'devphase';
 
 const config : ProjectConfigOptions = {
+    general: {
+        ss58Format: 30,
+    },
     /*
      * Project directories
      */
@@ -31,6 +34,10 @@ const config : ProjectConfigOptions = {
     stack: {
         blockTime: 6000, // default block time for direct stack running
         version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
+        setupOptions: {
+            workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            clusterId: undefined,
+        },
         node: {
             port: 9944, // ws port
             binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
@@ -40,7 +47,8 @@ const config : ProjectConfigOptions = {
                 '--dev': true,
                 '--rpc-methods': 'Unsafe',
                 '--block-millisecs': '{{stack.blockTime}}',
-                '--ws-port': '{{stack.node.port}}'
+                '--ws-port': '{{stack.node.port}}',
+                '--base-path': '.',
             },
             timeout: 10000,
         },
@@ -68,8 +76,28 @@ const config : ProjectConfigOptions = {
                 '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                 '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
                 '--dev-wait-block-ms': '{{stack.blockTime}}',
+                '--attestation-provider': 'none',
             },
             timeout: 2000,
+        }
+    },
+    /**
+     * Networks configuration
+     */
+    networks: {
+        local: {
+            nodeUrl: 'ws://localhost:{{stack.node.port}}',
+            nodeApiOptions: {
+                // types: {
+                //     ...KhalaTypes,
+                //     ...PhalaSDKTypes,
+                // },
+                signedExtensions: {
+                    CheckMqSequence: {} // fix debug output
+                }
+            },
+            workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            blockTime: 6000,
         }
     },
     /**
@@ -92,12 +120,19 @@ const config : ProjectConfigOptions = {
         },
     },
     /**
-     * Configuration options of DevPhase instance used in testing
+     * Accounts default configuration
      */
-    devPhaseOptions: {
-        nodeUrl: 'ws://localhost:{{stack.node.port}}',
-        workerUrl: 'http://localhost:{{stack.pruntime.port}}',
-    },
+    accountsConfig: {
+        keyrings: {
+            alice: '//Alice',
+            bob: '//Bob',
+            charlie: '//Charlie',
+            dave: '//Dave',
+            eve: '//Eve',
+            ferdie: '//Ferdie'
+        },
+        suAccount: 'alice'
+    }
 };
 
 export default config;
