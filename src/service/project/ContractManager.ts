@@ -215,8 +215,6 @@ export class ContractManager
         options : ContractCompileOptions
     ) : Promise<Record<string, CompilationResult>>
     {
-        ux.action.start('Contracts compilation');
-        
         const contractCompiler = new Compiler(this._runtimeContext);
         const typeBinder = new TypeBinder(this._runtimeContext);
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
@@ -256,8 +254,6 @@ export class ContractManager
         );
         
         await listr.run();
-        
-        ux.action.stop();
         
         return compilationResults;
     }

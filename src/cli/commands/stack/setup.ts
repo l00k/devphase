@@ -23,8 +23,6 @@ export class StackSetupCommand
     
     public async run ()
     {
-        ux.action.start('Setup');
-        
         await this.runtimeContext.initContext(RunMode.Simple);
         await this.runtimeContext.requestProjectDirectory();
         
@@ -45,8 +43,6 @@ export class StackSetupCommand
         this._logger.log(result.clusterId);
         
         await devPhase.cleanup();
-        
-        ux.action.stop();
         
         return result;
     }

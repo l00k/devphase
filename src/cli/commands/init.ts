@@ -12,14 +12,10 @@ export class InitCommand
     
     public async run ()
     {
-        ux.action.start('Initiation');
-        
         await this.runtimeContext.initContext(RunMode.Simple);
         
         const initializer = new Initializer(this.runtimeContext);
         const result = await initializer.init();
-        
-        ux.action.stop();
         
         return { result };
     }

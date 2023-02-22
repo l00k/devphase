@@ -21,8 +21,6 @@ export class StackRunCommand
     
     public async run ()
     {
-        ux.action.start('Starting local stack');
-        
         await this.runtimeContext.initContext(RunMode.Simple);
         await this.runtimeContext.requestProjectDirectory();
         await this.runtimeContext.requestStackBinaries();
@@ -41,8 +39,6 @@ export class StackRunCommand
             await stackManager.stopStack();
             throw e;
         }
-    
-        ux.action.stop();
         
         process.on('SIGINT', async() => {
             this._logger.warn('Got SIGINT - shutting down');

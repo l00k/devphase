@@ -44,7 +44,7 @@ export class Compiler
             args.push('--release');
         }
         
-        const child = await childProcess.spawn(
+        const child = childProcess.spawn(
             'cargo',
             args,
             {
@@ -69,16 +69,16 @@ export class Compiler
             compilationTextOutput += text;
             
             if (displayLogs) {
-                console.log(chalk.blueBright('[Compiler]'));
                 process.stdout.write(text);
             }
         };
         
-        child.stdout.setEncoding('utf-8');
-        child.stderr.setEncoding('utf-8');
+        const [ stdin, stdout, stderr ] = child.stdio;
+        stdout.setEncoding('utf-8');
+        stderr.setEncoding('utf-8');
         
-        child.stdout.on('data', analyzeOutput);
-        child.stderr.on('data', analyzeOutput);
+        stdout.on('data', analyzeOutput);
+        stderr.on('data', analyzeOutput);
         
         const resultCode = await new Promise(resolve => {
             child.on('exit', code => resolve(code));
