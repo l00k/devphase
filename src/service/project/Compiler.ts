@@ -1,3 +1,4 @@
+import { RunMode, VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
@@ -51,6 +52,8 @@ export class Compiler
             }
         );
         
+        const displayLogs = this._runtimeContext.verbosity == VerbosityLevel.Verbose;
+        
         // analyzing contracts output
         let outputDirectory : string;
         let compilationTextOutput = '';
@@ -64,6 +67,11 @@ export class Compiler
             }
             
             compilationTextOutput += text;
+            
+            if (displayLogs) {
+                console.log(chalk.blueBright('[Compiler]'));
+                process.stdout.write(text);
+            }
         };
         
         child.stdout.setEncoding('utf-8');
