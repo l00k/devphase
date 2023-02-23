@@ -8,7 +8,7 @@ Development tool for Phala Phat contracts.
 ## Install
 
 Add to your projects using package manager (`yarn@^1` / `npm`)  
-Sadly `yarn@^3` is not supported (check #4)  
+Sadly `yarn@^3` is not supported (check [#4](https://github.com/l00k/devphase/issues/4))  
 
 ```shell
 yarn add -D devphase
