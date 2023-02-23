@@ -241,7 +241,7 @@ export class ContractFactory
             : options.asAccount;
         
         const cert = await PhalaSdk.signCertificate({
-            api: this.api,
+            api: <any>this.api,
             pair: keyringPair
         });
         

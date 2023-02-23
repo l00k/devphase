@@ -110,7 +110,7 @@ export class DevPhase
         }
         
         const suAccountCert = await PhalaSdk.signCertificate({
-            api,
+            api: <any>api,
             pair: suAccount,
         });
         

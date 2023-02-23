@@ -19,7 +19,8 @@ import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
 import { KeyringPair } from '@polkadot/keyring/types';
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
 import Listr from 'listr';
@@ -98,7 +99,7 @@ export class StackSetupService
         this._txQueue = new TxQueue(this._api);
         
         this._suAccountCert = await PhalaSdk.signCertificate({
-            api: this._api,
+            api: <any>this._api,
             pair: this._suAccount,
         });
         

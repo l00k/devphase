@@ -354,7 +354,7 @@ export class ContractManager
         }
         
         const certificate : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({
-            api: devPhase.api,
+            api: <any>devPhase.api,
             pair: signer,
         });
         

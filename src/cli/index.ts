@@ -1,10 +1,8 @@
-#! /usr/bin/env ts-node-script
+#!/usr/bin/env node
 
-(async() => {
-    const oclif = require('@oclif/core');
-    
-    oclif.run()
-        .then(require('@oclif/core/flush'))
-        .catch(require('@oclif/core/handle'))
-    ;
-})();
+import oclif from '@oclif/core';
+
+oclif
+    .run(process.argv.slice(2), import.meta.url)
+    .then(<any>oclif.flush)
+    .catch(oclif.Errors.handle);
