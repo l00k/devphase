@@ -128,12 +128,6 @@ export namespace ContractMetadata
         type : TypeDefType,
     };
     
-    export type ABI = {
-        spec : Spec,
-        storage : Storage,
-        types : TypeDef[],
-    };
-    
     export type Metadata = {
         source : {
             hash : string,
@@ -146,7 +140,10 @@ export namespace ContractMetadata
             version : string,
             authors : string[],
         },
-        V3 : ABI,
+        spec : Spec,
+        storage : Storage,
+        types : TypeDef[],
+        version : string,
     }
     
 }

@@ -14,6 +14,7 @@ export type DependenciesCheckResult = {
     valid : boolean,
     rustc : BinaryCheckResult,
     cargo : BinaryCheckResult,
+    contract : BinaryCheckResult,
     wasm32 : boolean,
 };
 
@@ -40,6 +41,10 @@ export class DependenciesChecker
                 valid: false,
                 version: null,
             },
+            contract: {
+                valid: false,
+                version: null,
+            },
             wasm32: false,
         };
         
@@ -48,16 +53,25 @@ export class DependenciesChecker
             result.rustc.version = await this._exec('rustc -V');
             const match = result.rustc.version.match(/^rustc ([0-9]+\.[0-9]+\.[0-9]+)/);
             if (match) {
-                result.rustc.valid = compareVersions(match[1], '1.59.0') >= 0;
+                result.rustc.valid = compareVersions(match[1], '1.67.0') >= 0;
             }
         }
         
         // cargo
         {
-            result.cargo.version = await this._exec('cargo +nightly -V');
+            result.cargo.version = await this._exec('cargo --version');
             const match = result.cargo.version.match(/^cargo ([0-9]+\.[0-9]+\.[0-9]+)/);
             if (match) {
-                result.cargo.valid = compareVersions(match[1], '1.59.0') >= 0;
+                result.cargo.valid = compareVersions(match[1], '1.67.0') >= 0;
+            }
+        }
+        
+        // cargo contract
+        {
+            result.contract.version = await this._exec('cargo contract --version');
+            const match = result.contract.version.match(/^cargo-contract-contract ([0-9]+\.[0-9]+\.[0-9]+)/);
+            if (match) {
+                result.contract.valid = compareVersions(match[1], '2.0.0') >= 0;
             }
         }
         
@@ -72,6 +86,7 @@ export class DependenciesChecker
         
         result.valid = result.rustc.valid
             && result.cargo.valid
+            && result.contract.valid
             && result.wasm32
         ;
         

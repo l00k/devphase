@@ -33,7 +33,10 @@ export class TypeBinder
             contractName
         );
         
-        const metadataFilePath = path.join(artifactsPath, 'metadata.json');
+        const metadataFilePath = path.join(
+            artifactsPath,
+            `${contractName}.json`
+        );
         if (!fs.existsSync(metadataFilePath)) {
             throw new Exception(
                 'Metadata file not found',
@@ -48,14 +51,13 @@ export class TypeBinder
         const metadata : ContractMetadata.Metadata = JSON.parse(metadataRaw);
         
         // check support
-        if (!metadata.V3) {
+        if (!metadata.version) {
             throw new Exception(
                 'Only V3 metadata is supported',
                 1667022489434
             );
         }
         
-        const abi : ContractMetadata.ABI = metadata.V3;
         const pcContractName = upperFirst(camelCase(metadata.contract.name));
         
         // create typings dir
@@ -73,7 +75,7 @@ export class TypeBinder
         await AbiTypeBindingProcessor.createTypeBindingFile(
             filePath,
             pcContractName,
-            abi
+            metadata
         );
         
         return true;

@@ -1,7 +1,6 @@
-import { RunMode, VerbosityLevel } from '@/def';
+import { VerbosityLevel } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
-import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import childProcess from 'child_process';
 import * as fs from 'fs';
@@ -39,7 +38,7 @@ export class Compiler
             contractName
         );
         
-        const args = [ '+nightly', 'contract', 'build' ];
+        const args = [ 'contract', 'build' ];
         if (releaseMode) {
             args.push('--release');
         }
@@ -53,6 +52,7 @@ export class Compiler
         );
         
         const displayLogs = this._runtimeContext.verbosity == VerbosityLevel.Verbose;
+        const displayWarns = this._runtimeContext.verbosity >= VerbosityLevel.Default;
         
         // analyzing contracts output
         let outputDirectory : string;
@@ -85,14 +85,18 @@ export class Compiler
         });
         
         if (resultCode !== 0) {
-            this._logger.log(compilationTextOutput);
-            this._logger.error('Failed building contract');
+            if (displayWarns) {
+                this._logger.log(compilationTextOutput);
+                this._logger.error('Failed building contract');
+            }
             return { result: false };
         }
         
         if (!outputDirectory) {
-            this._logger.log(compilationTextOutput);
-            this._logger.error('Unable to detect output directory');
+            if (displayWarns) {
+                this._logger.log(compilationTextOutput);
+                this._logger.error('Unable to detect output directory');
+            }
             return { result: false };
         }
         
@@ -102,17 +106,22 @@ export class Compiler
         }
         
         // check & copy artifact files
-        this._logger.log(chalk.green('Files generated under:'));
+        if (displayLogs) {
+            this._logger.log(chalk.green('Files generated under:'));
+        }
         
         const artifactFiles : string[] = [
             `${contractName}.contract`,
             `${contractName}.wasm`,
-            'metadata.json',
+            `${contractName}.json`,
         ];
         for (const artifactFile of artifactFiles) {
             const sourceArtifactFilePath = path.join(outputDirectory, artifactFile);
             if (!fs.existsSync(sourceArtifactFilePath)) {
-                this._logger.error(`File ${artifactFile} not generated under ${sourceArtifactFilePath}`);
+                if (displayWarns) {
+                    this._logger.error(`File ${artifactFile} not generated under ${sourceArtifactFilePath}`);
+                }
+                
                 return { result: false };
             }
             
@@ -122,12 +131,16 @@ export class Compiler
                 artifactFilePath
             );
             
-            this._logger.log(
-                path.relative(this._runtimeContext.paths.project, artifactFilePath)
-            );
+            if (displayLogs) {
+                this._logger.log(
+                    path.relative(this._runtimeContext.paths.project, artifactFilePath)
+                );
+            }
         }
         
-        this._logger.log('');
+        if (displayLogs) {
+            this._logger.log('');
+        }
         
         return {
             result: true,

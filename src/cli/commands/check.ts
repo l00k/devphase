@@ -63,6 +63,7 @@ export class CheckCommand
             checkResult.stackBinaries = true;
         }
         catch (e) {
+            this._logger.log(checkResult);
             this._logger.error(e);
         }
         
