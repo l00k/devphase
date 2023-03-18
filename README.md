@@ -255,6 +255,3 @@ export default config;
 
 ### Usage sample
 Check [usage sample](https://github.com/l00k/devphase-usage-sample) repo
-
-### Sandbox
-Check [sandbox environment](https://github.com/l00k/devphase-sandbox) repo for easy testing with up-to-date code
