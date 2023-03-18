@@ -11,7 +11,7 @@ Add to your projects using package manager (`yarn@^1` / `npm`)
 Sadly `yarn@^3` is not supported (check [#4](https://github.com/l00k/devphase/issues/4))  
 
 ```shell
-yarn add -D devphase
+yarn add -D @devphase/cli
 yarn add -D typescript ts-node # required peer dependencies
 ```
 
@@ -44,6 +44,7 @@ yarn devphase stack run [--save-log]
 - Setup local stack (register gatekeeper, create cluster, deploy system contract etc.)
 ```shell
 yarn devphase stack setup
+-m, --setupMode=<option>    # Stack setup mode <options: 0 - Minimal | 1 - WithDrivers | 2 - WithLogger>
 -n, --network               # Switch network (local - by default)
 ```
 
@@ -111,6 +112,7 @@ yarn devphase contract typegen -c <value>
 - Testing with mocha
 ```shell
 yarn devphase contract test [-s <value>] [-n <value>]
+-m, --setupMode=<option>    # Stack setup mode <options: 0 - Minimal | 1 - WithDrivers | 2 - WithLogger>
 -n, --network=<value>       # [default: local] Network key
 -s, --suite=<value>         # Test suite name (directory)
 

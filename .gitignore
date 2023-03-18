@@ -1,6 +1,9 @@
-/dist
-/node_modules
+/contracts/*/target/
+/standalone/
 
+**/*.rs.bk
+Cargo.lock
+
+node_modules
+yarn.lock
 .env
-
-!/templates/accounts.json

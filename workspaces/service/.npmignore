@@ -1,0 +1,5 @@
+node_modules/
+src/
+
+!/templates/.gitignore
+!/templates/accounts.json

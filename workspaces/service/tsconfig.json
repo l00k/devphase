@@ -1,0 +1,44 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        
+        "esModuleInterop": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        
+        "importHelpers": true,
+        "allowSyntheticDefaultImports": true,
+
+        "strict": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        
+        "rootDir": "src",
+        "outDir": "dist",
+        
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [ "./src/*" ]
+        }
+    },
+    "include": [
+        "etc",
+        "src",
+        "tests",
+        "typings"
+    ],
+    "ts-node": {
+        "transpileOnly": true,
+        "require": [
+            "tsconfig-paths/register"
+        ]
+    }
+}

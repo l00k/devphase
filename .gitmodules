@@ -1,0 +1,3 @@
+[submodule "devphase"]
+	path = devphase
+	url = git@github.com:l00k/devphase.git
