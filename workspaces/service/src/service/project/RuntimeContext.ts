@@ -238,6 +238,7 @@ export class RuntimeContext
                     port: 9944,
                     binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
                     workingDir: '{{directories.stacks}}/.data/node',
+                    dataDir: '{{directories.stacks}}/.data/node',
                     envs: {},
                     args: {
                         '--dev': true,
@@ -252,6 +253,7 @@ export class RuntimeContext
                     port: 8000,
                     binary: '{{directories.stacks}}/{{stack.version}}/pruntime',
                     workingDir: '{{directories.stacks}}/.data/pruntime',
+                    dataDir: '{{directories.stacks}}/.data/pruntime',
                     envs: {},
                     args: {
                         '--allow-cors': true,
@@ -264,6 +266,7 @@ export class RuntimeContext
                     gkMnemonic: '//Alice',
                     binary: '{{directories.stacks}}/{{stack.version}}/pherry',
                     workingDir: '{{directories.stacks}}/.data/pherry',
+                    dataDir: '{{directories.stacks}}/.data/pherry',
                     envs: {},
                     args: {
                         '--no-wait': true,

@@ -160,6 +160,7 @@ const config : ProjectConfigOptions = {
             port: 9944, // ws port
             binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
             workingDir: '{{directories.stacks}}/.data/node',
+            dataDir: '{{directories.stacks}}/.data/node',
             envs: {},
             args: {
                 '--dev': true,
@@ -173,6 +174,7 @@ const config : ProjectConfigOptions = {
             port: 8000, // server port
             binary: '{{directories.stacks}}/{{stack.version}}/pruntime',
             workingDir: '{{directories.stacks}}/.data/pruntime',
+            dataDir: '{{directories.stacks}}/.data/pruntime',
             envs: {},
             args: {
                 '--allow-cors': true,
@@ -185,6 +187,7 @@ const config : ProjectConfigOptions = {
             gkMnemonic: '//Alice', // gate keeper mnemonic
             binary: '{{directories.stacks}}/{{stack.version}}/pherry',
             workingDir: '{{directories.stacks}}/.data/pherry',
+            dataDir: '{{directories.stacks}}/.data/pherry',
             envs: {},
             args: {
                 '--no-wait': true,

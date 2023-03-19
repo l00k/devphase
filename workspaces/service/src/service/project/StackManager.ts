@@ -100,6 +100,8 @@ export class StackManager
             await listr.run();
         }
         catch (e : any) {
+            await this.stopStack(true);
+        
             if (
                 e?.message
                 && e.message.includes('Stack killed')
@@ -156,7 +158,7 @@ export class StackManager
             stackOptions,
             compOptions,
             runMode,
-            text => text.includes('Running JSON-RPC'),
+            text => text.includes('Listening for new connections on') || text.includes('Running JSON-RPC'),
             text => text.toLowerCase().includes('error'),
         );
     }
@@ -209,11 +211,13 @@ export class StackManager
         const binaryPath = this.getComponentPath(componentOptions.binary);
         
         const workingDirPath = this.getComponentPath(componentOptions.workingDir);
-        if (fs.existsSync(workingDirPath)) {
-            fs.rmSync(workingDirPath, { recursive: true, force: true });
+        
+        const dataDirPath = this.getComponentPath(componentOptions.dataDir);
+        if (fs.existsSync(dataDirPath)) {
+            fs.rmSync(dataDirPath, { recursive: true, force: true });
         }
         
-        fs.mkdirSync(workingDirPath, { recursive: true });
+        fs.mkdirSync(dataDirPath, { recursive: true });
         
         // prepare args
         const spawnOptions : SpawnOptions = {
@@ -222,7 +226,7 @@ export class StackManager
                 ...process.env,
                 ...componentOptions.envs,
             },
-            stdio: [ 'ignore', 'pipe', 'pipe' ]
+            stdio: [ 'ignore', 'pipe', 'pipe' ],
         };
         
         // wait for process to be ready
@@ -237,9 +241,10 @@ export class StackManager
             this._logger.logDir(spawnOptions.env);
         }
         
+        const serializedArgs = serializeProcessArgs(componentOptions.args);
         const child = childProcess.spawn(
             binaryPath,
-            serializeProcessArgs(componentOptions.args),
+            serializedArgs,
             spawnOptions
         );
         

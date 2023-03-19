@@ -82,6 +82,7 @@ export interface StackComponentOptions
 {
     binary : string,
     workingDir : string,
+    dataDir: string,
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
     timeout : number,
