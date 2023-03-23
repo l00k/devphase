@@ -3,10 +3,10 @@
 1. Compile Flipper contract
 ```shell
 cd sandbox
-yarn devphase compile [flipper]
+yarn devphase contract compile -c flipper
 ```
 2. Try testing
 ```shell
 cd sandbox
-yarn devphase test
+yarn devphase contract test -s flipper
 ```
