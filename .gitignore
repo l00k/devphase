@@ -1,5 +1,4 @@
-/contracts/*/target/
-/standalone/
+/standalone/*
 
 **/*.rs.bk
 Cargo.lock
@@ -7,3 +6,4 @@ Cargo.lock
 node_modules
 yarn.lock
 .env
+

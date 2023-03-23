@@ -74,7 +74,7 @@ mod adv_cases {
     impl AdvCases {
         #[ink(constructor)]
         pub fn default() -> Self {
-            ink_lang::utils::initialize_contract(|this: &mut Self| {
+            ink::utils::initialize_contract(|this: &mut Self| {
                 this.users_num = 0;
             })
         }
