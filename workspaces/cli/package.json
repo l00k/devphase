@@ -23,7 +23,7 @@
         "@oclif/core": "^2.0.7",
         "@oclif/plugin-help": "^5.2.2",
         "@oclif/plugin-plugins": "^2.2.4",
-        "@devphase/service": "^0.0.1",
+        "@devphase/service": "^0.0.2",
         "listr": "^0.14.3"
     },
     "peerDependencies": {

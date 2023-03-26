@@ -16,13 +16,24 @@ export interface FixedArray<L extends number, T>
     length : L
 }
 
-export interface IJson<T extends AnyJson>
+type ToJsonConverter<T> = T extends Object
+    ? {
+        [P in keyof T as `${Uncapitalize<string & P>}`]: T[P] extends Object
+            ? ToJsonConverter<T[P]>
+            : T[P]
+    }
+    : T
+    ;
+
+interface IJsonInterface<T extends AnyJson>
     extends Codec
 {
     toHuman (isExtended? : boolean) : T;
-    toJSON () : T;
+    toJSON () : ToJsonConverter<T>;
     toPrimitive () : T;
 }
+
+export type IJson<T extends AnyJson> = IJsonInterface<T> & { [P in keyof T]?: T[P] };
 
 
 export interface CallOutcome<T extends Codec = Codec>

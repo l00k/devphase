@@ -42,10 +42,8 @@ export class StructTypeBuilder
         );
     }
     
-    public build() : Record<number, BuiltType>
+    public build () : Record<number, BuiltType>
     {
-        console.dir(this._definedTypes, { depth: 10 });
-    
         for (const [ idx, typeDef ] of Object.entries(this._definedTypes)) {
             if (!this._builtTypes[idx]) {
                 this.buildType(Number(idx));
@@ -252,7 +250,7 @@ export class StructTypeBuilder
         ;
         
         // collect variants
-        const builtVariants : string[] = [];
+        const builtVariants : Record<string, string> = {};
         
         if (variants) {
             for (const variant of variants) {
@@ -277,19 +275,19 @@ export class StructTypeBuilder
                     innerType = '[' + tupleParts + ']';
                 }
                 
-                builtVariants.push(
-                    `{ ${name}: ${innerType} }`
-                );
+                builtVariants[name] = innerType;
             }
         }
-        else {
-            builtVariants.push('{}');
-        }
         
-        let declaration : TsMorph.TypeAliasDeclarationStructure = {
+        const declarationInnerType = Object.entries(builtVariants)
+            .map(([ name, propType ]) => `${name}? : ${propType}`)
+            .join(',\n')
+            ;
+        
+        const declaration : TsMorph.TypeAliasDeclarationStructure = {
             kind: TsMorph.StructureKind.TypeAlias,
             name: variantName,
-            type: builtVariants.join(' | '),
+            type: '{\n' + declarationInnerType + '\n}',
         };
         this._typeStatements[variantName] = declaration;
         
@@ -327,7 +325,7 @@ export class StructTypeBuilder
         const pathName = path
             .map(part => upperFirst(camelCase(part)))
             .join('_')
-            ;
+        ;
         return pathName + '$' + idx.toString();
     }
     

@@ -6,11 +6,26 @@ import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contrac
 import type { Codec } from "@polkadot/types/types";
 
 export namespace PhatHello {
-    type InkPrimitives_LangError$3 = { CouldNotReadInput: null };
-    type Result$1 = { Ok: never[] } | { Err: InkPrimitives_LangError$3 };
-    type PhatHello_PhatHello_Error$6 = { InvalidEthAddress: null } | { HttpRequestFailed: null } | { InvalidResponseBody: null };
-    type Result$5 = { Ok: string } | { Err: PhatHello_PhatHello_Error$6 };
-    type Result$4 = { Ok: Result$5 } | { Err: InkPrimitives_LangError$3 };
+    type InkPrimitives_LangError$3 = {
+        CouldNotReadInput? : null
+        };
+    type Result$1 = {
+        Ok? : never[],
+        Err? : InkPrimitives_LangError$3
+        };
+    type PhatHello_PhatHello_Error$6 = {
+        InvalidEthAddress? : null,
+        HttpRequestFailed? : null,
+        InvalidResponseBody? : null
+        };
+    type Result$5 = {
+        Ok? : string,
+        Err? : PhatHello_PhatHello_Error$6
+        };
+    type Result$4 = {
+        Ok? : Result$5,
+        Err? : InkPrimitives_LangError$3
+        };
 
     /** */
     /** Queries */
