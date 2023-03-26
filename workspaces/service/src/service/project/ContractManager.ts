@@ -291,7 +291,6 @@ export class ContractManager
         );
         
         // deploy
-        // todo ld 2023-01-12 16:52:42 - verify was contacts already deployed (query not implemented yet)
         const deployOptions : DeployOptions = {};
         if (options.account) {
             deployOptions.asAccount = options.account;

@@ -1,3 +1,4 @@
+import { ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
 import { ux } from '@oclif/core';
@@ -14,11 +15,12 @@ export class Initializer
         'tsconfig.json': 'tsconfig.json',
         'devphase.config.ts': 'devphase.config.ts',
         'accounts.json': 'accounts.json',
+        'scripts': 'scripts',
+        'tests': 'tests',
     };
     
     protected _directories : string[] = [
         'contracts',
-        'tests',
     ];
     
     protected _logger : Logger = new Logger('Initializer');
@@ -37,6 +39,20 @@ export class Initializer
             return false;
         }
         
+        // create directories
+        this._logger.log('Creating directories');
+        
+        for (const directory of this._directories) {
+            const targetDirectoryPath = `./${directory}`;
+            if (fs.existsSync(targetDirectoryPath)) {
+                continue;
+            }
+            
+            this._logger.log(chalk.cyan(directory));
+            
+            fs.mkdirSync(targetDirectoryPath);
+        }
+        
         // copy templates
         this._logger.log('Creating files');
         
@@ -53,25 +69,21 @@ export class Initializer
             
             this._logger.log(chalk.cyan(toTemplateFile));
             
-            fs.copyFileSync(
+            fs.cpSync(
                 sourceTemplatePath,
-                targetFilePath
+                targetFilePath,
+                { recursive: true }
             );
         }
         
-        // create directories
-        this._logger.log('Creating directories');
+        // create sample contract
+        this._logger.log('Creating sample contract');
         
-        for (const directory of this._directories) {
-            const targetDirectoryPath = `./${directory}`;
-            if (fs.existsSync(targetDirectoryPath)) {
-                continue;
-            }
-            
-            this._logger.log(chalk.cyan(directory));
-            
-            fs.mkdirSync(targetDirectoryPath);
-        }
+        const contractManager = new ContractManager(this._runtimeContext);
+        await contractManager.createNew({
+            name: 'flipper',
+            template: 'flipper'
+        });
         
         return true;
     }

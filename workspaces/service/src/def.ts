@@ -155,6 +155,7 @@ export type ProjectConfig = {
         artifacts : string,
         contracts : string,
         logs : string,
+        scripts : string,
         stacks : string,
         tests : string,
         typings : string,

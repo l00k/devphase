@@ -39,6 +39,13 @@ yarn devphase init
 yarn devphase check
 ```
 
+- Run script
+```shell
+yarn devphase script [-n local] <...SCRIPTS>
+SCRIPTS                     # Scripts to execute
+-n, --network=<value>       # [default: local] Network key
+```
+
 #### Stack related commands
 - Starting local stack (node + pruntime + pherry)
 ```shell
@@ -61,7 +68,6 @@ yarn devphase account list [--columns <value> | -x] [--sort <value>] [--filter <
 - Creates new managed account
 ```shell
 yarn devphase account create -a <value> [-p <value>] [-n]
-
 -a, --alias=<value>         # (required) Account alias
 -n, --no-passphrase         # Force no passphrase (prompted if not specified)
 -p, --passphrase=<value>    # Passphrase used to protect keyring
@@ -121,7 +127,6 @@ yarn devphase contract test [-s <value>] [-n <value>]
 -m, --setupMode=<option>    # Stack setup mode <options: 0 - Minimal | 1 - WithDrivers | 2 - WithLogger>
 -n, --network=<value>       # [default: local] Network key
 -s, --suite=<value>         # Test suite name (directory)
-
 ```
 
 ## Configuration
@@ -139,6 +144,7 @@ const config : ProjectConfigOptions = {
         artifacts: 'artifacts',
         contracts: 'contracts',
         logs: 'logs',
+        scripts: 'scripts',
         stacks: 'stacks',
         tests: 'tests',
         typings: 'typings'

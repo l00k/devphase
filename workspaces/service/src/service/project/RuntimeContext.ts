@@ -223,6 +223,7 @@ export class RuntimeContext
                 artifacts: 'artifacts',
                 contracts: 'contracts',
                 logs: 'logs',
+                scripts: 'scripts',
                 stacks: 'stacks',
                 tests: 'tests',
                 typings: 'typings'
