@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -23,7 +23,7 @@
         "@oclif/core": "^2.0.7",
         "@oclif/plugin-help": "^5.2.2",
         "@oclif/plugin-plugins": "^2.2.4",
-        "@devphase/service": "^0.0.4",
+        "@devphase/service": "^0.0.6",
         "listr": "^0.14.3"
     },
     "peerDependencies": {
