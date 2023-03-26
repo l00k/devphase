@@ -7,18 +7,28 @@ import type { Codec } from "@polkadot/types/types";
 
 export namespace Signing {
     type InkPrimitives_LangError = { CouldNotReadInput: null };
-    type Result = { Ok: never[] } | { Err: InkPrimitives_LangError };
+    type Result = { Ok: boolean } | { Err: InkPrimitives_LangError };
 
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
+        export interface Sign extends DPT.ContractQuery {
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+        }
+
+        export interface Verify extends DPT.ContractQuery {
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[]): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+        }
+
         export interface Test extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
         }
     }
 
     export interface MapMessageQuery extends DPT.MapMessageQuery {
+        sign: ContractQuery.Sign;
+        verify: ContractQuery.Verify;
         test: ContractQuery.Test;
     }
 
