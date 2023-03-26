@@ -26,6 +26,7 @@ export type ContractDefinition = {
 
 export type ContractCreateNewOptions = {
     name? : string,
+    template? : string,
 };
 
 export type ContractCompileOptions = {
@@ -142,8 +143,16 @@ export class ContractManager
         
         const templatePath = path.join(
             this._runtimeContext.paths.templates,
-            'contract',
+            'contracts',
+            options.template
         );
+        if (!fs.existsSync(templatePath)) {
+            throw new Exception(
+                `Template ${options.template} does not exist`,
+                1679837411410
+            );
+        }
+        
         const targetContractPath = path.join(
             this._runtimeContext.paths.contracts,
             options.name,

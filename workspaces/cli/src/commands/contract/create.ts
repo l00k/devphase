@@ -14,6 +14,14 @@ export class ContractCreateCommand
             summary: 'Contract name',
             char: 'n',
             required: true,
+        }),
+        template: Flags.string({
+            summary: 'Template name',
+            char: 't',
+            options: [
+                'flipper',
+            ],
+            default: 'flipper',
         })
     };
     
