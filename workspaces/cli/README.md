@@ -17,7 +17,7 @@ yarn add -D typescript ts-node # required peer dependencies
 
 ## Sandbox
 In directory `workspaces/xsandbox` there is a template of devphase project.  
-You try building and testing contracts.  
+You can try building and testing contracts.  
 More info [here](./workspaces/xsandbox/README.md)
 
 ## Commands
