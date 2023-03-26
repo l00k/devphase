@@ -31,12 +31,7 @@ export class ContractCreateCommand
         await this.runtimeContext.requestProjectDirectory();
         
         const contractManager = new ContractManager(this.runtimeContext);
-        
-        const result = await contractManager.createNew({
-            name: this.flags.name,
-        });
-        
-        return result;
+        return await contractManager.createNew(this.flags);
     }
     
 }
