@@ -1,7 +1,7 @@
 import { Flipper } from '@/typings/Flipper';
+import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
-import { ContractType } from '@devphase/service';
 
 
 describe('Flipper', () => {

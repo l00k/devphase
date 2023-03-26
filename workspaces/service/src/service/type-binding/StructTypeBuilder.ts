@@ -44,6 +44,8 @@ export class StructTypeBuilder
     
     public build() : Record<number, BuiltType>
     {
+        console.dir(this._definedTypes, { depth: 10 });
+    
         for (const [ idx, typeDef ] of Object.entries(this._definedTypes)) {
             if (!this._builtTypes[idx]) {
                 this.buildType(Number(idx));
@@ -157,7 +159,7 @@ export class StructTypeBuilder
         else {
             // todo ld 2022-10-31 09:00:10
             throw new Exception(
-                'Unknown type',
+                'Unknown type. Please submit ticket for that issue.',
                 1667223448403
             );
         }
@@ -197,7 +199,7 @@ export class StructTypeBuilder
         } = typeDef;
         
         const compositeName = path
-            ? this.getTypeNameFromPath(path)
+            ? this.getTypeNameFromPath(path, ++this._newTypeIdx)
             : 'Composite' + (++this._newTypeIdx)
         ;
         
@@ -245,7 +247,7 @@ export class StructTypeBuilder
         } = typeDef;
         
         const variantName = path
-            ? this.getTypeNameFromPath(path)
+            ? this.getTypeNameFromPath(path, ++this._newTypeIdx)
             : 'Variant' + (++this._newTypeIdx)
         ;
         
@@ -317,12 +319,16 @@ export class StructTypeBuilder
         };
     }
     
-    public getTypeNameFromPath (path : string[]) : string
+    public getTypeNameFromPath (
+        path : string[],
+        idx : number
+    ) : string
     {
-        return path
+        const pathName = path
             .map(part => upperFirst(camelCase(part)))
             .join('_')
             ;
+        return pathName + '$' + idx.toString();
     }
     
 }
