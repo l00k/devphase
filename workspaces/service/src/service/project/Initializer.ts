@@ -11,8 +11,9 @@ export class Initializer
     
     protected _templates : Record<string, string> = {
         'gitignore': '.gitignore',
-        'accounts.json': 'accounts.json',
+        'tsconfig.json': 'tsconfig.json',
         'devphase.config.ts': 'devphase.config.ts',
+        'accounts.json': 'accounts.json',
     };
     
     protected _directories : string[] = [
