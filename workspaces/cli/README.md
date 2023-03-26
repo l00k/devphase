@@ -130,8 +130,6 @@ yarn devphase contract test [-s <value>] [-n <value>]
 ```
 
 ## Configuration
-Create `devphase.config.ts` in root directory (`init` command in TODO)
-
 Here is default configuration. All values are optional (merged recuresivly)
 ```ts
 import { ProjectConfigOptions } from 'devphase';
