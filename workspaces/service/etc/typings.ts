@@ -25,16 +25,13 @@ type ToJsonConverter<T> = T extends Object
     : T
     ;
 
-interface IJsonInterface<T extends AnyJson>
+export interface IJson<T extends AnyJson>
     extends Codec
 {
     toHuman (isExtended? : boolean) : T;
     toJSON () : ToJsonConverter<T>;
-    toPrimitive () : T;
+    toPrimitive () : ToJsonConverter<T>;
 }
-
-export type IJson<T extends AnyJson> = IJsonInterface<T> & { [P in keyof T]?: T[P] };
-
 
 export interface CallOutcome<T extends Codec = Codec>
     extends ContractCallOutcome

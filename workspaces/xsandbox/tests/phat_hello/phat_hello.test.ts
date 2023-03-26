@@ -35,12 +35,13 @@ describe('PhatHello', () => {
         
         it('Should be able to query balance of an account on Ethereum', async function() {
             const response = await contract.query.getEthBalance(certificate, {}, hex_address);
-            const output = response.output.toJSON();
+            const human = response.output.toHuman();
+            const primitive = response.output.toPrimitive();
+            const json = response.output.toJSON();
             
-            console.log(
-                response.output.Ok.Ok,
-                output.ok.ok
-            );
+            console.log(human.Ok.Ok);
+            console.log(primitive.ok.ok);
+            console.log(json.ok.ok);
         });
     });
     
