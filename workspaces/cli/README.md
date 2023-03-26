@@ -75,8 +75,9 @@ yarn devphase contract list [--columns <value> | -x] [--sort <value>] [--filter 
 ```
 - Creates new contract project from template
 ```shell
-yarn devphase contract create -n <value>
+yarn devphase contract create -n <value> [-t flipper]
 -n, --name=<value>          # (required) Contract name
+-t, --template=<option>     # [default: flipper] Template name <options: flipper>
 ```
 - Compiles contract using system `cargo` binary
 ```shell

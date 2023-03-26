@@ -51,7 +51,7 @@ export class Initializer
                 continue;
             }
             
-            ux.log(chalk.cyan(toTemplateFile));
+            this._logger.log(chalk.cyan(toTemplateFile));
             
             fs.copyFileSync(
                 sourceTemplatePath,
