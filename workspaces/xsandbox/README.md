@@ -67,3 +67,8 @@ $ (...)/node_modules/.bin/devphase contract test -s flipper
 
 Done in 33.19s.
 ```
+
+## 3. Run script
+```shell
+yarn devphase script ./scripts/deploy.ts
+```
