@@ -12,10 +12,8 @@ describe('Flipper', () => {
     
     before(async function() {
         factory = await this.devPhase.getFactory(
-            './contracts/flipper/target/ink/flipper.contract',
-            {
-                contractType: ContractType.InkCode,
-            }
+            'flipper',
+            { contractType: ContractType.InkCode }
         );
         
         await factory.deploy();

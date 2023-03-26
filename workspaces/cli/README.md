@@ -15,6 +15,11 @@ yarn add -D @devphase/cli
 yarn add -D typescript ts-node # required peer dependencies
 ```
 
+## Sandbox
+In directory `workspaces/xsandbox` there is a template of devphase project.  
+You try building and testing contracts.  
+More info [here](./workspaces/xsandbox/README.md)
+
 ## Commands
 
 ### Global flags
@@ -255,6 +260,3 @@ const config : ProjectConfigOptions = {
 
 export default config;
 ```
-
-### Usage sample
-Check [usage sample](https://github.com/l00k/devphase-usage-sample) repo
