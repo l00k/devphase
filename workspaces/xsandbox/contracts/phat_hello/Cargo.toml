@@ -1,0 +1,38 @@
+[package]
+name = "phat_hello"
+version = "0.1.0"
+authors = ["[your_name] <[your_email]>"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "4", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1", default-features = false, features = ["derive"], optional = true }
+
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+serde-json-core = { version = "0.4.0" }
+
+pink-extension = { version = "0.4", default-features = false }
+
+[dev-dependencies]
+pink-extension-runtime = { version = "0.4", default-features = false }
+
+[lib]
+name = "phat_hello"
+path = "lib.rs"
+crate-type = [
+	# Used for normal contract Wasm blobs.
+	"cdylib",
+]
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+    "pink-extension/std",
+    "serde-json-core/std",
+]
+ink-as-dependency = []
