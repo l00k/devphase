@@ -107,9 +107,10 @@ export interface PherryComponentOptions
 }
 
 export enum StackSetupMode {
-    Minimal = 0,
-    WithDrivers = 1,
-    WithLogger = 2,
+    None = 0,
+    Minimal = 1,
+    WithDrivers = 2,
+    WithLogger = 3,
 }
 
 export type StackSetupOptions = {

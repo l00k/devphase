@@ -123,100 +123,104 @@ export class StackSetupService
      */
     protected async setupStack_default (options : StackSetupOptions) : Promise<StackSetupResult>
     {
-        const tasks = [
-            {
-                title: 'Fetch worker info',
-                task: async() => {
-                    this._workerInfo = await this.getWorkerInfo(options.workerUrl);
-                }
-            },
-            {
-                title: 'Register worker',
-                skip: async() => {
-                    if (!this._workerInfo.initalized) {
-                        return false;
+        const tasks : Listr.ListrTask[] = [];
+        
+        if (options.mode >= StackSetupMode.Minimal) {
+            tasks.push(
+                {
+                    title: 'Fetch worker info',
+                    task: async() => {
+                        this._workerInfo = await this.getWorkerInfo(options.workerUrl);
                     }
-                    
-                    const onChainInfo = await this._api.query
-                        .phalaRegistry.workers(this._workerInfo.ecdhPublicKey);
-                    return !onChainInfo.isEmpty;
                 },
-                task: () => this.registerWorker(),
-            },
-            {
-                title: 'Register gatekeeper',
-                skip: async() => {
-                    const gatekeepers : string[] = <any>(
-                        await this._api.query
-                            .phalaRegistry.gatekeeper()
-                    ).toJSON();
-                    
-                    return gatekeepers.includes(this._workerInfo.publicKey);
+                {
+                    title: 'Register worker',
+                    skip: async() => {
+                        if (!this._workerInfo.initalized) {
+                            return false;
+                        }
+                        
+                        const onChainInfo = await this._api.query
+                            .phalaRegistry.workers(this._workerInfo.ecdhPublicKey);
+                        return !onChainInfo.isEmpty;
+                    },
+                    task: () => this.registerWorker(),
                 },
-                task: () => this.registerGatekeeper(),
-            },
-            {
-                title: 'Load system contracts',
-                task: async() => {
-                    this._pinkSystemMetadata = await this.loadContract('system');
-                    this._tokenomicsMetatadata = await this.loadContract(SystemContractFileMap[SystemContract.ContractDeposit]);
-                    this._sidevmopMetadata = await this.loadContract(SystemContractFileMap[SystemContract.SidevmOperation]);
-                    this._logServerMetadata = await this.loadContract(SystemContractFileMap[SystemContract.PinkLogger]);
-                    this._logServerSideVmWasm = await this.loadWasm('log_server.sidevm');
-                }
-            },
-            {
-                title: 'Upload Pink system code',
-                skip: async() => {
-                    const requiredPinkSystemCode = this._pinkSystemMetadata.source.wasm;
-                    const onChainPinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
-                    return onChainPinkSystemCode[1].toString() === requiredPinkSystemCode;
-                },
-                task: () => this.uploadPinkSystemCode(),
-            },
-            {
-                title: 'Verify cluster',
-                task: async() => {
-                    if (options.clusterId === undefined) {
-                        const clustersNum : number = <any>(
+                {
+                    title: 'Register gatekeeper',
+                    skip: async() => {
+                        const gatekeepers : string[] = <any>(
                             await this._api.query
-                                .phalaFatContracts.clusterCounter()
+                                .phalaRegistry.gatekeeper()
                         ).toJSON();
                         
-                        if (clustersNum === 0) {
-                            options.clusterId = null;
-                        }
-                        else {
-                            const clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
-                            const onChainClusterInfo : any = await this._api.query
-                                .phalaFatContracts.clusters(clusterId);
+                        return gatekeepers.includes(this._workerInfo.publicKey);
+                    },
+                    task: () => this.registerGatekeeper(),
+                },
+                {
+                    title: 'Load system contracts',
+                    task: async() => {
+                        this._pinkSystemMetadata = await this.loadContract('system');
+                        this._tokenomicsMetatadata = await this.loadContract(SystemContractFileMap[SystemContract.ContractDeposit]);
+                        this._sidevmopMetadata = await this.loadContract(SystemContractFileMap[SystemContract.SidevmOperation]);
+                        this._logServerMetadata = await this.loadContract(SystemContractFileMap[SystemContract.PinkLogger]);
+                        this._logServerSideVmWasm = await this.loadWasm('log_server.sidevm');
+                    }
+                },
+                {
+                    title: 'Upload Pink system code',
+                    skip: async() => {
+                        const requiredPinkSystemCode = this._pinkSystemMetadata.source.wasm;
+                        const onChainPinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
+                        return onChainPinkSystemCode[1].toString() === requiredPinkSystemCode;
+                    },
+                    task: () => this.uploadPinkSystemCode(),
+                },
+                {
+                    title: 'Verify cluster',
+                    task: async() => {
+                        if (options.clusterId === undefined) {
+                            const clustersNum : number = <any>(
+                                await this._api.query
+                                    .phalaFatContracts.clusterCounter()
+                            ).toJSON();
                             
-                            this._clusterInfo = {
-                                id: clusterId,
-                                systemContract: onChainClusterInfo.unwrap().systemContract.toHex()
-                            };
+                            if (clustersNum === 0) {
+                                options.clusterId = null;
+                            }
+                            else {
+                                const clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
+                                const onChainClusterInfo : any = await this._api.query
+                                    .phalaFatContracts.clusters(clusterId);
+                                
+                                this._clusterInfo = {
+                                    id: clusterId,
+                                    systemContract: onChainClusterInfo.unwrap().systemContract.toHex()
+                                };
+                            }
                         }
                     }
-                }
-            },
-            {
-                title: 'Create cluster',
-                skip: () => !!this._clusterInfo,
-                task: async() => {
-                    this._clusterInfo = await this.createCluster();
-                }
-            },
-            {
-                title: 'Wait for cluster to be ready',
-                task: () => this.waitForClusterReady()
-            },
-            {
-                title: 'Create system contract API',
-                task: async() => {
-                    this._systemContract = await this._devPhase.getSystemContract(this._clusterInfo.id);
-                }
-            },
-        ];
+                },
+                {
+                    title: 'Create cluster',
+                    skip: () => !!this._clusterInfo,
+                    task: async() => {
+                        this._clusterInfo = await this.createCluster();
+                    }
+                },
+                {
+                    title: 'Wait for cluster to be ready',
+                    task: () => this.waitForClusterReady()
+                },
+                {
+                    title: 'Create system contract API',
+                    task: async() => {
+                        this._systemContract = await this._devPhase.getSystemContract(this._clusterInfo.id);
+                    }
+                },
+            );
+        }
         
         if (options.mode >= StackSetupMode.WithDrivers) {
             tasks.push(

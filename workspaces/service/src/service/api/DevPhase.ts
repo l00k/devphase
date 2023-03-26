@@ -25,6 +25,7 @@ type WorkerInfo = {
 export type GetFactoryOptions = {
     clusterId? : string,
     contractType? : ContractType,
+    systemContract? : boolean,
 }
 
 
@@ -169,6 +170,7 @@ export class DevPhase
     {
         options = {
             clusterId: this.mainClusterId,
+            systemContract: false,
             ...options
         };
         
@@ -303,6 +305,7 @@ export class DevPhase
                         {
                             clusterId,
                             contractType: ContractType.InkCode,
+                            systemContract: true,
                         }
                     );
                     

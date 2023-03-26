@@ -9,7 +9,7 @@ import type { ApiTypes, AugmentedEvent } from '@polkadot/api-base/types';
 import type { Bytes, Null, Option, Result, U256, U8aFixed, Vec, bool, u128, u16, u32, u64, u8 } from '@polkadot/types-codec';
 import type { ITuple } from '@polkadot/types-codec/types';
 import type { AccountId32, H256 } from '@polkadot/types/interfaces/runtime';
-import type { FrameSupportDispatchDispatchInfo, FrameSupportTokensMiscBalanceStatus, KhalaParachainRuntimeProxyType, PalletDemocracyVoteAccountVote, PalletDemocracyVoteThreshold, PalletMultisigTimepoint, PalletPhalaWorldCareerType, PalletPhalaWorldNftSaleType, PalletPhalaWorldRaceType, PalletPhalaWorldRarityType, PalletPhalaWorldShellParts, PhalaTypesAttestationProvider, RmrkTraitsNftAccountIdOrCollectionNftTuple, SpCoreSr25519Public, SpRuntimeDispatchError, SpWeightsWeightV2Weight, XcmV1MultiAsset, XcmV1MultiLocation, XcmV2Response, XcmV2TraitsError, XcmV2TraitsOutcome, XcmV2Xcm, XcmVersionedMultiAssets, XcmVersionedMultiLocation } from '@polkadot/types/lookup';
+import type { FrameSupportDispatchDispatchInfo, FrameSupportTokensMiscBalanceStatus, KhalaParachainRuntimeProxyType, PalletDemocracyVoteAccountVote, PalletDemocracyVoteThreshold, PalletMultisigTimepoint, PalletPhalaWorldCareerType, PalletPhalaWorldNftSaleType, PalletPhalaWorldRaceType, PalletPhalaWorldRarityType, PalletPhalaWorldShellParts, PhalaTypesAttestationProvider, RmrkTraitsNftAccountIdOrCollectionNftTuple, RmrkTraitsNftRoyaltyInfo, SpCoreSr25519Public, SpRuntimeDispatchError, SpWeightsWeightV2Weight, XcmV1MultiAsset, XcmV1MultiLocation, XcmV2Response, XcmV2TraitsError, XcmV2TraitsOutcome, XcmV2Xcm, XcmVersionedMultiAssets, XcmVersionedMultiLocation } from '@polkadot/types/lookup';
 
 export type __AugmentedEvent<ApiType extends ApiTypes> = AugmentedEvent<ApiType>;
 
@@ -17,9 +17,17 @@ declare module '@polkadot/api-base/types/events' {
   interface AugmentedEvents<ApiType extends ApiTypes> {
     assets: {
       /**
+       * Accounts were destroyed for given asset.
+       **/
+      AccountsDestroyed: AugmentedEvent<ApiType, [assetId: u32, accountsDestroyed: u32, accountsRemaining: u32], { assetId: u32, accountsDestroyed: u32, accountsRemaining: u32 }>;
+      /**
        * An approval for account `delegate` was cancelled by `owner`.
        **/
       ApprovalCancelled: AugmentedEvent<ApiType, [assetId: u32, owner: AccountId32, delegate: AccountId32], { assetId: u32, owner: AccountId32, delegate: AccountId32 }>;
+      /**
+       * Approvals were destroyed for given asset.
+       **/
+      ApprovalsDestroyed: AugmentedEvent<ApiType, [assetId: u32, approvalsDestroyed: u32, approvalsRemaining: u32], { assetId: u32, approvalsDestroyed: u32, approvalsRemaining: u32 }>;
       /**
        * (Additional) funds have been approved for transfer to a destination account.
        **/
@@ -48,6 +56,10 @@ declare module '@polkadot/api-base/types/events' {
        * An asset class was destroyed.
        **/
       Destroyed: AugmentedEvent<ApiType, [assetId: u32], { assetId: u32 }>;
+      /**
+       * An asset class is in the process of being destroyed.
+       **/
+      DestructionStarted: AugmentedEvent<ApiType, [assetId: u32], { assetId: u32 }>;
       /**
        * Some asset class was force-created.
        **/
@@ -1176,6 +1188,20 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
+    pwMarketplace: {
+      /**
+       * Marketplace owner is set.
+       **/
+      MarketplaceOwnerSet: AugmentedEvent<ApiType, [oldMarketplaceOwner: Option<AccountId32>, newMarketplaceOwner: AccountId32], { oldMarketplaceOwner: Option<AccountId32>, newMarketplaceOwner: AccountId32 }>;
+      /**
+       * RoyaltyInfo updated for a NFT.
+       **/
+      RoyaltyInfoUpdated: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32, oldRoyaltyInfo: Option<RmrkTraitsNftRoyaltyInfo>, newRoyaltyInfo: RmrkTraitsNftRoyaltyInfo], { collectionId: u32, nftId: u32, oldRoyaltyInfo: Option<RmrkTraitsNftRoyaltyInfo>, newRoyaltyInfo: RmrkTraitsNftRoyaltyInfo }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
     pwNftSale: {
       /**
        * Chosen preorder was minted to owner
@@ -1278,6 +1304,7 @@ declare module '@polkadot/api-base/types/events' {
       NFTRejected: AugmentedEvent<ApiType, [sender: AccountId32, collectionId: u32, nftId: u32], { sender: AccountId32, collectionId: u32, nftId: u32 }>;
       NFTSent: AugmentedEvent<ApiType, [sender: AccountId32, recipient: RmrkTraitsNftAccountIdOrCollectionNftTuple, collectionId: u32, nftId: u32, approvalRequired: bool], { sender: AccountId32, recipient: RmrkTraitsNftAccountIdOrCollectionNftTuple, collectionId: u32, nftId: u32, approvalRequired: bool }>;
       PrioritySet: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32], { collectionId: u32, nftId: u32 }>;
+      PropertiesRemoved: AugmentedEvent<ApiType, [collectionId: u32, maybeNftId: Option<u32>], { collectionId: u32, maybeNftId: Option<u32> }>;
       PropertyRemoved: AugmentedEvent<ApiType, [collectionId: u32, maybeNftId: Option<u32>, key: Bytes], { collectionId: u32, maybeNftId: Option<u32>, key: Bytes }>;
       PropertySet: AugmentedEvent<ApiType, [collectionId: u32, maybeNftId: Option<u32>, key: Bytes, value: Bytes], { collectionId: u32, maybeNftId: Option<u32>, key: Bytes, value: Bytes }>;
       ResourceAccepted: AugmentedEvent<ApiType, [nftId: u32, resourceId: u32, collectionId: u32], { nftId: u32, resourceId: u32, collectionId: u32 }>;
@@ -1303,6 +1330,10 @@ declare module '@polkadot/api-base/types/events' {
     };
     rmrkMarket: {
       /**
+       * Market fee paid to marketplace owner
+       **/
+      MarketFeePaid: AugmentedEvent<ApiType, [sender: AccountId32, marketplaceOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128], { sender: AccountId32, marketplaceOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128 }>;
+      /**
        * Offer was accepted
        **/
       OfferAccepted: AugmentedEvent<ApiType, [owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32], { owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32 }>;
@@ -1314,6 +1345,10 @@ declare module '@polkadot/api-base/types/events' {
        * Offer was withdrawn
        **/
       OfferWithdrawn: AugmentedEvent<ApiType, [sender: AccountId32, collectionId: u32, nftId: u32], { sender: AccountId32, collectionId: u32, nftId: u32 }>;
+      /**
+       * Royalty fee paid to royalty owner
+       **/
+      RoyaltyFeePaid: AugmentedEvent<ApiType, [sender: AccountId32, royaltyOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128], { sender: AccountId32, royaltyOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128 }>;
       /**
        * Token listed on Marketplace
        **/
@@ -1542,6 +1577,10 @@ declare module '@polkadot/api-base/types/events' {
        * We have ended a spend period and will now allocate funds.
        **/
       Spending: AugmentedEvent<ApiType, [budgetRemaining: u128], { budgetRemaining: u128 }>;
+      /**
+       * The inactive funds of the pallet have been updated.
+       **/
+      UpdatedInactive: AugmentedEvent<ApiType, [reactivated: u128, deactivated: u128], { reactivated: u128, deactivated: u128 }>;
       /**
        * Generic event
        **/

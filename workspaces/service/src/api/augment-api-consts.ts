@@ -39,6 +39,12 @@ declare module '@polkadot/api-base/types/consts' {
        **/
       metadataDepositPerByte: u128 & AugmentedConst<ApiType>;
       /**
+       * Max number of items to destroy per `destroy_accounts` and `destroy_approvals` call.
+       * 
+       * Must be configured to result in a weight that makes each call fit in a block.
+       **/
+      removeItemsLimit: u32 & AugmentedConst<ApiType>;
+      /**
        * The maximum length of a name or symbol stored on-chain.
        **/
       stringLimit: u32 & AugmentedConst<ApiType>;
@@ -114,7 +120,7 @@ declare module '@polkadot/api-base/types/consts' {
       curatorDepositMin: Option<u128> & AugmentedConst<ApiType>;
       /**
        * The curator deposit is calculated as a percentage of the curator fee.
-       *
+       * 
        * This deposit has optional upper and lower bounds with `CuratorDepositMax` and
        * `CuratorDepositMin`.
        **/
@@ -125,7 +131,7 @@ declare module '@polkadot/api-base/types/consts' {
       dataDepositPerByte: u128 & AugmentedConst<ApiType>;
       /**
        * Maximum acceptable reason length.
-       *
+       * 
        * Benchmarks depend on this value, be sure to update weights file when changing this value
        **/
       maximumReasonLength: u32 & AugmentedConst<ApiType>;
@@ -175,7 +181,7 @@ declare module '@polkadot/api-base/types/consts' {
       cooloffPeriod: u32 & AugmentedConst<ApiType>;
       /**
        * The period between a proposal being approved and enacted.
-       *
+       * 
        * It should generally be a little more than the unstake period to ensure that
        * voting stakers have an opportunity to remove themselves from the system in the case
        * where they are on the losing side of a vote.
@@ -209,7 +215,7 @@ declare module '@polkadot/api-base/types/consts' {
       maxProposals: u32 & AugmentedConst<ApiType>;
       /**
        * The maximum number of votes for an account.
-       *
+       * 
        * Also used to compute weight, an overly big value can
        * lead to extrinsic with very big weight: see `delegate` for instance.
        **/
@@ -220,7 +226,7 @@ declare module '@polkadot/api-base/types/consts' {
       minimumDeposit: u128 & AugmentedConst<ApiType>;
       /**
        * The minimum period of vote locking.
-       *
+       * 
        * It should be no shorter than enactment period to ensure that in the case of an approval,
        * those successful voters are locked into the consequences that their votes entail.
        **/
@@ -292,7 +298,7 @@ declare module '@polkadot/api-base/types/consts' {
       /**
        * The base amount of currency needed to reserve for creating a multisig execution or to
        * store a dispatch call for later.
-       *
+       * 
        * This is held for an additional storage item whose value size is
        * `4 + sizeof((BlockNumber, Balance, AccountId))` bytes and whose key size is
        * `32 + sizeof(AccountId)` bytes.
@@ -300,7 +306,7 @@ declare module '@polkadot/api-base/types/consts' {
       depositBase: u128 & AugmentedConst<ApiType>;
       /**
        * The amount of currency needed per unit threshold when creating a multisig execution.
-       *
+       * 
        * This is held for adding 32 bytes more into a pre-existing storage value.
        **/
       depositFactor: u128 & AugmentedConst<ApiType>;
@@ -320,13 +326,13 @@ declare module '@polkadot/api-base/types/consts' {
       noneAttestationEnabled: bool & AugmentedConst<ApiType>;
       /**
        * Verify attestation
-       *
+       * 
        * SHOULD NOT SET TO FALSE ON PRODUCTION!!!
        **/
       verifyPRuntime: bool & AugmentedConst<ApiType>;
       /**
        * Verify relaychain genesis
-       *
+       * 
        * SHOULD NOT SET TO FALSE ON PRODUCTION!!!
        **/
       verifyRelaychainGenesisBlockHash: bool & AugmentedConst<ApiType>;
@@ -390,7 +396,7 @@ declare module '@polkadot/api-base/types/consts' {
       desiredRunnersUp: u32 & AugmentedConst<ApiType>;
       /**
        * The maximum number of candidates in a phragmen election.
-       *
+       * 
        * Warning: The election happens onchain, and this value will determine
        * the size of the election. When this limit is reached no more
        * candidates are accepted in the election.
@@ -398,7 +404,7 @@ declare module '@polkadot/api-base/types/consts' {
       maxCandidates: u32 & AugmentedConst<ApiType>;
       /**
        * The maximum number of voters to allow in a phragmen election.
-       *
+       * 
        * Warning: This impacts the size of the election which is run onchain.
        * When the limit is reached the new voters are ignored.
        **/
@@ -415,7 +421,7 @@ declare module '@polkadot/api-base/types/consts' {
       termDuration: u32 & AugmentedConst<ApiType>;
       /**
        * Base deposit associated with voting.
-       *
+       * 
        * This should be sensibly high to economically ensure the pallet cannot be attacked by
        * creating a gigantic number of votes.
        **/
@@ -432,14 +438,14 @@ declare module '@polkadot/api-base/types/consts' {
     proxy: {
       /**
        * The base amount of currency needed to reserve for creating an announcement.
-       *
+       * 
        * This is held when a new storage item holding a `Balance` is created (typically 16
        * bytes).
        **/
       announcementDepositBase: u128 & AugmentedConst<ApiType>;
       /**
        * The amount of currency needed per announcement made.
-       *
+       * 
        * This is held for adding an `AccountId`, `Hash` and `BlockNumber` (typically 68 bytes)
        * into a pre-existing storage value.
        **/
@@ -454,14 +460,14 @@ declare module '@polkadot/api-base/types/consts' {
       maxProxies: u32 & AugmentedConst<ApiType>;
       /**
        * The base amount of currency needed to reserve for creating a proxy.
-       *
+       * 
        * This is held for an additional storage item whose value size is
        * `sizeof(Balance)` bytes and whose key size is `sizeof(AccountId)` bytes.
        **/
       proxyDepositBase: u128 & AugmentedConst<ApiType>;
       /**
        * The amount of currency needed per proxy added.
-       *
+       * 
        * This is held for adding 32 bytes plus an instance of `ProxyType` more into a
        * pre-existing storage value. Thus, when configuring `ProxyDepositFactor` one should take
        * into account `32 + proxy_type.encode().len()` bytes of data.
@@ -534,6 +540,10 @@ declare module '@polkadot/api-base/types/consts' {
        **/
       partsLimit: u32 & AugmentedConst<ApiType>;
       /**
+       * The maximum number of properties each can have
+       **/
+      propertiesLimit: u32 & AugmentedConst<ApiType>;
+      /**
        * The maximum resource symbol length
        **/
       resourceSymbolLimit: u32 & AugmentedConst<ApiType>;
@@ -557,6 +567,10 @@ declare module '@polkadot/api-base/types/consts' {
       [key: string]: Codec;
     };
     rmrkMarket: {
+      /**
+       * Market fee to be implemented downstream.
+       **/
+      marketFee: Permill & AugmentedConst<ApiType>;
       /**
        * Minimum offer amount as a valid offer
        **/
@@ -599,12 +613,12 @@ declare module '@polkadot/api-base/types/consts' {
       dbWeight: SpWeightsRuntimeDbWeight & AugmentedConst<ApiType>;
       /**
        * The designated SS58 prefix of this chain.
-       *
+       * 
        * This replaces the "ss58Format" property declared in the chain spec. Reason is
        * that the runtime should know about the prefix in order to make use of it as
        * an identifier of the chain.
        **/
-      ss58Format: u16 & AugmentedConst<ApiType>;
+      ss58Prefix: u16 & AugmentedConst<ApiType>;
       /**
        * Get the chain's current version.
        **/
@@ -634,7 +648,7 @@ declare module '@polkadot/api-base/types/consts' {
       dataDepositPerByte: u128 & AugmentedConst<ApiType>;
       /**
        * Maximum acceptable reason length.
-       *
+       * 
        * Benchmarks depend on this value, be sure to update weights file when changing this value
        **/
       maximumReasonLength: u32 & AugmentedConst<ApiType>;
@@ -659,21 +673,21 @@ declare module '@polkadot/api-base/types/consts' {
       /**
        * A fee mulitplier for `Operational` extrinsics to compute "virtual tip" to boost their
        * `priority`
-       *
+       * 
        * This value is multipled by the `final_fee` to obtain a "virtual tip" that is later
        * added to a tip component in regular `priority` calculations.
        * It means that a `Normal` transaction can front-run a similarly-sized `Operational`
        * extrinsic (with no tip), by including a tip value greater than the virtual tip.
-       *
+       * 
        * ```rust,ignore
        * // For `Normal`
        * let priority = priority_calc(tip);
-       *
+       * 
        * // For `Operational`
        * let virtual_tip = (inclusion_fee + tip) * OperationalFeeMultiplier;
        * let priority = priority_calc(tip + virtual_tip);
        * ```
-       *
+       * 
        * Note that since we use `final_fee` the multiplier applies also to the regular `tip`
        * sent with the transaction. So, not only does the transaction get a priority bump based
        * on the `inclusion_fee`, but we also amplify the impact of tips applied to `Operational`
@@ -692,7 +706,7 @@ declare module '@polkadot/api-base/types/consts' {
       burn: Permill & AugmentedConst<ApiType>;
       /**
        * The maximum number of approvals that can wait in the spending queue.
-       *
+       * 
        * NOTE: This parameter is also used within the Bounties Pallet extension if enabled.
        **/
       maxApprovals: u32 & AugmentedConst<ApiType>;
