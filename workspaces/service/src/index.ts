@@ -20,6 +20,7 @@ export * from '@/service/project/MultiContractExecutor';
 export * from '@/service/project/RuntimeContext';
 export * from '@/service/project/StackBinaryDownloader';
 export * from '@/service/project/StackManager';
+export * from '@/service/project/Tester';
 export * from '@/service/project/TypeBinder';
 
 export * from '@/service/type-binding/AbiTypeBindingProcessor';

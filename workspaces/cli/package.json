@@ -26,10 +26,8 @@
         "@oclif/plugin-not-found": "^2.3.22",
         "@devphase/service": "^0.0.7",
         "chalk": "^4.1.2",
-        "glob": "^8.0.3",
         "listr": "^0.14.3",
-        "lodash": "^4.17.21",
-        "mocha": "^10.0.0"
+        "lodash": "^4.17.21"
     },
     "peerDependencies": {
         "ts-node": "^10.9.1",
@@ -41,7 +39,11 @@
         "@types/node": "^16.11.64",
         "@typescript-eslint/eslint-plugin": "^5.42.0",
         "@typescript-eslint/parser": "^5.42.0",
+        "chai": "^4.3.6",
+        "chai-as-promised": "^7.1.1",
         "eslint": "^8.27.0",
+        "mocha": "^10.0.0",
+        "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
         "ttypescript": "^1.5.15",
         "typescript": "^4.8.4",

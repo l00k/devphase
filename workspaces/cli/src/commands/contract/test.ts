@@ -1,9 +1,6 @@
 import { BaseCommand } from '@/base/BaseCommand';
-import { RunMode, RuntimeContext, StackSetupMode } from '@devphase/service';
+import { RunMode, RuntimeContext, StackSetupMode, Tester } from '@devphase/service';
 import { Flags } from '@oclif/core';
-import glob from 'glob';
-import type { MochaOptions } from 'mocha';
-import path from 'path';
 
 
 export class ContractTestCommand
@@ -40,46 +37,8 @@ export class ContractTestCommand
         await this.runtimeContext.requestProjectDirectory();
         await this.runtimeContext.requestStackBinaries();
         
-        this.runtimeContext.config.stack.setupOptions.mode = Number(this.flags.setupMode);
-        
-        const { default: Mocha } = await import('mocha');
-        
-        const mochaConfig : MochaOptions = {
-            timeout: 10000,
-            ...this.runtimeContext.config.testing.mocha
-        };
-        const mocha = new Mocha(mochaConfig);
-        
-        // add internals
-        mocha.addFile(
-            path.join(
-                this.runtimeContext.paths.devphase,
-                '/etc/mocha.global.ts'
-            )
-        );
-        
-        // grep test files
-        const suitePath = this.flags.suite
-            ? `/${this.flags.suite}/**/*.@(test|spec).@(ts|js)`
-            : '/**/*.@(test|spec).@(ts|js)';
-        
-        const patterns = [
-            [
-                this.runtimeContext.config.directories.tests,
-                suitePath
-            ].join('')
-        ];
-        
-        for (const pattern of patterns) {
-            const files = glob.sync(pattern, { cwd: this.runtimeContext.paths.project });
-            files.forEach(file => mocha.addFile(file));
-        }
-        
-        await new Promise<number>((resolve) => {
-            mocha.run(resolve);
-        });
-        
-        mocha.dispose();
+        const tester = new Tester(this.runtimeContext);
+        return tester.runTests(<any>this.flags);
     }
     
 }
