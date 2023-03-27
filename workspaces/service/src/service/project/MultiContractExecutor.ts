@@ -1,6 +1,5 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
-import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import chokidar from 'chokidar';
 import glob from 'glob';

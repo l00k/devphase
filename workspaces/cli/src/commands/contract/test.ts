@@ -2,7 +2,7 @@ import { BaseCommand } from '@/base/BaseCommand';
 import { RunMode, RuntimeContext, StackSetupMode } from '@devphase/service';
 import { Flags } from '@oclif/core';
 import glob from 'glob';
-import { MochaOptions } from 'mocha';
+import type { MochaOptions } from 'mocha';
 import path from 'path';
 
 

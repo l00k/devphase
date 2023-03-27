@@ -1,7 +1,6 @@
 import { ContractManager } from '@/service/project/ContractManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Logger } from '@/utils/Logger';
-import { ux } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';

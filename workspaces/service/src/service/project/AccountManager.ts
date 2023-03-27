@@ -1,7 +1,6 @@
 import { AccountKeyringsConfig, Accounts } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
-import { ux } from '@oclif/core';
 import * as Keyring from '@polkadot/keyring';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { mnemonicGenerate } from '@polkadot/util-crypto';
@@ -9,6 +8,7 @@ import { waitReady } from '@polkadot/wasm-crypto';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
+import prompts from 'prompts';
 
 
 export type AccountCreateOptions = {
@@ -81,10 +81,11 @@ export class AccountManager
         if (unlock) {
             for (const [ alias, keyring ] of Object.entries(accounts)) {
                 if (keyring.isLocked) {
-                    const password = await ux.prompt(
-                        `Account ${chalk.cyan(alias)} is locked. Provide password:`,
-                        { type: 'mask'}
-                    );
+                    const { password } = await prompts({
+                        message: `Account ${chalk.cyan(alias)} is locked. Provide password:`,
+                        type: 'mask',
+                        name: 'password',
+                    });
                     
                     try {
                         keyring.unlock(password);
@@ -143,10 +144,12 @@ export class AccountManager
             !options.passphrase
             && !options.noPassphrase
         ) {
-            options.passphrase = await ux.prompt(
-                'Account passphrase (leave empty if to save as plain text)',
-                { type: 'mask'}
-            );
+            const { passphrase } = await prompts({
+                message: 'Account passphrase (leave empty if to save as plain text)',
+                type: 'mask',
+                name: 'password',
+            });
+            options.passphrase = passphrase;
         }
         
         const exported : any = !!options.passphrase

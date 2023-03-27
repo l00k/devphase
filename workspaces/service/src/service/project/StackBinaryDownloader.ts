@@ -1,7 +1,6 @@
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
-import { ux } from '@oclif/core';
 import axios from 'axios';
 import chalk from 'chalk';
 import fs from 'fs';
@@ -108,7 +107,7 @@ export class StackBinaryDownloader
     }
     
     public async downloadIfRequired (
-        execute: boolean = true
+        execute : boolean = true
     ) : Promise<Listr>
     {
         const listr = new Listr([
