@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -13,7 +13,9 @@
     "bin": {
         "devphase": "./dist/index.js"
     },
-    "files": [],
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "lint": "eslint .",
         "test": "ts-mocha -p ./tsconfig.test.json",
