@@ -16,6 +16,13 @@ export class RuntimeContext
 {
     
     protected static readonly SINGLETON_KEY = 'devphase_Context_VSffVql3bvj9aulZY5DNnRCnrEt1V27a';
+    
+    public static readonly CONFIG_FILES : string[] = [
+        'devphase.config.ts',
+        'devphase.config.js',
+        'devphase.config.json',
+    ];
+    
     public static readonly NETWORK_LOCAL = 'local';
     
     protected _stackBinaryDownloader : StackBinaryDownloader;
@@ -65,10 +72,7 @@ export class RuntimeContext
     
     public async isInProjectDirectory () : Promise<boolean>
     {
-        const configFilePath = await findUp([
-            'devphase.config.ts',
-            'devphase.config.js',
-        ]);
+        const configFilePath = await findUp(RuntimeContext.CONFIG_FILES);
         
         return (configFilePath !== undefined);
     }
@@ -90,10 +94,7 @@ export class RuntimeContext
         network : string = RuntimeContext.NETWORK_LOCAL
     ) : Promise<void>
     {
-        const configFilePath = await findUp([
-            'devphase.config.ts',
-            'devphase.config.js',
-        ]);
+        const configFilePath = await findUp(RuntimeContext.CONFIG_FILES);
         
         const packageFilePath = await findUp(
             [ 'package.json' ],
@@ -109,7 +110,10 @@ export class RuntimeContext
         let userConfig : ProjectConfigOptions = {};
         if (configFilePath) {
             this.paths.project = path.dirname(configFilePath);
-            userConfig = require(configFilePath).default;
+            userConfig = configFilePath.endsWith('.json')
+                ? require(configFilePath)
+                : require(configFilePath).default
+            ;
         }
         else {
             this.paths.project = process.cwd();
@@ -284,7 +288,7 @@ export class RuntimeContext
             testing: {
                 mocha: {}, // custom mocha configuration
                 spawnStack: true, // spawn runtime stack
-                stackLogOutput: false,
+                stackLogOutput: false, // display stack output in console
                 blockTime: 100, // overrides block time specified in node (and pherry) component
                 envSetup: {
                     setup: {
