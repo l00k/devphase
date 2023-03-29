@@ -155,7 +155,7 @@ export class ContractFactory
         }
         
         await TxHandler.handle(
-            this.api.tx.phalaFatContracts.clusterUploadResource(
+            this.api.tx.phalaPhatContracts.clusterUploadResource(
                 this.clusterId,
                 this.contractType,
                 this.metadata.source.wasm
@@ -199,7 +199,7 @@ export class ContractFactory
             : options.asAccount;
         
         const result = await TxHandler.handle(
-            this.api.tx.phalaFatContracts.instantiateContract(
+            this.api.tx.phalaPhatContracts.instantiateContract(
                 { WasmCode: this.metadata.source.hash },
                 callData,
                 salt,
@@ -214,7 +214,7 @@ export class ContractFactory
         );
         
         const instantiateEvent = result.events.find(({ event }) => {
-            return event.section === 'phalaFatContracts'
+            return event.section === 'phalaPhatContracts'
                 && event.method === 'Instantiating';
         });
         if (!instantiateEvent) {
@@ -248,7 +248,7 @@ export class ContractFactory
         // transfer funds to cluster if specified
         if (options.transferToCluster) {
             const result = await TxHandler.handle(
-                this.api.tx.phalaFatContracts.transferToCluster(
+                this.api.tx.phalaPhatContracts.transferToCluster(
                     options.transferToCluster,
                     this.clusterId,
                     contractId
@@ -261,7 +261,7 @@ export class ContractFactory
         // adjust stake if specified
         if (options.adjustStake) {
             const result = await TxHandler.handle(
-                this.api.tx.phalaFatTokenomic.adjustStake(
+                this.api.tx.phalaPhatTokenomic.adjustStake(
                     contractId,
                     options.adjustStake
                 ),

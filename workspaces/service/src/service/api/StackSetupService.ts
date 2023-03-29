@@ -172,7 +172,7 @@ export class StackSetupService
                     title: 'Upload Pink system code',
                     skip: async() => {
                         const requiredPinkSystemCode = this._pinkSystemMetadata.source.wasm;
-                        const onChainPinkSystemCode = await this._api.query.phalaFatContracts.pinkSystemCode();
+                        const onChainPinkSystemCode = await this._api.query.phalaPhatContracts.pinkSystemCode();
                         return onChainPinkSystemCode[1].toString() === requiredPinkSystemCode;
                     },
                     task: () => this.uploadPinkSystemCode(),
@@ -183,7 +183,7 @@ export class StackSetupService
                         if (options.clusterId === undefined) {
                             const clustersNum : number = <any>(
                                 await this._api.query
-                                    .phalaFatContracts.clusterCounter()
+                                    .phalaPhatContracts.clusterCounter()
                             ).toJSON();
                             
                             if (clustersNum === 0) {
@@ -192,7 +192,7 @@ export class StackSetupService
                             else {
                                 const clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
                                 const onChainClusterInfo : any = await this._api.query
-                                    .phalaFatContracts.clusters(clusterId);
+                                    .phalaPhatContracts.clusters(clusterId);
                                 
                                 this._clusterInfo = {
                                     id: clusterId,
@@ -436,7 +436,7 @@ export class StackSetupService
         
         const result = await this._txQueue.submit(
             this._api.tx.sudo.sudo(
-                this._api.tx.phalaFatContracts.setPinkSystemCode(systemCode)
+                this._api.tx.phalaPhatContracts.setPinkSystemCode(systemCode)
             ),
             this._suAccount,
             true
@@ -444,7 +444,7 @@ export class StackSetupService
         
         await this._waitFor(
             async() => {
-                const code = await this._api.query.phalaFatContracts.pinkSystemCode();
+                const code = await this._api.query.phalaPhatContracts.pinkSystemCode();
                 return code[1].toString() === systemCode;
             },
             this._waitTime
@@ -455,7 +455,7 @@ export class StackSetupService
     {
         // create cluster
         const tx = this._api.tx.sudo.sudo(
-            this._api.tx.phalaFatContracts.addCluster(
+            this._api.tx.phalaPhatContracts.addCluster(
                 this._accounts.alice.address,   // owner
                 { Public: null },               // access rights
                 [ this._workerInfo.publicKey ], // workers keys
@@ -474,7 +474,7 @@ export class StackSetupService
         );
         
         const clusterCreatedEvent = result.events.find(({ event }) => {
-            return event.section === 'phalaFatContracts'
+            return event.section === 'phalaPhatContracts'
                 && event.method === 'ClusterCreated';
         });
         if (!clusterCreatedEvent) {
@@ -490,7 +490,7 @@ export class StackSetupService
         // deposit funds to cluster
         await this._txQueue.submit(
             this._api.tx
-                .phalaFatContracts.transferToCluster(
+                .phalaPhatContracts.transferToCluster(
                 100e12,
                 clusterId,
                 this._suAccount.address
@@ -511,7 +511,7 @@ export class StackSetupService
             async() => {
                 // cluster exists
                 const cluster = await this._api.query
-                    .phalaFatContracts.clusters(this._clusterInfo.id);
+                    .phalaPhatContracts.clusters(this._clusterInfo.id);
                 if (cluster.isEmpty) {
                     return false;
                 }
@@ -677,7 +677,7 @@ export class StackSetupService
         }, this._waitTime);
         
         await this._txQueue.submit(
-            this._api.tx.phalaFatContracts.clusterUploadResource(
+            this._api.tx.phalaPhatContracts.clusterUploadResource(
                 this._clusterInfo.id,
                 ContractType.SidevmCode,
                 '0x' + this._logServerSideVmWasm

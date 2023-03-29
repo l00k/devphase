@@ -286,7 +286,7 @@ export class DevPhase
             this._systemContracts[clusterId] = new Promise(async(resolve, reject) => {
                 try {
                     const onChainClusterInfo : any = await this.api.query
-                        .phalaFatContracts.clusters(clusterId);
+                        .phalaPhatContracts.clusters(clusterId);
                     const systemContractId = onChainClusterInfo.unwrap().systemContract.toHex();
                     if (!systemContractId) {
                         throw new Exception(
