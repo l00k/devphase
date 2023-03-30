@@ -1,6 +1,6 @@
+import { DevPhase, Logger, RunMode, RuntimeContext, StackManager } from '@devphase/service';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import { DevPhase, Logger, RuntimeContext, RunMode, StackManager } from '@devphase/service';
 
 chai.use(chaiAsPromised);
 
@@ -13,15 +13,14 @@ before(async function() {
     this.runtimeContext = await RuntimeContext.getSingleton();
     this.stackManager = new StackManager(this.runtimeContext);
     
-    const {
-        spawnStack,
-        envSetup: { setup }
-    } = this.runtimeContext.config.testing;
+    const testingConfig = this.runtimeContext.testingConfig;
+    const { stackSetupConfig: { setup } } = this.runtimeContext.config.testing;
     
     this.timeout(setup.timeout);
     
     logger.log('Global setup start');
-    if (spawnStack) {
+    
+    if (testingConfig.spawnStack) {
         logger.log('Preparing dev stack');
         await this.stackManager.startStack(
             RunMode.Testing,
@@ -30,7 +29,10 @@ before(async function() {
     }
     
     logger.log('Init API');
-    this.devPhase = await DevPhase.create(this.runtimeContext, RuntimeContext.NETWORK_LOCAL);
+    this.devPhase = await DevPhase.create(this.runtimeContext, {
+        network: testingConfig.network,
+        blockTime: testingConfig.blockTime,
+    });
     this.api = this.devPhase.api;
     
     logger.log('Setup environment');
@@ -39,7 +41,7 @@ before(async function() {
     }
     else {
         // run default
-        await this.devPhase.stackSetup();
+        await this.devPhase.stackSetup({ mode: testingConfig.stackSetupMode });
     }
     
     logger.log('Global setup done');
@@ -49,10 +51,8 @@ before(async function() {
 after(async function() {
     logger.log('Global teardown start');
     
-    const {
-        spawnStack,
-        envSetup: { teardown }
-    } = this.runtimeContext.config.testing;
+    const testingConfig = this.runtimeContext.testingConfig;
+    const { stackSetupConfig: { teardown } } = this.runtimeContext.config.testing;
     
     this.timeout(teardown.timeout);
     
@@ -67,7 +67,7 @@ after(async function() {
     }
     
     if (
-        spawnStack
+        testingConfig.spawnStack
         && this.stackManager
     ) {
         logger.log('Stopping stack');

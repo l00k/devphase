@@ -23,13 +23,11 @@ describe('Http proxy', () => {
             api: this.api,
             pair: signer,
         });
+        
+        contract = await factory.instantiate('new', []);
     });
     
     describe('default constructor', () => {
-        beforeEach(async function() {
-            contract = await factory.instantiate('new', []);
-        });
-        
         it('Proper execute request using GET method', async function() {
             const { output } = await contract.query.request(certificate, {}, {
                 method: 'GET',
@@ -68,7 +66,6 @@ describe('Http proxy', () => {
                 Buffer.from(response.ok.body.toString().slice(2), 'hex').toString('utf-8')
             );
             
-            console.dir(body, { depth: 10 });
             expect(body).to.not.be.undefined;
             expect(body.method).to.be.equal('POST');
             expect(body.url).to.be.equal('https://httpbin.org/anything');

@@ -71,7 +71,7 @@ export type NetworkConfig = {
     nodeUrl : string,
     nodeApiOptions? : ApiOptions,
     workerUrl : string,
-    blockTime : number,
+    blockTime? : number,
 };
 
 export type StartStackOptions = {
@@ -82,7 +82,7 @@ export interface StackComponentOptions
 {
     binary : string,
     workingDir : string,
-    dataDir: string,
+    dataDir : string,
     args : Record<string, any>,
     envs : NodeJS.ProcessEnv,
     timeout : number,
@@ -106,7 +106,8 @@ export interface PherryComponentOptions
     gkMnemonic : string,
 }
 
-export enum StackSetupMode {
+export enum StackSetupMode
+{
     None = 0,
     Minimal = 1,
     WithDrivers = 2,
@@ -114,8 +115,8 @@ export enum StackSetupMode {
 }
 
 export type StackSetupOptions = {
-    mode? : StackSetupMode,
-    workerUrl? : string,
+    mode : StackSetupMode,
+    workerUrl : string,
     clusterId? : string,
 };
 
@@ -129,8 +130,7 @@ export type DevPhaseOptions = NetworkConfig & StackSetupOptions;
 export interface TestingOptions
 {
     mocha : MochaOptions,
-    spawnStack : boolean,
-    envSetup : {
+    stackSetupConfig : {
         setup : {
             custom : (devPhase : any) => Promise<void>,
             timeout : number,
@@ -144,6 +144,12 @@ export interface TestingOptions
     stackLogOutput : boolean,
 }
 
+export type TestingConfig = {
+    spawnStack : boolean,
+    network : string,
+    blockTime : number,
+    stackSetupMode : StackSetupMode,
+}
 
 export type GeneralConfig = {
     ss58Format : number,

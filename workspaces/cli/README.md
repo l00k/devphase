@@ -25,109 +25,282 @@ More info [here](./workspaces/xsandbox)
 ### Global flags
 ```shell
 --json                      # Prints result of command in json format
---verbosity=X               # Adjusts verbosity (0 - silent, 1 - default, 2 - verbose)
+-v, --verbose               # Verbose output
+-s, --silent                # No output
 ```
 
-#### Project commands
-- Init project (creates required files and directories)
-```shell
-yarn devphase init
-```
+### Commands index
+<!-- commands -->
+* [`devphase account create`](#devphase-account-create)
+* [`devphase account list`](#devphase-account-list)
+* [`devphase check`](#devphase-check)
+* [`devphase contract call [ARGS]`](#devphase-contract-call-args)
+* [`devphase contract compile`](#devphase-contract-compile)
+* [`devphase contract create`](#devphase-contract-create)
+* [`devphase contract deploy [ARGS]`](#devphase-contract-deploy-args)
+* [`devphase contract list`](#devphase-contract-list)
+* [`devphase contract test`](#devphase-contract-test)
+* [`devphase contract typegen`](#devphase-contract-typegen)
+* [`devphase help [COMMANDS]`](#devphase-help-commands)
+* [`devphase init`](#devphase-init)
+* [`devphase script [ARGS]`](#devphase-script-args)
+* [`devphase stack run`](#devphase-stack-run)
+* [`devphase stack setup`](#devphase-stack-setup)
 
-- Check project configuration and dependencies
-```shell
-yarn devphase check
-```
+## `devphase account create`
 
-- Run script
-```shell
-yarn devphase script [-n local] <...SCRIPTS>
-SCRIPTS                     # Scripts to execute
--n, --network=<value>       # [default: local] Network key
-```
-
-#### Stack related commands
-- Starting local stack (node + pruntime + pherry)
-```shell
-yarn devphase stack run [--save-log]
---save-log                  # Saves logs to file
-```
-
-- Setup local stack (register gatekeeper, create cluster, deploy system contract etc.)
-```shell
-yarn devphase stack setup
--m, --setupMode=<option>    # Stack setup mode <options: 0 - Minimal | 1 - WithDrivers | 2 - WithLogger>
--n, --network               # Switch network (local - by default)
-```
-
-#### Accounts management
-- Prints list of managed accounts (from `./accounts.json`)
-```shell
-yarn devphase account list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml] [--csv | --no-truncate] [--no-header]
-```
-- Creates new managed account
-```shell
-yarn devphase account create -a <value> [-p <value>] [-n]
--a, --alias=<value>         # (required) Account alias
--n, --no-passphrase         # Force no passphrase (prompted if not specified)
--p, --passphrase=<value>    # Passphrase used to protect keyring
+Creates new managed account
 
 ```
+USAGE
+  $ devphase account create -a <value> [-p <value>] [-n]
 
-#### Contracts management
-- Prints list of managed contracts (from `./contracts.json`)
-```shell
-yarn devphase contract list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml] [--csv | --no-truncate] [--no-header]
+FLAGS
+  -a, --alias=<value>       (required) Account alias
+  -n, --no-passphrase       Force no passphrase (prompted if not specified)
+  -p, --passphrase=<value>  Passphrase used to protect keyring
 ```
-- Creates new contract project from template
-```shell
-yarn devphase contract create -n <value> [-t flipper]
--n, --name=<value>          # (required) Contract name
--t, --template=<option>     # [default: flipper] Template name <options: flipper>
+
+## `devphase account list`
+
+Lists managed accounts
+
 ```
-- Compiles contract using system `cargo` binary
-```shell
-yarn devphase contract compile [-c <value>] [-w] [-r]
--c, --contract=<value>      # Contract name
--r, --release               # Compile in release mode
--w, --watch                 # Watch changes
+USAGE
+  $ devphase account list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml | 
+    | [--csv | --no-truncate]] [--no-header | ]
+
+FLAGS
+  -x, --extended     show extra columns
+  --columns=<value>  only show provided columns (comma-separated)
+  --csv              output is csv format [alias: --output=csv]
+  --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-header        hide table header from output
+  --no-truncate      do not truncate output to fit screen
+  --output=<option>  output in a more machine friendly format
+                     <options: csv|json|yaml>
+  --sort=<value>     property to sort by (prepend '-' for descending)
 ```
-- Deployes contract to network
-```shell
-yarn devphase contract deploy [ARGS] -c <value> -o <value> [-t InkCode|SidevmCode] [-n <value>] [-l <value>] [-a <value>]
-ARGS                        # Constructor arguments
--a, --account=<value>       # [default: alice] Account used to deploy (managed account key)
--c, --contract=<value>      # (required) Contract name
--l, --cluster=<value>       # Target cluster Id
--n, --network=<value>       # [default: local] Target network to deploy (local default)
--o, --constructor=<value>   # (required) Contract constructor to call (name)
--t, --type=<option>         # [default: InkCode] <options: InkCode|SidevmCode>
+
+## `devphase check`
+
+Check project
+
 ```
-- Executes contract call
-```shell
-yarn devphase contract call [ARGS] -c <value> -i <value> -m <value> [-t InkCode|SidevmCode] [-a query|tx] [-n <value>] [-l <value>] [-a <value>]
-ARGS                        # Call arguments
--a, --accessor=<option>     # [default: query] Method type: transaction or query <options: query|tx>
--a, --account=<value>       # [default: alice] Account used to call (managed account key)
--c, --contract=<value>      # (required) Contract name
--i, --id=<value>            # (required) Contract ID
--l, --cluster=<value>       # Target cluster Id
--m, --method=<value>        # (required) Contract method to call (name)
--n, --network=<value>       # [default: local] Target network to deploy (local default)
--t, --type=<option>         # [default: InkCode] <options: InkCode|SidevmCode>
+USAGE
+  $ devphase check [--json] [-s | -v]
+
+FLAGS
+  -s, --silent   No output
+  -v, --verbose  Verbose output
+  --json         Output in JSON format
 ```
-- Contracts TS bindings creation
-```shell
-yarn devphase contract typegen -c <value>
--c, --contract=<value>      # (required) Contract name
+
+_See code: [dist/commands/check.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/check.ts)_
+
+## `devphase contract call [ARGS]`
+
+Call contract
+
 ```
-- Testing with mocha
-```shell
-yarn devphase contract test [-s <value>] [-n <value>]
--m, --setupMode=<option>    # Stack setup mode <options: 0 - Minimal | 1 - WithDrivers | 2 - WithLogger>
--n, --network=<value>       # [default: local] Network key
--s, --suite=<value>         # Test suite name (directory)
+USAGE
+  $ devphase contract call [ARGS] -c <value> -i <value> -m <value> [-t InkCode|SidevmCode] [-a query|tx] [-n
+    <value>] [-l <value>] [-a <value>]
+
+ARGUMENTS
+  ARGS  Call arguments
+
+FLAGS
+  -a, --accessor=<option>  [default: query] Method type: transaction or query
+                           <options: query|tx>
+  -a, --account=<value>    [default: alice] Account used to call (managed account key)
+  -c, --contract=<value>   (required) Contract name
+  -i, --id=<value>         (required) Contract ID
+  -l, --cluster=<value>    Target cluster Id
+  -m, --method=<value>     (required) Contract method to call (name)
+  -n, --network=<value>    [default: local] Target network to deploy (local default)
+  -t, --type=<option>      [default: InkCode]
+                           <options: InkCode|SidevmCode>
 ```
+
+## `devphase contract compile`
+
+Compile contract
+
+```
+USAGE
+  $ devphase contract compile [-c <value>] [-w] [-r]
+
+FLAGS
+  -c, --contract=<value>  Contract name
+  -r, --release           Compile in release mode
+  -w, --watch             Watch changes
+```
+
+## `devphase contract create`
+
+Creates new contract from template
+
+```
+USAGE
+  $ devphase contract create -n <value> [-t flipper]
+
+FLAGS
+  -n, --name=<value>       (required) Contract name
+  -t, --template=<option>  [default: flipper] Template name
+                           <options: flipper>
+```
+
+## `devphase contract deploy [ARGS]`
+
+Deploy contract
+
+```
+USAGE
+  $ devphase contract deploy [ARGS] -c <value> -o <value> [-t InkCode|SidevmCode] [-n <value>] [-l <value>] [-a
+    <value>]
+
+ARGUMENTS
+  ARGS  Constructor arguments
+
+FLAGS
+  -a, --account=<value>      [default: alice] Account used to deploy (managed account key)
+  -c, --contract=<value>     (required) Contract name
+  -l, --cluster=<value>      Target cluster Id
+  -n, --network=<value>      [default: local] Target network to deploy (local default)
+  -o, --constructor=<value>  (required) Contract constructor to call (name)
+  -t, --type=<option>        [default: InkCode]
+                             <options: InkCode|SidevmCode>
+```
+
+## `devphase contract list`
+
+Lists managed contracts
+
+```
+USAGE
+  $ devphase contract list [--columns <value> | -x] [--sort <value>] [--filter <value>] [--output csv|json|yaml | 
+    | [--csv | --no-truncate]] [--no-header | ]
+
+FLAGS
+  -x, --extended     show extra columns
+  --columns=<value>  only show provided columns (comma-separated)
+  --csv              output is csv format [alias: --output=csv]
+  --filter=<value>   filter property by partial string matching, ex: name=foo
+  --no-header        hide table header from output
+  --no-truncate      do not truncate output to fit screen
+  --output=<option>  output in a more machine friendly format
+                     <options: csv|json|yaml>
+  --sort=<value>     property to sort by (prepend '-' for descending)
+```
+
+## `devphase contract test`
+
+Run tests for specified contract(s)
+
+```
+USAGE
+  $ devphase contract test [-t <value>] [-n <value>] [-e] [-m None|Minimal|WithDrivers|WithLogger|0|1|2|3]
+
+FLAGS
+  -e, --externalStack            Don't spawn local stack (use external)
+  -m, --stackSetupMode=<option>  [default: 1] Stack setup mode
+                                 <options: None|Minimal|WithDrivers|WithLogger|0|1|2|3>
+  -n, --network=<value>          [default: local] Network key
+  -t, --suite=<value>            Test suite name (directory in tests)
+```
+
+## `devphase contract typegen`
+
+Generate type bindings for compiled contract
+
+```
+USAGE
+  $ devphase contract typegen -c <value>
+
+FLAGS
+  -c, --contract=<value>  (required) Contract name
+```
+
+## `devphase help [COMMANDS]`
+
+Display help for devphase.
+
+```
+USAGE
+  $ devphase help [COMMANDS] [-n]
+
+ARGUMENTS
+  COMMANDS  Command to show help for.
+
+FLAGS
+  -n, --nested-commands  Include all nested commands in the output.
+
+DESCRIPTION
+  Display help for devphase.
+```
+
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.5/src/commands/help.ts)_
+
+## `devphase init`
+
+Initiate devPHAse project
+
+```
+USAGE
+  $ devphase init [--json] [-s | -v]
+
+FLAGS
+  -s, --silent   No output
+  -v, --verbose  Verbose output
+  --json         Output in JSON format
+```
+
+_See code: [dist/commands/init.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/init.ts)_
+
+## `devphase script [ARGS]`
+
+Run script
+
+```
+USAGE
+  $ devphase script [ARGS] [-n <value>]
+
+ARGUMENTS
+  ARGS  Script(s) to execute
+
+FLAGS
+  -n, --network=<value>  [default: local] Network key
+```
+
+_See code: [dist/commands/script.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/script.ts)_
+
+## `devphase stack run`
+
+Starts local development stack
+
+```
+USAGE
+  $ devphase stack run [--save-logs]
+
+FLAGS
+  --save-logs  Save logs to file
+```
+
+## `devphase stack setup`
+
+Setup external stack
+
+```
+USAGE
+  $ devphase stack setup [-n <value>] [-m None|Minimal|WithDrivers|WithLogger|0|1|2|3]
+
+FLAGS
+  -m, --setupMode=<option>  [default: 3] Stack setup mode
+                            <options: None|Minimal|WithDrivers|WithLogger|0|1|2|3>
+  -n, --network=<value>     [default: local] Network key
+```
+<!-- commandsstop -->
 
 ## Configuration
 Here is default configuration. All values are optional (merged recuresivly)
@@ -164,8 +337,12 @@ const config : ProjectConfigOptions = {
      * }
      */
     stack: {
-        blockTime: 6000, // default block time for direct stack running (may be overriden in testing mode)
         version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
+        blockTime: 6000, // default block time for direct stack running (may be overriden in testing mode)
+        setupOptions: {
+            mode: StackSetupMode.None,
+            workerUrl: 'http://localhost:{{stack.pruntime.port}}'
+        },
         node: {
             port: 9944, // ws port
             binary: '{{directories.stacks}}/{{stack.version}}/phala-node',
@@ -215,9 +392,7 @@ const config : ProjectConfigOptions = {
      */
     testing: {
         mocha: {}, // custom mocha configuration
-        spawnStack: true, // spawn runtime stack? or assume there is running one
-        stackLogOutput: false, // if specifed pipes output of all stack component to file (by default it is ignored)
-        blockTime: 100, // overrides block time specified in node (and pherry) component
+        blockTime: 100, // block time override for spawning local testnet
         envSetup: { // environment setup
             setup: {
                 custom: undefined, // custom setup procedure callback; (devPhase) => Promise<void>
@@ -228,6 +403,7 @@ const config : ProjectConfigOptions = {
                 timeout: 10 * 1000,
             }
         },
+        stackLogOutput: false, // display stack output in console
     },
     /**
      * Networks configuration

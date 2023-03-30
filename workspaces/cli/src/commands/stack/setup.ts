@@ -31,7 +31,7 @@ export class StackSetupCommand
         
         const devPhase = await DevPhase.create(
             this.runtimeContext,
-            this.flags.network
+            { network: this.flags.network }
         );
         
         const stackSetupService = new StackSetupService(devPhase);

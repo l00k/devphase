@@ -20,11 +20,17 @@ export abstract class BaseCommand<T extends typeof Command>
         }),
         silent: Flags.boolean({
             char: 's',
-            summary: 'No output'
+            summary: 'No output',
+            exclusive: [
+                'verbose'
+            ],
         }),
         verbose: Flags.boolean({
             char: 'v',
-            summary: 'Verbose output'
+            summary: 'Verbose output',
+            exclusive: [
+                'silent'
+            ],
         }),
     };
     

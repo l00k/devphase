@@ -1,5 +1,6 @@
 import { StackSetupMode } from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
+import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
 import glob from 'glob';
 import type { MochaOptions } from 'mocha';
@@ -8,8 +9,9 @@ import path from 'path';
 
 export type RunTestsOptions = {
     suite? : string,
-    network? : string,
-    setupMode? : StackSetupMode,
+    network : string,
+    spawnStack : boolean,
+    stackSetupMode : StackSetupMode,
 }
 
 
@@ -25,17 +27,32 @@ export class Tester
     {}
     
     public async runTests (
-        options : RunTestsOptions = {}
+        options : Partial<RunTestsOptions> = {}
     ) : Promise<void>
     {
         const { default: Mocha } = await import('mocha');
         
-        // override setup mode
-        this._runtimeContext.config.stack.setupOptions.mode = Number(options.setupMode);
+        const testingConfig = this._runtimeContext.config.testing;
+        
+        // override testing options
+        const networkConfig = this._runtimeContext.config.networks[options.network];
+        if (!networkConfig) {
+            throw new Exception(
+                `Network <${options.network}> is not configured`,
+                1680184917877
+            );
+        }
+        
+        this._runtimeContext.testingConfig.network = options.network;
+        if (networkConfig.blockTime) {
+            this._runtimeContext.testingConfig.blockTime = networkConfig.blockTime;
+        }
+        this._runtimeContext.testingConfig.spawnStack = options.spawnStack;
+        this._runtimeContext.testingConfig.stackSetupMode = Number(options.stackSetupMode);
         
         const mochaConfig : MochaOptions = {
-            timeout: 10000,
-            ...this._runtimeContext.config.testing.mocha
+            timeout: this._runtimeContext.testingConfig.blockTime * 200,
+            ...testingConfig.mocha
         };
         const mocha = new Mocha(mochaConfig);
         

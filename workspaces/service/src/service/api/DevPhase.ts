@@ -1,5 +1,5 @@
 import type { Accounts, AccountsConfig, NetworkConfig } from '@/def';
-import { ContractType, SystemContract, SystemContractFileMap } from '@/def';
+import { ContractType, StackSetupOptions, SystemContract, SystemContractFileMap } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { StackSetupService } from '@/service/api/StackSetupService';
@@ -35,6 +35,7 @@ export class DevPhase
     public readonly api : ApiPromise;
     public readonly network : string;
     public readonly networkConfig : NetworkConfig;
+    public readonly blockTime : number;
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
@@ -59,16 +60,16 @@ export class DevPhase
     
     public static async create (
         runtimeContext : RuntimeContext,
-        network : string
+        options : Partial<DevPhase>
     ) : Promise<DevPhase>
     {
         // create instance
         const instance = new DevPhase();
         
-        const networkConfig = runtimeContext.config.networks[network];
+        const networkConfig = runtimeContext.config.networks[options.network];
         if (!networkConfig) {
             throw new Exception(
-                'Undefined network',
+                `Network <${options.network}> is not configured`,
                 1673537590278
             );
         }
@@ -79,8 +80,13 @@ export class DevPhase
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
+        const blockTime = networkConfig.blockTime
+            ?? runtimeContext.config.stack.blockTime
+            ;
+        
         Object.assign(instance, {
-            network,
+            blockTime,
+            ...options,
             networkConfig,
             runtimeContext,
             api,
@@ -133,7 +139,7 @@ export class DevPhase
         });
     }
     
-    public async stackSetup () : Promise<void>
+    public async stackSetup (options : Partial<StackSetupOptions> = {}) : Promise<void>
     {
         if (!this.runtimeContext) {
             throw new Exception(
@@ -144,9 +150,10 @@ export class DevPhase
         
         const stackSetupService = new StackSetupService(this);
         
-        const result = await stackSetupService.setupStack(
-            this.runtimeContext.config.stack.setupOptions
-        );
+        const result = await stackSetupService.setupStack({
+            ...this.runtimeContext.config.stack.setupOptions,
+            ...options
+        });
         
         Object.assign(this, {
             mainClusterId: result.clusterId

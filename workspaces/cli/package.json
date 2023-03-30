@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.0.12",
+    "version": "0.1.1",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -27,7 +27,7 @@
         "@oclif/plugin-help": "^5.2.2",
         "@oclif/plugin-plugins": "^2.2.4",
         "@oclif/plugin-not-found": "^2.3.22",
-        "@devphase/service": "^0.0.12",
+        "@devphase/service": "^0.1.1",
         "chalk": "^4.1.2",
         "listr": "^0.14.3",
         "lodash": "^4.17.21"
@@ -47,6 +47,7 @@
         "chai-as-promised": "^7.1.1",
         "eslint": "^8.27.0",
         "mocha": "^10.0.0",
+        "oclif": "3.7.0",
         "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
         "ttypescript": "^1.5.15",

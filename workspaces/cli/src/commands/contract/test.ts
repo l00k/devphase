@@ -19,26 +19,33 @@ export class ContractTestCommand
             char: 'n',
             default: RuntimeContext.NETWORK_LOCAL,
         }),
-        setupMode: Flags.string({
+        externalStack: Flags.boolean({
+            summary: 'Don\'t spawn local stack (use external)',
+            char: 'e',
+            default: false,
+        }),
+        stackSetupMode: Flags.string({
             summary: 'Stack setup mode',
             char: 'm',
-            default: StackSetupMode.Minimal.toString(),
             options: Object.values(StackSetupMode).map(m => m.toString()),
+            default: StackSetupMode.Minimal.toString(),
         })
     };
     
     
     public async run ()
     {
-        await this.runtimeContext.initContext(
-            RunMode.Testing,
-            this.flags.network
-        );
+        await this.runtimeContext.initContext(RunMode.Testing);
         await this.runtimeContext.requestProjectDirectory();
         await this.runtimeContext.requestStackBinaries();
         
         const tester = new Tester(this.runtimeContext);
-        return tester.runTests(<any>this.flags);
+        return tester.runTests({
+            suite: this.flags.suite,
+            network: this.flags.network,
+            spawnStack: !this.flags.externalStack,
+            stackSetupMode: <any>this.flags.stackSetupMode,
+        });
     }
     
 }

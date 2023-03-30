@@ -49,6 +49,7 @@ export class ContractFactory
     public readonly clusterId : string;
     
     protected _devPhase : DevPhase;
+    protected _blockTime : number;
     protected _systemContract : Contract;
     protected _eventQueue : EventQueue = new EventQueue();
     
@@ -85,6 +86,7 @@ export class ContractFactory
         const instance = new ContractFactory();
         
         instance._devPhase = devPhase;
+        instance._blockTime = devPhase.blockTime;
         
         if (!options.clusterId) {
             options.clusterId = devPhase.mainClusterId;
@@ -235,7 +237,7 @@ export class ContractFactory
                         .phalaRegistry.contractKeys(contractId);
                     return !key.isEmpty;
                 },
-                20_000
+                (50 * this._blockTime)
             );
         }
         catch (e) {

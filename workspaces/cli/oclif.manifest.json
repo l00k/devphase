@@ -1,0 +1,658 @@
+{
+  "version": "0.0.12",
+  "commands": {
+    "check": {
+      "id": "check",
+      "summary": "Check project",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "json": {
+          "name": "json",
+          "type": "boolean",
+          "summary": "Output in JSON format",
+          "allowNo": false
+        },
+        "silent": {
+          "name": "silent",
+          "type": "boolean",
+          "char": "s",
+          "summary": "No output",
+          "allowNo": false,
+          "exclusive": [
+            "verbose"
+          ]
+        },
+        "verbose": {
+          "name": "verbose",
+          "type": "boolean",
+          "char": "v",
+          "summary": "Verbose output",
+          "allowNo": false,
+          "exclusive": [
+            "silent"
+          ]
+        }
+      },
+      "args": {}
+    },
+    "init": {
+      "id": "init",
+      "summary": "Initiate devPHAse project",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "json": {
+          "name": "json",
+          "type": "boolean",
+          "summary": "Output in JSON format",
+          "allowNo": false
+        },
+        "silent": {
+          "name": "silent",
+          "type": "boolean",
+          "char": "s",
+          "summary": "No output",
+          "allowNo": false,
+          "exclusive": [
+            "verbose"
+          ]
+        },
+        "verbose": {
+          "name": "verbose",
+          "type": "boolean",
+          "char": "v",
+          "summary": "Verbose output",
+          "allowNo": false,
+          "exclusive": [
+            "silent"
+          ]
+        }
+      },
+      "args": {}
+    },
+    "script": {
+      "id": "script",
+      "summary": "Run script",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "network": {
+          "name": "network",
+          "type": "option",
+          "char": "n",
+          "summary": "Network key",
+          "multiple": false,
+          "default": "local"
+        }
+      },
+      "args": {
+        "args": {
+          "name": "args",
+          "description": "Script(s) to execute"
+        }
+      }
+    },
+    "account:create": {
+      "id": "account:create",
+      "summary": "Creates new managed account",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "alias": {
+          "name": "alias",
+          "type": "option",
+          "char": "a",
+          "summary": "Account alias",
+          "required": true,
+          "multiple": false
+        },
+        "passphrase": {
+          "name": "passphrase",
+          "type": "option",
+          "char": "p",
+          "summary": "Passphrase used to protect keyring",
+          "multiple": false
+        },
+        "no-passphrase": {
+          "name": "no-passphrase",
+          "type": "boolean",
+          "char": "n",
+          "summary": "Force no passphrase (prompted if not specified)",
+          "allowNo": false
+        }
+      },
+      "args": {}
+    },
+    "account:list": {
+      "id": "account:list",
+      "summary": "Lists managed accounts",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "columns": {
+          "name": "columns",
+          "type": "option",
+          "description": "only show provided columns (comma-separated)",
+          "multiple": false,
+          "exclusive": [
+            "extended"
+          ]
+        },
+        "sort": {
+          "name": "sort",
+          "type": "option",
+          "description": "property to sort by (prepend '-' for descending)",
+          "multiple": false
+        },
+        "filter": {
+          "name": "filter",
+          "type": "option",
+          "description": "filter property by partial string matching, ex: name=foo",
+          "multiple": false
+        },
+        "csv": {
+          "name": "csv",
+          "type": "boolean",
+          "description": "output is csv format [alias: --output=csv]",
+          "allowNo": false,
+          "exclusive": [
+            "no-truncate"
+          ]
+        },
+        "output": {
+          "name": "output",
+          "type": "option",
+          "description": "output in a more machine friendly format",
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ]
+        },
+        "extended": {
+          "name": "extended",
+          "type": "boolean",
+          "char": "x",
+          "description": "show extra columns",
+          "allowNo": false,
+          "exclusive": [
+            "columns"
+          ]
+        },
+        "no-truncate": {
+          "name": "no-truncate",
+          "type": "boolean",
+          "description": "do not truncate output to fit screen",
+          "allowNo": false,
+          "exclusive": [
+            "csv"
+          ]
+        },
+        "no-header": {
+          "name": "no-header",
+          "type": "boolean",
+          "description": "hide table header from output",
+          "allowNo": false,
+          "exclusive": [
+            "csv"
+          ]
+        }
+      },
+      "args": {}
+    },
+    "contract:call": {
+      "id": "contract:call",
+      "summary": "Call contract",
+      "strict": false,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "contract": {
+          "name": "contract",
+          "type": "option",
+          "char": "c",
+          "summary": "Contract name",
+          "required": true,
+          "multiple": false
+        },
+        "type": {
+          "name": "type",
+          "type": "option",
+          "char": "t",
+          "summary": "",
+          "multiple": false,
+          "options": [
+            "InkCode",
+            "SidevmCode"
+          ],
+          "default": "InkCode"
+        },
+        "id": {
+          "name": "id",
+          "type": "option",
+          "char": "i",
+          "summary": "Contract ID",
+          "required": true,
+          "multiple": false
+        },
+        "accessor": {
+          "name": "accessor",
+          "type": "option",
+          "char": "a",
+          "summary": "Method type: transaction or query",
+          "multiple": false,
+          "options": [
+            "query",
+            "tx"
+          ],
+          "default": "query"
+        },
+        "method": {
+          "name": "method",
+          "type": "option",
+          "char": "m",
+          "summary": "Contract method to call (name)",
+          "required": true,
+          "multiple": false
+        },
+        "network": {
+          "name": "network",
+          "type": "option",
+          "char": "n",
+          "summary": "Target network to deploy (local default)",
+          "multiple": false,
+          "default": "local"
+        },
+        "cluster": {
+          "name": "cluster",
+          "type": "option",
+          "char": "l",
+          "summary": "Target cluster Id",
+          "multiple": false
+        },
+        "account": {
+          "name": "account",
+          "type": "option",
+          "char": "a",
+          "summary": "Account used to call (managed account key)",
+          "multiple": false,
+          "default": "alice"
+        }
+      },
+      "args": {
+        "args": {
+          "name": "args",
+          "description": "Call arguments"
+        }
+      }
+    },
+    "contract:compile": {
+      "id": "contract:compile",
+      "summary": "Compile contract",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "contract": {
+          "name": "contract",
+          "type": "option",
+          "char": "c",
+          "summary": "Contract name",
+          "multiple": false
+        },
+        "watch": {
+          "name": "watch",
+          "type": "boolean",
+          "char": "w",
+          "summary": "Watch changes",
+          "allowNo": false
+        },
+        "release": {
+          "name": "release",
+          "type": "boolean",
+          "char": "r",
+          "summary": "Compile in release mode",
+          "allowNo": false
+        }
+      },
+      "args": {}
+    },
+    "contract:create": {
+      "id": "contract:create",
+      "summary": "Creates new contract from template",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "name": {
+          "name": "name",
+          "type": "option",
+          "char": "n",
+          "summary": "Contract name",
+          "required": true,
+          "multiple": false
+        },
+        "template": {
+          "name": "template",
+          "type": "option",
+          "char": "t",
+          "summary": "Template name",
+          "multiple": false,
+          "options": [
+            "flipper"
+          ],
+          "default": "flipper"
+        }
+      },
+      "args": {}
+    },
+    "contract:deploy": {
+      "id": "contract:deploy",
+      "summary": "Deploy contract",
+      "strict": false,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "contract": {
+          "name": "contract",
+          "type": "option",
+          "char": "c",
+          "summary": "Contract name",
+          "required": true,
+          "multiple": false
+        },
+        "type": {
+          "name": "type",
+          "type": "option",
+          "char": "t",
+          "summary": "",
+          "multiple": false,
+          "options": [
+            "InkCode",
+            "SidevmCode"
+          ],
+          "default": "InkCode"
+        },
+        "constructor": {
+          "name": "constructor",
+          "type": "option",
+          "char": "o",
+          "summary": "Contract constructor to call (name)",
+          "required": true,
+          "multiple": false
+        },
+        "network": {
+          "name": "network",
+          "type": "option",
+          "char": "n",
+          "summary": "Target network to deploy (local default)",
+          "multiple": false,
+          "default": "local"
+        },
+        "cluster": {
+          "name": "cluster",
+          "type": "option",
+          "char": "l",
+          "summary": "Target cluster Id",
+          "multiple": false
+        },
+        "account": {
+          "name": "account",
+          "type": "option",
+          "char": "a",
+          "summary": "Account used to deploy (managed account key)",
+          "multiple": false,
+          "default": "alice"
+        }
+      },
+      "args": {
+        "args": {
+          "name": "args",
+          "description": "Constructor arguments"
+        }
+      }
+    },
+    "contract:list": {
+      "id": "contract:list",
+      "summary": "Lists managed contracts",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "columns": {
+          "name": "columns",
+          "type": "option",
+          "description": "only show provided columns (comma-separated)",
+          "multiple": false,
+          "exclusive": [
+            "extended"
+          ]
+        },
+        "sort": {
+          "name": "sort",
+          "type": "option",
+          "description": "property to sort by (prepend '-' for descending)",
+          "multiple": false
+        },
+        "filter": {
+          "name": "filter",
+          "type": "option",
+          "description": "filter property by partial string matching, ex: name=foo",
+          "multiple": false
+        },
+        "csv": {
+          "name": "csv",
+          "type": "boolean",
+          "description": "output is csv format [alias: --output=csv]",
+          "allowNo": false,
+          "exclusive": [
+            "no-truncate"
+          ]
+        },
+        "output": {
+          "name": "output",
+          "type": "option",
+          "description": "output in a more machine friendly format",
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ]
+        },
+        "extended": {
+          "name": "extended",
+          "type": "boolean",
+          "char": "x",
+          "description": "show extra columns",
+          "allowNo": false,
+          "exclusive": [
+            "columns"
+          ]
+        },
+        "no-truncate": {
+          "name": "no-truncate",
+          "type": "boolean",
+          "description": "do not truncate output to fit screen",
+          "allowNo": false,
+          "exclusive": [
+            "csv"
+          ]
+        },
+        "no-header": {
+          "name": "no-header",
+          "type": "boolean",
+          "description": "hide table header from output",
+          "allowNo": false,
+          "exclusive": [
+            "csv"
+          ]
+        }
+      },
+      "args": {}
+    },
+    "contract:test": {
+      "id": "contract:test",
+      "summary": "Run tests for specified contract(s)",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "suite": {
+          "name": "suite",
+          "type": "option",
+          "char": "t",
+          "summary": "Test suite name (directory in tests)",
+          "multiple": false
+        },
+        "network": {
+          "name": "network",
+          "type": "option",
+          "char": "n",
+          "summary": "Network key",
+          "multiple": false,
+          "default": "local"
+        },
+        "externalStack": {
+          "name": "externalStack",
+          "type": "boolean",
+          "char": "e",
+          "summary": "Don't spawn local stack (use external)",
+          "allowNo": false
+        },
+        "stackSetupMode": {
+          "name": "stackSetupMode",
+          "type": "option",
+          "char": "m",
+          "summary": "Stack setup mode",
+          "multiple": false,
+          "options": [
+            "None",
+            "Minimal",
+            "WithDrivers",
+            "WithLogger",
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "default": "1"
+        }
+      },
+      "args": {}
+    },
+    "contract:typegen": {
+      "id": "contract:typegen",
+      "summary": "Generate type bindings for compiled contract",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "contract": {
+          "name": "contract",
+          "type": "option",
+          "char": "c",
+          "summary": "Contract name",
+          "required": true,
+          "multiple": false
+        }
+      },
+      "args": {}
+    },
+    "stack:run": {
+      "id": "stack:run",
+      "summary": "Starts local development stack",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "save-logs": {
+          "name": "save-logs",
+          "type": "boolean",
+          "summary": "Save logs to file",
+          "allowNo": false
+        }
+      },
+      "args": {}
+    },
+    "stack:setup": {
+      "id": "stack:setup",
+      "summary": "Setup external stack",
+      "strict": true,
+      "pluginName": "@devphase/cli",
+      "pluginAlias": "@devphase/cli",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "network": {
+          "name": "network",
+          "type": "option",
+          "char": "n",
+          "summary": "Network key",
+          "multiple": false,
+          "default": "local"
+        },
+        "setupMode": {
+          "name": "setupMode",
+          "type": "option",
+          "char": "m",
+          "summary": "Stack setup mode",
+          "multiple": false,
+          "options": [
+            "None",
+            "Minimal",
+            "WithDrivers",
+            "WithLogger",
+            "0",
+            "1",
+            "2",
+            "3"
+          ],
+          "default": "3"
+        }
+      },
+      "args": {}
+    }
+  }
+}

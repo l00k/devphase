@@ -34,7 +34,7 @@ export class ScriptCommand
         
         const devPhase = await DevPhase.create(
             this.runtimeContext,
-            this.flags.network
+            { network: this.flags.network }
         );
         
         

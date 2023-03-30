@@ -1,4 +1,12 @@
-import { ProjectConfig, ProjectConfigOptions, RunMode, RuntimePaths, VerbosityLevel } from '@/def';
+import {
+    ProjectConfig,
+    ProjectConfigOptions,
+    RunMode,
+    RuntimePaths,
+    StackSetupMode,
+    TestingConfig,
+    VerbosityLevel
+} from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
 import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
@@ -49,6 +57,8 @@ export class RuntimeContext
         typings: null,
     };
     
+    public testingConfig : TestingConfig;
+    
     
     public static async getSingleton () : Promise<RuntimeContext>
     {
@@ -89,10 +99,7 @@ export class RuntimeContext
     }
     
     
-    public async initContext (
-        runMode : RunMode,
-        network : string = RuntimeContext.NETWORK_LOCAL
-    ) : Promise<void>
+    public async initContext (runMode : RunMode) : Promise<void>
     {
         const configFilePath = await findUp(RuntimeContext.CONFIG_FILES);
         
@@ -155,10 +162,13 @@ export class RuntimeContext
             this.config.stack.version
         );
         
-        // network setup
-        if (runMode === RunMode.Testing) {
-            this.config.networks.local.blockTime = this.config.testing.blockTime;
-        }
+        // testing config
+        this.testingConfig = {
+            spawnStack: true,
+            network: RuntimeContext.NETWORK_LOCAL,
+            blockTime: this.config.testing.blockTime,
+            stackSetupMode: StackSetupMode.Minimal,
+        };
     }
     
     public async initDevPhase (
@@ -172,7 +182,7 @@ export class RuntimeContext
             );
         }
         
-        this._devPhases[network] = await DevPhase.create(this, network);
+        this._devPhases[network] = await DevPhase.create(this, { network });
         
         return this._devPhases[network];
     }
@@ -233,11 +243,11 @@ export class RuntimeContext
                 typings: 'typings'
             },
             stack: {
-                blockTime: 6000,
                 version: 'latest',
+                blockTime: 6000, // default block time for running local stack
                 setupOptions: {
-                    workerUrl: 'http://localhost:{{stack.pruntime.port}}',
-                    clusterId: undefined,
+                    mode: StackSetupMode.None,
+                    workerUrl: 'http://localhost:{{stack.pruntime.port}}'
                 },
                 node: {
                     port: 9944,
@@ -252,7 +262,7 @@ export class RuntimeContext
                         '--ws-port': '{{stack.node.port}}',
                         '--base-path': '.',
                     },
-                    timeout: 10000,
+                    timeout: 20000,
                 },
                 pruntime: {
                     port: 8000,
@@ -265,7 +275,7 @@ export class RuntimeContext
                         '--cores': 0,
                         '--port': '{{stack.pruntime.port}}'
                     },
-                    timeout: 5000,
+                    timeout: 10000,
                 },
                 pherry: {
                     gkMnemonic: '//Alice',
@@ -282,15 +292,13 @@ export class RuntimeContext
                         '--dev-wait-block-ms': '{{stack.blockTime}}',
                         '--attestation-provider': 'none',
                     },
-                    timeout: 5000,
+                    timeout: 10000,
                 }
             },
             testing: {
                 mocha: {}, // custom mocha configuration
-                spawnStack: true, // spawn runtime stack
-                stackLogOutput: false, // display stack output in console
-                blockTime: 100, // overrides block time specified in node (and pherry) component
-                envSetup: {
+                blockTime: 100, // block time override for spawning local testnet
+                stackSetupConfig: {
                     setup: {
                         custom: undefined,
                         timeout: 2 * 60 * 1000,
@@ -300,9 +308,10 @@ export class RuntimeContext
                         timeout: 10 * 1000,
                     }
                 },
+                stackLogOutput: false, // display stack output in console
             },
             networks: {
-                local: {
+                [RuntimeContext.NETWORK_LOCAL]: {
                     nodeUrl: 'ws://localhost:{{stack.node.port}}',
                     nodeApiOptions: {
                         types: {
@@ -314,7 +323,6 @@ export class RuntimeContext
                         }
                     },
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
-                    blockTime: 6000,
                 }
             },
             accountsConfig: {
@@ -332,10 +340,6 @@ export class RuntimeContext
         
         // replace stack version
         config.stack.version = await this._stackBinaryDownloader.uniformStackVersion(config.stack.version);
-        
-        if (runMode === RunMode.Testing) {
-            config.stack.blockTime = config.testing.blockTime;
-        }
         
         // process placeholders
         replacePlaceholders(config, config);
