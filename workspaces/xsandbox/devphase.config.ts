@@ -3,7 +3,6 @@ import { DevPhase } from '@devphase/service';
 
 const config : ProjectConfigOptions = {
     stack: {
-        version: 'nightly-2023-03-25',
         blockTime: 1000,
         pruntime: {
             envs: {
