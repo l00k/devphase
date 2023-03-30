@@ -18,11 +18,13 @@ export abstract class BaseCommand<T extends typeof Command>
         json: Flags.boolean({
             summary: 'Output in JSON format'
         }),
-        verbosity: Flags.integer({
-            summary: 'Verbosity level',
+        silent: Flags.boolean({
+            char: 's',
+            summary: 'No output'
+        }),
+        verbose: Flags.boolean({
             char: 'v',
-            min: 0,
-            max: 2,
+            summary: 'Verbose output'
         }),
     };
     
@@ -68,22 +70,24 @@ export abstract class BaseCommand<T extends typeof Command>
             .map(arg => arg.input)
         ;
         
-        if (this.flags.verbosity === undefined) {
-            (<any>this.flags).verbosity = this.flags.json
-                ? VerbosityLevel.Silent
-                : VerbosityLevel.Default
-            ;
+        let verbosity = VerbosityLevel.Default;
+        if (this.flags.verbose) {
+            verbosity = VerbosityLevel.Verbose;
         }
-        Logger.LOGGER_LEVEL = this.flags.verbosity;
+        else if (this.flags.silent) {
+            verbosity = VerbosityLevel.Silent;
+        }
+        
+        Logger.LOGGER_LEVEL = verbosity;
         
         ux.config.outputLevel = 'debug';
-        if (this.flags.verbosity == VerbosityLevel.Silent) {
+        if (verbosity == VerbosityLevel.Silent) {
             ux.config.action.std = 'stderr';
             ux.config.outputLevel = 'fatal';
         }
         
         this.runtimeContext = await RuntimeContext.getSingleton();
-        this.runtimeContext.setVerbosityLevel(this.flags.verbosity);
+        this.runtimeContext.setVerbosityLevel(verbosity);
     }
     
     public async run () : Promise<void | Record<string, any>>

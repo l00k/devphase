@@ -11,8 +11,8 @@ export class ContractTestCommand
     
     public static flags = {
         suite: Flags.string({
-            summary: 'Test suite name (directory)',
-            char: 's',
+            summary: 'Test suite name (directory in tests)',
+            char: 't',
         }),
         network: Flags.string({
             summary: 'Network key',
