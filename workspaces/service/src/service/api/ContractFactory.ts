@@ -141,15 +141,16 @@ export class ContractFactory
                 );
             }
             
-            const { output: codeExists } = await this._systemContract.query['system::codeExists'](
+            const { output } = await this._systemContract.query['system::codeExists'](
                 cert,
                 {},
                 this.metadata.source.hash,
                 codeType
             );
-            if (codeExists?.Ok) {
+            
+            const codeExists = output.toJSON();
+            if (codeExists?.ok) {
                 // already uploaded
-                console.log('already uploaded');
                 return;
             }
         }

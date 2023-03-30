@@ -11,15 +11,6 @@ describe('Flipper', () => {
     let certificate : PhalaSdk.CertificateData;
     
     before(async function() {
-        factory = await this.devPhase.getFactory(
-            './contracts/flipper/target/ink/flipper.contract',
-            {
-                contractType: ContractType.InkCode,
-            }
-        );
-        
-        await factory.deploy();
-        
         signer = this.devPhase.accounts.bob;
         certificate = await PhalaSdk.signCertificate({
             api: this.api,
@@ -27,8 +18,17 @@ describe('Flipper', () => {
         });
     });
     
+    beforeEach(async function() {
+        factory = await this.devPhase.getFactory(
+            'flipper',
+            { contractType: ContractType.InkCode }
+        );
+        
+        await factory.deploy();
+    });
+    
     describe('default constructor', () => {
-        before(async function() {
+        beforeEach(async function() {
             contract = await factory.instantiate('default', []);
         });
         
@@ -39,7 +39,7 @@ describe('Flipper', () => {
     });
     
     describe('new constructor', () => {
-        before(async function() {
+        beforeEach(async function() {
             contract = await factory.instantiate('new', [ true ]);
         });
         
