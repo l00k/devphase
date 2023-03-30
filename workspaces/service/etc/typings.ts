@@ -5,7 +5,7 @@ import type { ApiBase } from '@polkadot/api/base';
 import type * as Submittable from '@polkadot/api/submittable/types';
 import type { DecorateMethod } from '@polkadot/api/types';
 import type { AccountId } from '@polkadot/types/interfaces';
-import type { Codec, AnyJson } from '@polkadot/types/types';
+import type { AnyJson, Codec } from '@polkadot/types/types';
 
 export * from '@polkadot/types-codec/types/interfaces';
 
@@ -16,11 +16,24 @@ export interface FixedArray<L extends number, T>
     length : L
 }
 
+type SnakeToCamelCase<Key extends string> = Key extends `${infer FirstPart}_${infer FirstLetter}${infer LastPart}`
+    ? `${Lowercase<FirstPart>}${Uppercase<FirstLetter>}${SnakeToCamelCase<LastPart>}`
+    : `${Lowercase<Key>}`;
+
+type SnakeToCamelCaseOpt<Key extends string> = Key extends `${infer FirstPart}_${infer FirstLetter}${infer LastPart}`
+    ? `${FirstPart}${Uppercase<FirstLetter>}${SnakeToCamelCase<LastPart>}`
+    : Key;
+
+type ToHumanConverter<T> = T extends Object
+    ? {
+        [P in keyof T as `${SnakeToCamelCaseOpt<string & P>}`]: ToHumanConverter<T[P]>
+    }
+    : T
+    ;
+
 type ToJsonConverter<T> = T extends Object
     ? {
-        [P in keyof T as `${Uncapitalize<string & P>}`]: T[P] extends Object
-            ? ToJsonConverter<T[P]>
-            : T[P]
+        [P in keyof T as `${SnakeToCamelCase<string & P>}`]: ToJsonConverter<T[P]>
     }
     : T
     ;
@@ -28,7 +41,7 @@ type ToJsonConverter<T> = T extends Object
 export interface IJson<T extends AnyJson>
     extends Codec
 {
-    toHuman (isExtended? : boolean) : T;
+    toHuman (isExtended? : boolean) : ToHumanConverter<T>;
     toJSON () : ToJsonConverter<T>;
     toPrimitive () : ToJsonConverter<T>;
 }

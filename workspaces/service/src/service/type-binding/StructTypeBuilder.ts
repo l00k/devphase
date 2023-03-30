@@ -179,6 +179,14 @@ export class StructTypeBuilder
         const { sequence: { type } } = typeDef.def;
         const { native, codec } = this.buildType(type);
         
+        // special case of Vec<Number>
+        if (native === 'number') {
+            return {
+                native: `${native}[] | string`,
+                codec: `DPT.IVec<${codec}>`,
+            }
+        }
+        
         return {
             native: `${native}[]`,
             codec: `DPT.IVec<${codec}>`,

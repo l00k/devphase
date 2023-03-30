@@ -233,14 +233,6 @@ export class StackManager
         const binaryName = path.basename(binaryPath);
         
         // spawn child process
-        if (this._context.verbosity == VerbosityLevel.Verbose) {
-            this._logger.log(`Starting ${componentName}`);
-            this._logger.log('Args:');
-            this._logger.logDir(componentOptions.args);
-            this._logger.log('Env:');
-            this._logger.logDir(spawnOptions.env);
-        }
-        
         const serializedArgs = serializeProcessArgs(componentOptions.args);
         const child = childProcess.spawn(
             binaryPath,
