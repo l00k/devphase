@@ -25,6 +25,7 @@ type WorkerInfo = {
 export type GetFactoryOptions = {
     clusterId? : string,
     contractType? : ContractType,
+    systemContract? : boolean,
 }
 
 
@@ -169,6 +170,7 @@ export class DevPhase
     {
         options = {
             clusterId: this.mainClusterId,
+            systemContract: false,
             ...options
         };
         
@@ -284,7 +286,7 @@ export class DevPhase
             this._systemContracts[clusterId] = new Promise(async(resolve, reject) => {
                 try {
                     const onChainClusterInfo : any = await this.api.query
-                        .phalaFatContracts.clusters(clusterId);
+                        .phalaPhatContracts.clusters(clusterId);
                     const systemContractId = onChainClusterInfo.unwrap().systemContract.toHex();
                     if (!systemContractId) {
                         throw new Exception(
@@ -303,6 +305,7 @@ export class DevPhase
                         {
                             clusterId,
                             contractType: ContractType.InkCode,
+                            systemContract: true,
                         }
                     );
                     

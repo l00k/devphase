@@ -16,10 +16,11 @@ import type { ContractInstantiateResult } from '@polkadot/types/interfaces/contr
 export type CreateOptions = {
     contractType? : ContractType,
     clusterId? : string,
+    systemContract? : boolean,
 }
 
 export type DeployOptions = {
-    contractType? : ContractType,
+    forceUpload? : boolean,
     asAccount? : AccountKey | KeyringPair,
 }
 
@@ -37,6 +38,11 @@ export type InstantiateOptions = {
 
 export class ContractFactory
 {
+
+    public static readonly CODE_TYPE_MAP = {
+        [ContractType.InkCode]: 'Ink',
+        [ContractType.SidevmCode]: 'Sidevm',
+    }
     
     public readonly contractType : string;
     public readonly metadata : ContractMetadata.Metadata;
@@ -53,9 +59,15 @@ export class ContractFactory
         return this._devPhase.api;
     }
     
-    protected async init ()
+    protected async init (
+        loadSystemContract : boolean = false
+    )
     {
         await this._eventQueue.init(this._devPhase.api);
+        
+        if (loadSystemContract) {
+            this._systemContract = await this._devPhase.getSystemContract(this.clusterId);
+        }
     }
     
     
@@ -65,6 +77,11 @@ export class ContractFactory
         options : CreateOptions = {}
     ) : Promise<T>
     {
+        options = {
+            systemContract: false,
+            ...options,
+        }
+    
         const instance = new ContractFactory();
         
         instance._devPhase = devPhase;
@@ -79,7 +96,7 @@ export class ContractFactory
             clusterId: options.clusterId,
         });
         
-        await instance.init();
+        await instance.init(!options.systemContract);
         
         return <any>instance;
     }
@@ -93,6 +110,7 @@ export class ContractFactory
     ) : Promise<void>
     {
         options = {
+            forceUpload: false,
             asAccount: 'alice',
             ...options
         };
@@ -100,11 +118,47 @@ export class ContractFactory
         const keyringPair : any = typeof options.asAccount === 'string'
             ? this._devPhase.accounts[options.asAccount]
             : options.asAccount;
+            
+        // verify is it required to upload resource
+        if (!options.forceUpload) {
+            if (!this._systemContract) {
+                throw new Exception(
+                    'System contract is not ready',
+                    1679713544635
+                );
+            }
+        
+            const cert = await PhalaSdk.signCertificate({
+                api: this.api,
+                pair: keyringPair
+            });
+            
+            const codeType = ContractFactory.CODE_TYPE_MAP[this.contractType];
+            if (!codeType) {
+                throw new Exception(
+                    `Unable to map contract type <${this.contractType}> to code type`,
+                    1679713421053
+                );
+            }
+            
+            const { output } = await this._systemContract.query['system::codeExists'](
+                cert,
+                {},
+                this.metadata.source.hash,
+                codeType
+            );
+            
+            const codeExists = output.toJSON();
+            if (codeExists?.ok) {
+                // already uploaded
+                return;
+            }
+        }
         
         await TxHandler.handle(
-            this.api.tx.phalaFatContracts.clusterUploadResource(
+            this.api.tx.phalaPhatContracts.clusterUploadResource(
                 this.clusterId,
-                options.contractType || this.contractType,
+                this.contractType,
                 this.metadata.source.wasm
             ),
             keyringPair,
@@ -146,7 +200,7 @@ export class ContractFactory
             : options.asAccount;
         
         const result = await TxHandler.handle(
-            this.api.tx.phalaFatContracts.instantiateContract(
+            this.api.tx.phalaPhatContracts.instantiateContract(
                 { WasmCode: this.metadata.source.hash },
                 callData,
                 salt,
@@ -161,7 +215,7 @@ export class ContractFactory
         );
         
         const instantiateEvent = result.events.find(({ event }) => {
-            return event.section === 'phalaFatContracts'
+            return event.section === 'phalaPhatContracts'
                 && event.method === 'Instantiating';
         });
         if (!instantiateEvent) {
@@ -195,7 +249,7 @@ export class ContractFactory
         // transfer funds to cluster if specified
         if (options.transferToCluster) {
             const result = await TxHandler.handle(
-                this.api.tx.phalaFatContracts.transferToCluster(
+                this.api.tx.phalaPhatContracts.transferToCluster(
                     options.transferToCluster,
                     this.clusterId,
                     contractId
@@ -208,7 +262,7 @@ export class ContractFactory
         // adjust stake if specified
         if (options.adjustStake) {
             const result = await TxHandler.handle(
-                this.api.tx.phalaFatTokenomic.adjustStake(
+                this.api.tx.phalaPhatTokenomic.adjustStake(
                     contractId,
                     options.adjustStake
                 ),

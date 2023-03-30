@@ -877,6 +877,8 @@ declare module '@polkadot/types/types/registry' {
     RpcMethods: RpcMethods;
     RuntimeDbWeight: RuntimeDbWeight;
     RuntimeDispatchInfo: RuntimeDispatchInfo;
+    RuntimeDispatchInfoV1: RuntimeDispatchInfo;
+    RuntimeDispatchInfoV2: RuntimeDispatchInfo;
     RuntimeVersion: RuntimeVersion;
     RuntimeVersionApi: RuntimeVersionApi;
     RuntimeVersionPartial: RuntimeVersionPartial;
