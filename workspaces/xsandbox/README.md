@@ -1,6 +1,12 @@
 # devPHAse sandbox
 
-## 1. Compile contract
+1. [Compile contract](#compile-contract)
+2. [Run tests](#run-tests)
+3. [Run scripts](#run-scripts)
+4. [Speed up testing](#speed-up-testing)
+
+
+## <a name="compile-contract">1. Compile contract</a>
 ```shell
 yarn devphase contract compile -c <contractName>
 ```
@@ -18,13 +24,13 @@ $ (...)/node_modules/.bin/devphase contract compile -c flipper
 Done in 11.97s.
 ```
 
-## 2. Run tests
+## <a name="run-tests">2. Run tests</a>
 ```shell
-yarn devphase contract test -s <testSuiteDir>
+yarn devphase contract test -t <testSuiteDir>
 ```
 Example:
 ```shell
-yarn devphase contract test -s flipper
+yarn devphase contract test -t flipper
 yarn run v1.22.19
 $ (...)/node_modules/.bin/devphase contract test -s flipper
 [StackBinaryDownloader] Preparing Phala stack release
@@ -68,7 +74,21 @@ $ (...)/node_modules/.bin/devphase contract test -s flipper
 Done in 33.19s.
 ```
 
-## 3. Run script
+## <a name="run-scripts">3. Run scripts</a>
 ```shell
 yarn devphase script ./scripts/deploy.ts
 ```
+
+## <a name="speed-up-testing">4. Speed up testing</a>
+Creating new stack every time you want to test change may be time-consuming.  
+Especially becasue of stack setup procedure.  
+Due that fact it is adviced to create stack in one terminal and execute tests with option `-e`.
+```shell
+# Terminal #1
+yarn devphase stack run
+```
+```shell
+# Terminal #2
+yarn devphase contract test -e -t flipper
+```
+
