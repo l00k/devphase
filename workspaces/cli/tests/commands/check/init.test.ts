@@ -4,12 +4,13 @@ import fs from 'fs';
 import path from 'path';
 
 
-describe('Command ' + chalk.cyan('init'), () => {
+describe('Command ' + chalk.cyan('check'), () => {
     const ROOT_PATH = process.cwd();
     const CONTEXT_PATH = path.resolve('./tests/context');
     const PRESERVE_FILES = [
         '.gitignore',
         '.devphase',
+        'contracts',
         'stacks',
         'tests'
     ];
@@ -30,6 +31,13 @@ describe('Command ' + chalk.cyan('init'), () => {
             fs.rmSync(filePath, { recursive: true });
         });
         
+        // create config file
+        const configFilePath = path.join(
+            CONTEXT_PATH,
+            'devphase.config.json'
+        );
+        fs.writeFileSync(configFilePath, '{}', { encoding: 'utf-8' });
+        
         // change working dir to context
         process.chdir(CONTEXT_PATH);
     });
@@ -37,34 +45,23 @@ describe('Command ' + chalk.cyan('init'), () => {
     const pTest = test
         .stdout()//{ print: true })
         .timeout(10_000)
-        .command([ 'init', '-v' ])
+        .command([ 'check', '-v' ])
         ;
-        
-    pTest.it('Should properly execute init', ctx => {
-        expect(ctx.stdout).to.include('Creating directories');
-        expect(ctx.stdout).to.include('Creating files');
-        expect(ctx.stdout).to.include('Creating sample contract');
+    
+    pTest.it('Should properly output checks', ctx => {
+        expect(ctx.stdout).to.include('Checking configuration file [completed]');
+        expect(ctx.stdout).to.include('Check dependencies [completed]');
+        expect(ctx.stdout).to.include('Checking releases directory [completed]');
+        expect(ctx.stdout).to.include('Checking target release binaries [started]');
+        expect(ctx.stdout).to.include('Checking Phala stack binaries [completed]');
     });
     
-    pTest.it('Should create config file', ctx => {
-        const configFilePath = path.join(
+    pTest.it('Should create directories', ctx => {
+        const stacksDirPath = path.join(
             CONTEXT_PATH,
-            'devphase.config.ts'
+            'stacks'
         );
-        expect(fs.existsSync(configFilePath)).to.be.equal(true);
+        expect(fs.existsSync(stacksDirPath)).to.be.equal(true);
     });
     
-    pTest.it('Should create sample contract', ctx => {
-        const libPath = path.join(
-            CONTEXT_PATH,
-            'contracts/flipper/lib.rs'
-        );
-        expect(fs.existsSync(libPath)).to.be.equal(true);
-        
-        const cargoPath = path.join(
-            CONTEXT_PATH,
-            'contracts/flipper/Cargo.toml'
-        );
-        expect(fs.existsSync(cargoPath)).to.be.equal(true);
-    });
 });
