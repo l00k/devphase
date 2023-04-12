@@ -14,6 +14,7 @@ type Release = {
     assets : Array<{
         name : string,
         browser_download_url : string,
+        size: number,
     }>,
 }
 
@@ -126,11 +127,6 @@ export class StackBinaryDownloader
                 task: async() => {
                     const releaseStackPath = this._context.paths.currentStack;
                     
-                    let needsDownload = !fs.existsSync(this._context.config.stack.node.binary);
-                    if (!needsDownload) {
-                        return null;
-                    }
-                    
                     // find release
                     const release = await this.findRelease(this._context.config.stack.version);
                     
@@ -142,8 +138,14 @@ export class StackBinaryDownloader
                             releaseStackPath,
                             asset.name
                         );
+                        
                         if (fs.existsSync(filePath)) {
-                            continue;
+                            // verify current file size
+                            const currentFileStat = fs.statSync(filePath);
+                            
+                            if (currentFileStat.size == asset.size) {
+                                continue;
+                            }
                         }
                         
                         const title = isBinary
@@ -153,32 +155,53 @@ export class StackBinaryDownloader
                         
                         subListrOpts.push({
                             title,
-                            task: async() => {
-                                // download single file
-                                const { status, data } = await axios.get(
-                                    asset.browser_download_url,
-                                    {
-                                        responseType: 'arraybuffer',
-                                        headers: {
-                                            'Content-Type': 'application/gzip'
-                                        },
-                                        validateStatus: () => true,
-                                    }
-                                );
-                                if (status !== 200) {
-                                    throw new Exception(
-                                        'Unable to download release',
-                                        1668572702020
+                            task: async(ctx, task) => new Promise(async (resolve, reject) => {
+                                try {
+                                    const { status, data, headers } = await axios.get(
+                                        asset.browser_download_url,
+                                        {
+                                            responseType: 'stream',
+                                            headers: {
+                                                'Content-Type': 'application/gzip'
+                                            },
+                                            validateStatus: () => true,
+                                        }
                                     );
-                                }
+                                    
+                                    if (status !== 200) {
+                                        throw new Exception(
+                                            'Unable to download release',
+                                            1668572702020
+                                        );
+                                    }
                                 
-                                fs.writeFileSync(filePath, data, { encoding: 'binary' });
+                                    let loaded = 0;
+                                    data.on('data', (chunk) => {
+                                        loaded += chunk.length;
+                                        const progress = (loaded / asset.size * 100)
+                                            .toFixed(1)
+                                            .padStart(5, ' ')
+                                        ;
+                                        task.title = title + ` [${progress}%]`;
+                                    })
                                 
-                                // make binary executable
-                                if (isBinary) {
-                                    fs.chmodSync(filePath, 0o755);
+                                    data.pipe(fs.createWriteStream(filePath, { encoding: 'binary' }))
+                                    
+                                    data.on('done', () => {
+                                        if (isBinary) {
+                                            fs.chmodSync(filePath, 0o755);
+                                        }
+                                        
+                                        resolve(true);
+                                    });
                                 }
-                            }
+                                catch (e) {
+                                    // remove file
+                                    fs.rmSync(filePath);
+                                    
+                                    reject(e);
+                                }
+                            }),
                         });
                     }
                     
