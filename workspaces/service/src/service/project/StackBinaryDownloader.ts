@@ -187,7 +187,7 @@ export class StackBinaryDownloader
                                 
                                     data.pipe(fs.createWriteStream(filePath, { encoding: 'binary' }))
                                     
-                                    data.on('done', () => {
+                                    data.on('end', () => {
                                         if (isBinary) {
                                             fs.chmodSync(filePath, 0o755);
                                         }
