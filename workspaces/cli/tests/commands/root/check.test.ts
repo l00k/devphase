@@ -2,41 +2,22 @@ import { expect, test } from '@oclif/test';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
+import { cleanUpContext, CONTEXT_PATH } from '../before-all.test';
 
 
 describe('Command ' + chalk.cyan('init'), () => {
-    const ROOT_PATH = process.cwd();
-    const CONTEXT_PATH = path.resolve('./tests/context');
-    const PRESERVE_FILES = [
-        '.gitignore',
-        '.devphase',
-        'stacks',
-        'tests'
-    ];
-    
-    beforeEach(() => {
-        // restore working dir
-        process.chdir(ROOT_PATH);
-    
-        // clean up context
-        const files = fs.readdirSync(CONTEXT_PATH);
-        const filesToDelete = files.filter(file => !PRESERVE_FILES.includes(file));
-        
-        filesToDelete.forEach(file => {
-            const filePath = path.join(
-                CONTEXT_PATH,
-                file
-            );
-            fs.rmSync(filePath, { recursive: true });
-        });
-        
-        // change working dir to context
-        process.chdir(CONTEXT_PATH);
+    beforeEach(async() => {
+        await cleanUpContext([
+            '.gitignore',
+            '.devphase',
+            'stacks',
+            'tests'
+        ]);
     });
     
     const pTest = test
-        .stdout()//{ print: true })
-        .timeout(10_000)
+        .stdout()
+        .timeout(5_000)
         .command([ 'init', '-v' ])
         ;
         

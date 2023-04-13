@@ -8,6 +8,7 @@ import { FlagProps } from '@oclif/core/lib/interfaces/parser';
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand['baseFlags'] & T['flags']>
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>
 
+
 export abstract class BaseCommand<T extends typeof Command>
     extends Command
 {

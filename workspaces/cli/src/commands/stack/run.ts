@@ -14,6 +14,10 @@ export class StackRunCommand
             summary: 'Save logs to file',
             default: false
         }),
+        timelimit: Flags.integer({
+            summary: 'Execution time limit (ms)',
+            default: 0
+        }),
     };
     
     
@@ -43,6 +47,16 @@ export class StackRunCommand
             
             await stackManager.stopStack();
         });
+        
+        const timelimit = Number(this.flags.timelimit);
+        if (timelimit) {
+            setTimeout(async() => {
+                this._logger.log('Time limit reached');
+                await stackManager.stopStack();
+                
+                this.exit(0);
+            }, timelimit);
+        }
     }
     
 }
