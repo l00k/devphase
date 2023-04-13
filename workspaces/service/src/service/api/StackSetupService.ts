@@ -195,13 +195,18 @@ export class StackSetupService
                             options.clusterId = null;
                         }
                         else {
-                            const clusterId = '0x0000000000000000000000000000000000000000000000000000000000000000';
-                            const onChainClusterInfo : any = await this._api.query
-                                .phalaPhatContracts.clusters(clusterId);
+                            const onChainClusterInfos : any = (
+                                await this._api.query
+                                    .phalaPhatContracts.clusters
+                                    .entries()
+                            )[0];
+                            
+                            const clusterId = onChainClusterInfos[0].toHuman()[0];
+                            const onChainClusterInfo = onChainClusterInfos[1].unwrap();
                             
                             this._clusterInfo = {
                                 id: clusterId,
-                                systemContract: onChainClusterInfo.unwrap().systemContract.toHex()
+                                systemContract: onChainClusterInfo.systemContract.toHex()
                             };
                         }
                     }
