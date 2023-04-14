@@ -25,7 +25,7 @@
         "build": "yarn lint && yarn test && yarn coverage:badge && yarn compile"
     },
     "dependencies": {
-        "@phala/sdk": "^0.4.0-nightly-20230330-1",
+        "@phala/sdk": "^0.4.0",
         "@phala/typedefs": "^0.2.33",
         "@types/chai": "^4.3.3",
         "@types/mocha": "^10.0.0",

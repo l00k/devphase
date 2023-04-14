@@ -614,7 +614,9 @@ export class StackSetupService
         instantiateOpts = {
             asAccount: this._suAccount,
             gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
-            storageDepositLimit: instantiationEst.storageDeposit.asCharge.toNumber(),
+            storageDepositLimit: instantiationEst.storageDeposit.isCharge
+                ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
+                : 0,
             adjustStake: 10e12,
             ...instantiateOpts
         };

@@ -309,11 +309,7 @@ export class ContractFactory
             transfer: options.transfer
         }, cert);
         
-        const queryResponse : any = this.api.createType('InkResponse', instantiateReturn);
-        const queryResult = queryResponse.result.toHuman();
-        
-        const instantiateResult = this.api.createType('ContractInstantiateResult', queryResult.Ok.InkMessageReturn);
-        return <any>instantiateResult;
+        return <any> instantiateReturn;
     }
     
     
