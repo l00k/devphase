@@ -3,7 +3,9 @@
     "extensions": [
         "ts"
     ],
+    "timeout": 10000,
     "spec": [
-        "tests/commands/**/*.test.ts"
+        "tests/before-all.test.ts",
+        "tests/*.test.ts"
     ]
 }
