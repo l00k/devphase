@@ -39,7 +39,7 @@ export class AccountManager
             'accounts.json'
         );
         if (!fs.existsSync(accountsStoragePath)) {
-            return null;
+            return {};
         }
         
         return JSON.parse(
@@ -158,23 +158,16 @@ export class AccountManager
         ;
         
         // export to config file
+        accountsKeyrings[options.alias] = exported;
+        
         const accountsConfigPath = path.join(
             this._runtimeContext.paths.project,
             'accounts.json'
         );
-        if (!fs.existsSync(accountsConfigPath)) {
-            return null;
-        }
-        
-        const accountsJson = JSON.parse(
-            fs.readFileSync(accountsConfigPath, { encoding: 'utf-8' })
-        );
-        
-        accountsJson[options.alias] = exported;
         
         fs.writeFileSync(
             accountsConfigPath,
-            JSON.stringify(accountsJson, undefined, 4),
+            JSON.stringify(accountsKeyrings, undefined, 4),
             { encoding: 'utf-8' }
         );
         
