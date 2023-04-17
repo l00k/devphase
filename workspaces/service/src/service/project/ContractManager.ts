@@ -234,10 +234,10 @@ export class ContractManager
         options : ContractCompileOptions
     ) : Promise<Record<string, ContractCompilationResult>>
     {
-        const contractCompiler = new Compiler(this._runtimeContext);
+        const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
+        const compiler = new Compiler(this._runtimeContext);
         const validator = new Validator(this._runtimeContext);
         const typeBinder = new TypeBinder(this._runtimeContext);
-        const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
         
         const compilationResults : Record<string, ContractCompilationResult> = {};
         
@@ -249,7 +249,7 @@ export class ContractManager
                     {
                         title: 'Compilation',
                         task: async() => {
-                            const result = await contractCompiler.compile(
+                            const result = await compiler.compile(
                                 contractName,
                                 options.release
                             );
@@ -294,9 +294,8 @@ export class ContractManager
         options : ContractValidateOptions
     ) : Promise<Record<string, ValidationResult>>
     {
-        const validator = new Validator(this._runtimeContext);
-        const typeBinder = new TypeBinder(this._runtimeContext);
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
+        const validator = new Validator(this._runtimeContext);
         
         const validationResults : Record<string, ValidationResult> = {};
         

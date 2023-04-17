@@ -41,6 +41,7 @@ More info [here](./workspaces/xsandbox)
 * [`devphase contract list`](#devphase-contract-list)
 * [`devphase contract test`](#devphase-contract-test)
 * [`devphase contract typegen`](#devphase-contract-typegen)
+* [`devphase contract validate`](#devphase-contract-validate)
 * [`devphase help [COMMANDS]`](#devphase-help-commands)
 * [`devphase init`](#devphase-init)
 * [`devphase script [ARGS]`](#devphase-script-args)
@@ -95,8 +96,6 @@ FLAGS
   -v, --verbose  Verbose output
   --json         Output in JSON format
 ```
-
-_See code: [dist/commands/check.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/check.ts)_
 
 ## `devphase contract call [ARGS]`
 
@@ -222,6 +221,18 @@ FLAGS
   -c, --contract=<value>  (required) Contract name
 ```
 
+## `devphase contract validate`
+
+Compile contract
+
+```
+USAGE
+  $ devphase contract validate [-c <value>]
+
+FLAGS
+  -c, --contract=<value>  Contract name
+```
+
 ## `devphase help [COMMANDS]`
 
 Display help for devphase.
@@ -240,8 +251,6 @@ DESCRIPTION
   Display help for devphase.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.2.5/src/commands/help.ts)_
-
 ## `devphase init`
 
 Initiate devPHAse project
@@ -255,8 +264,6 @@ FLAGS
   -v, --verbose  Verbose output
   --json         Output in JSON format
 ```
-
-_See code: [dist/commands/init.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/init.ts)_
 
 ## `devphase script [ARGS]`
 
@@ -273,18 +280,17 @@ FLAGS
   -n, --network=<value>  [default: local] Network key
 ```
 
-_See code: [dist/commands/script.ts](https://github.com/l00k/devphase/blob/v0.0.12/dist/commands/script.ts)_
-
 ## `devphase stack run`
 
 Starts local development stack
 
 ```
 USAGE
-  $ devphase stack run [--save-logs]
+  $ devphase stack run [--save-logs] [--timelimit <value>]
 
 FLAGS
-  --save-logs  Save logs to file
+  --save-logs          Save logs to file
+  --timelimit=<value>  Execution time limit (ms)
 ```
 
 ## `devphase stack setup`
