@@ -85,7 +85,8 @@ export class Tester
             mocha.run(resolve);
         });
         
-        mocha.dispose();
+        // currently no need for that (it produces errors in mocha/lib/file-unloader.js)
+        // mocha.dispose();
     }
     
 }
