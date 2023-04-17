@@ -60,7 +60,7 @@ export class Tester
         mocha.addFile(
             path.join(
                 this._runtimeContext.paths.devphase,
-                '/etc/mocha.global.ts'
+                '/etc/mocha.global.js'
             )
         );
         

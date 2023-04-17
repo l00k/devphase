@@ -1,10 +1,9 @@
-import { DevPhase, Logger, RunMode, RuntimeContext, StackManager } from '@devphase/service';
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+const { DevPhase, Logger, RunMode, RuntimeContext, StackManager } = require('@devphase/service');
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 
 chai.use(chaiAsPromised);
-
-(<any>global).expect = chai.expect;
+global.expect = chai.expect;
 
 
 const logger = new Logger('Test');
