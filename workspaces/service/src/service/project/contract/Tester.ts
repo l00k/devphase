@@ -44,9 +44,13 @@ export class Tester
         }
         
         this._runtimeContext.testingConfig.network = options.network;
+        
+        this._runtimeContext.testingConfig.blockTime = this._runtimeContext.config.testing.blockTime
+            ?? this._runtimeContext.config.stack.blockTime;
         if (networkConfig.blockTime) {
             this._runtimeContext.testingConfig.blockTime = networkConfig.blockTime;
         }
+        
         this._runtimeContext.testingConfig.spawnStack = options.spawnStack;
         this._runtimeContext.testingConfig.stackSetupMode = Number(options.stackSetupMode);
         

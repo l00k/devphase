@@ -76,6 +76,7 @@ export type NetworkConfig = {
 
 export type StartStackOptions = {
     saveLogs? : boolean,
+    blockTime? : number,
 };
 
 export interface StackComponentOptions

@@ -1,5 +1,4 @@
 import type { ProjectConfigOptions } from '@devphase/service';
-import { DevPhase } from '@devphase/service';
 
 const config : ProjectConfigOptions = {
     stack: {
@@ -9,6 +8,9 @@ const config : ProjectConfigOptions = {
                 RUST_LOG: 'debug,runtime::contracts=debug'
             }
         }
+    },
+    testing: {
+        blockTime: 100,
     }
 };
 

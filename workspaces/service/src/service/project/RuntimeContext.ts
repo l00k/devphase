@@ -258,9 +258,9 @@ export class RuntimeContext
                     args: {
                         '--dev': true,
                         '--rpc-methods': 'Unsafe',
-                        '--block-millisecs': '{{stack.blockTime}}',
                         '--ws-port': '{{stack.node.port}}',
                         '--base-path': '.',
+                        '--block-millisecs': '{{stack.blockTime}}', // override at runtime
                     },
                     timeout: 20000,
                 },
@@ -289,8 +289,8 @@ export class RuntimeContext
                         '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                         '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                         '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
-                        '--dev-wait-block-ms': '{{stack.blockTime}}',
                         '--attestation-provider': 'none',
+                        '--dev-wait-block-ms': '{{stack.blockTime}}', // override at runtime
                     },
                     timeout: 10000,
                 }

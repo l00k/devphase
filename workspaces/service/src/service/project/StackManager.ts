@@ -1,4 +1,13 @@
-import { ComponentName, RunMode, StackComponentOptions, StartStackOptions, VerbosityLevel } from '@/def';
+import {
+    ComponentName,
+    NodeComponentOptions,
+    PherryComponentOptions,
+    PruntimeComponentOptions,
+    RunMode,
+    StackComponentOptions,
+    StartStackOptions,
+    VerbosityLevel
+} from '@/def';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
@@ -101,7 +110,7 @@ export class StackManager
         }
         catch (e : any) {
             await this.stopStack(true);
-        
+            
             if (
                 e?.message
                 && e.message.includes('Stack killed')
@@ -151,7 +160,9 @@ export class StackManager
         stackOptions : StartStackOptions
     ) : Promise<ChildProcess>
     {
-        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.node);
+        const compOptions : NodeComponentOptions = cloneDeep(this._context.config.stack.node);
+        
+        compOptions.args['--block-millisecs'] = stackOptions.blockTime;
         
         return this.startComponent(
             'node',
@@ -168,7 +179,7 @@ export class StackManager
         stackOptions : StartStackOptions
     ) : Promise<ChildProcess>
     {
-        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.pruntime);
+        const compOptions : PruntimeComponentOptions = cloneDeep(this._context.config.stack.pruntime);
         
         return this.startComponent(
             'pruntime',
@@ -185,7 +196,9 @@ export class StackManager
         stackOptions : StartStackOptions
     ) : Promise<ChildProcess>
     {
-        const compOptions : StackComponentOptions = cloneDeep(this._context.config.stack.pherry);
+        const compOptions : PherryComponentOptions = cloneDeep(this._context.config.stack.pherry);
+        
+        compOptions.args['--dev-wait-block-ms'] = stackOptions.blockTime;
         
         return this.startComponent(
             'pherry',
@@ -260,7 +273,7 @@ export class StackManager
         
         const displayLogs = this._context.verbosity == VerbosityLevel.Verbose
             && runMode != RunMode.Testing
-            ;
+        ;
         
         let settled : boolean = false;
         

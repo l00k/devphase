@@ -22,7 +22,10 @@ before(async function() {
         logger.log('Preparing dev stack');
         await this.stackManager.startStack(
             RunMode.Testing,
-            { saveLogs: true }
+            {
+                saveLogs: true,
+                blockTime: testingConfig.blockTime,
+            }
         );
     }
     
