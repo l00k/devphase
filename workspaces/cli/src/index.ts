@@ -3,7 +3,7 @@
 (async() => {
     const TsNode = require('ts-node');
     const tsNodeService = TsNode.register({
-        transpileOnly: false,
+        transpileOnly: true,
     });
 
     const oclif = require('@oclif/core');

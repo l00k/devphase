@@ -60,7 +60,7 @@ export class Tester
         mocha.addFile(
             path.join(
                 this._runtimeContext.paths.devphase,
-                '/etc/mocha.global.js'
+                '/etc/mocha.global.ts'
             )
         );
         
@@ -78,15 +78,19 @@ export class Tester
         
         for (const pattern of patterns) {
             const files = glob.sync(pattern, { cwd: this._runtimeContext.paths.project });
-            files.forEach(file => mocha.addFile(file));
+            files.forEach(file => mocha.addFile(
+                path.join(
+                    this._runtimeContext.paths.project,
+                    file
+                )
+            ));
         }
         
         await new Promise<number>((resolve) => {
             mocha.run(resolve);
         });
         
-        // currently no need for that (it produces errors in mocha/lib/file-unloader.js)
-        // mocha.dispose();
+        mocha.dispose();
     }
     
 }

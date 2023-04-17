@@ -3,7 +3,8 @@ const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
 chai.use(chaiAsPromised);
-global.expect = chai.expect;
+
+(<any>global).expect = chai.expect;
 
 
 const logger = new Logger('Test');
