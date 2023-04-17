@@ -1,19 +1,19 @@
 import { ContractType } from '@/def';
 import { DeployOptions, InstantiateOptions } from '@/service/api/ContractFactory';
-import { CompilationResult, Compiler } from '@/service/project/Compiler';
+import { CompilationResult, Compiler } from '@/service/project/contract/Compiler';
+import { TypeBinder } from '@/service/project/contract/TypeBinder';
+import { ValidationResult, Validator } from '@/service/project/contract/Validator';
 import { MultiContractExecutor } from '@/service/project/MultiContractExecutor';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
-import { TypeBinder } from '@/service/project/TypeBinder';
 import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
-import { ux } from '@oclif/core';
+import * as PhalaSdk from '@phala/sdk';
 import chalk from 'chalk';
 import fs from 'fs';
 import Listr from 'listr';
 import _ from 'lodash';
 import path from 'path';
-import * as PhalaSdk from '@phala/sdk';
 
 
 export type ContractDefinition = {
@@ -34,6 +34,16 @@ export type ContractCompileOptions = {
     watch? : boolean,
     release? : boolean,
 };
+
+export type ContractValidateOptions = {
+    contractName? : string,
+};
+
+export type ContractCompilationResult = {
+    compilation : CompilationResult,
+    validation : ValidationResult,
+    typeBinding : boolean,
+}
 
 export type ContractDeployOptions = {
     contractType? : ContractType,
@@ -222,13 +232,14 @@ export class ContractManager
     
     public async compile (
         options : ContractCompileOptions
-    ) : Promise<Record<string, CompilationResult>>
+    ) : Promise<Record<string, ContractCompilationResult>>
     {
         const contractCompiler = new Compiler(this._runtimeContext);
+        const validator = new Validator(this._runtimeContext);
         const typeBinder = new TypeBinder(this._runtimeContext);
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
         
-        const compilationResults : Record<string, CompilationResult> = {};
+        const compilationResults : Record<string, ContractCompilationResult> = {};
         
         const listr = await multiContractExecutor.exec(
             options.contractName,
@@ -249,12 +260,24 @@ export class ContractManager
                                 );
                             }
                             
-                            compilationResults[contractName] = result;
+                            compilationResults[contractName] = {
+                                compilation: result,
+                                validation: null,
+                                typeBinding: null,
+                            };
+                        }
+                    },
+                    {
+                        title: 'Validation',
+                        task: async() => {
+                            compilationResults[contractName].validation = await validator.validate(contractName);
                         }
                     },
                     {
                         title: 'Type binding',
-                        task: () => typeBinder.createBindings(contractName)
+                        task: async() => {
+                            compilationResults[contractName].typeBinding = await typeBinder.createBindings(contractName);
+                        }
                     }
                 ], {
                     renderer: this._runtimeContext.listrRenderer
@@ -265,6 +288,38 @@ export class ContractManager
         await listr.run();
         
         return compilationResults;
+    }
+    
+    public async validate (
+        options : ContractValidateOptions
+    ) : Promise<Record<string, ValidationResult>>
+    {
+        const validator = new Validator(this._runtimeContext);
+        const typeBinder = new TypeBinder(this._runtimeContext);
+        const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
+        
+        const validationResults : Record<string, ValidationResult> = {};
+        
+        const listr = await multiContractExecutor.exec(
+            options.contractName,
+            false,
+            async(contractName) => {
+                return new Listr([
+                    {
+                        title: 'Validation',
+                        task: async() => {
+                            validationResults[contractName] = await validator.validate(contractName);
+                        }
+                    },
+                ], {
+                    renderer: this._runtimeContext.listrRenderer
+                });
+            }
+        );
+        
+        await listr.run();
+        
+        return validationResults;
     }
     
     public async deploy (
@@ -378,7 +433,7 @@ export class ContractManager
         
         if (callType === ContractCallType.Query) {
             const contractCall = instance.query[methodName];
-            const outcome = await contractCall(<any> certificate, {}, ...args);
+            const outcome = await contractCall(<any>certificate, {}, ...args);
             
             result = {
                 output: outcome.output.toJSON(),

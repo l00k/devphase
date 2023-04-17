@@ -1,6 +1,6 @@
 {
     "name": "@devphase/service",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "license": "MIT",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -25,6 +25,7 @@
         "build": "yarn lint && yarn test && yarn coverage:badge && yarn compile"
     },
     "dependencies": {
+        "@phala/ink-validator": "^0.1.0",
         "@phala/sdk": "^0.4.0",
         "@phala/typedefs": "^0.2.33",
         "@types/chai": "^4.3.3",

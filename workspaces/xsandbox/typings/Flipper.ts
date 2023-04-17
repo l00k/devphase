@@ -6,15 +6,24 @@ import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contrac
 import type { Codec } from "@polkadot/types/types";
 
 export namespace Flipper {
-    type InkPrimitives_LangError = { CouldNotReadInput: null };
-    type Result = { Ok: boolean } | { Err: InkPrimitives_LangError };
+    type InkPrimitives_LangError$3 = {
+        CouldNotReadInput? : null
+        };
+    type Result$1 = {
+        Ok? : never[],
+        Err? : InkPrimitives_LangError$3
+        };
+    type Result$4 = {
+        Ok? : boolean,
+        Err? : InkPrimitives_LangError$3
+        };
 
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface Get extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$4>>>;
         }
     }
 
