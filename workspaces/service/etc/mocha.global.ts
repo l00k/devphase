@@ -1,6 +1,7 @@
-import { DevPhase, Logger, RunMode, RuntimeContext, StackManager } from '@devphase/service';
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+const { DevPhase, Logger, RunMode, RuntimeContext, StackManager } = require('@devphase/service');
+// @ts-ignore
+const chai = require('chai');
+const chaiAsPromised = require('chai-as-promised');
 
 chai.use(chaiAsPromised);
 
