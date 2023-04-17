@@ -7,7 +7,7 @@ export class ContractValidateCommand
     extends BaseCommand<typeof ContractValidateCommand>
 {
     
-    public static summary : string = 'Compile contract';
+    public static summary : string = 'Validate contract';
     
     public static flags = {
         contract: Flags.string({

@@ -31,22 +31,64 @@ More info [here](./workspaces/xsandbox)
 
 ### Commands index
 <!-- commands -->
-* [`devphase account create`](#devphase-account-create)
-* [`devphase account list`](#devphase-account-list)
 * [`devphase check`](#devphase-check)
-* [`devphase contract call [ARGS]`](#devphase-contract-call-args)
-* [`devphase contract compile`](#devphase-contract-compile)
-* [`devphase contract create`](#devphase-contract-create)
-* [`devphase contract deploy [ARGS]`](#devphase-contract-deploy-args)
-* [`devphase contract list`](#devphase-contract-list)
-* [`devphase contract test`](#devphase-contract-test)
-* [`devphase contract typegen`](#devphase-contract-typegen)
-* [`devphase contract validate`](#devphase-contract-validate)
-* [`devphase help [COMMANDS]`](#devphase-help-commands)
 * [`devphase init`](#devphase-init)
 * [`devphase script [ARGS]`](#devphase-script-args)
+* [`devphase account create`](#devphase-account-create)
+* [`devphase account list`](#devphase-account-list)
+* [`devphase contract create`](#devphase-contract-create)
+* [`devphase contract compile`](#devphase-contract-compile)
+* [`devphase contract typegen`](#devphase-contract-typegen)
+* [`devphase contract validate`](#devphase-contract-validate)
+* [`devphase contract test`](#devphase-contract-test)
+* [`devphase contract deploy [ARGS]`](#devphase-contract-deploy-args)
+* [`devphase contract list`](#devphase-contract-list)
+* [`devphase contract call [ARGS]`](#devphase-contract-call-args)
 * [`devphase stack run`](#devphase-stack-run)
 * [`devphase stack setup`](#devphase-stack-setup)
+
+## `devphase check`
+
+Check project
+
+```
+USAGE
+  $ devphase check [--json] [-s | -v]
+
+FLAGS
+  -s, --silent   No output
+  -v, --verbose  Verbose output
+  --json         Output in JSON format
+```
+
+## `devphase init`
+
+Initiate devPHAse project
+
+```
+USAGE
+  $ devphase init [--json] [-s | -v]
+
+FLAGS
+  -s, --silent   No output
+  -v, --verbose  Verbose output
+  --json         Output in JSON format
+```
+
+## `devphase script [ARGS]`
+
+Run script
+
+```
+USAGE
+  $ devphase script [ARGS] [-n <value>]
+
+ARGUMENTS
+  ARGS  Script(s) to execute
+
+FLAGS
+  -n, --network=<value>  [default: local] Network key
+```
 
 ## `devphase account create`
 
@@ -83,43 +125,18 @@ FLAGS
   --sort=<value>     property to sort by (prepend '-' for descending)
 ```
 
-## `devphase check`
+## `devphase contract create`
 
-Check project
-
-```
-USAGE
-  $ devphase check [--json] [-s | -v]
-
-FLAGS
-  -s, --silent   No output
-  -v, --verbose  Verbose output
-  --json         Output in JSON format
-```
-
-## `devphase contract call [ARGS]`
-
-Call contract
+Creates new contract from template
 
 ```
 USAGE
-  $ devphase contract call [ARGS] -c <value> -i <value> -m <value> [-t InkCode|SidevmCode] [-a query|tx] [-n
-    <value>] [-l <value>] [-a <value>]
-
-ARGUMENTS
-  ARGS  Call arguments
+  $ devphase contract create -n <value> [-t flipper]
 
 FLAGS
-  -a, --accessor=<option>  [default: query] Method type: transaction or query
-                           <options: query|tx>
-  -a, --account=<value>    [default: alice] Account used to call (managed account key)
-  -c, --contract=<value>   (required) Contract name
-  -i, --id=<value>         (required) Contract ID
-  -l, --cluster=<value>    Target cluster Id
-  -m, --method=<value>     (required) Contract method to call (name)
-  -n, --network=<value>    [default: local] Target network to deploy (local default)
-  -t, --type=<option>      [default: InkCode]
-                           <options: InkCode|SidevmCode>
+  -n, --name=<value>       (required) Contract name
+  -t, --template=<option>  [default: flipper] Template name
+                           <options: flipper>
 ```
 
 ## `devphase contract compile`
@@ -136,18 +153,44 @@ FLAGS
   -w, --watch             Watch changes
 ```
 
-## `devphase contract create`
+## `devphase contract validate`
 
-Creates new contract from template
+Validate contract
 
 ```
 USAGE
-  $ devphase contract create -n <value> [-t flipper]
+  $ devphase contract validate [-c <value>]
 
 FLAGS
-  -n, --name=<value>       (required) Contract name
-  -t, --template=<option>  [default: flipper] Template name
-                           <options: flipper>
+  -c, --contract=<value>  Contract name
+```
+
+## `devphase contract typegen`
+
+Generate type bindings for compiled contract
+
+```
+USAGE
+  $ devphase contract typegen -c <value>
+
+FLAGS
+  -c, --contract=<value>  (required) Contract name
+```
+
+## `devphase contract test`
+
+Run tests for specified contract(s)
+
+```
+USAGE
+  $ devphase contract test [-t <value>] [-n <value>] [-e] [-m None|Minimal|WithDrivers|WithLogger|0|1|2|3]
+
+FLAGS
+  -e, --externalStack            Don't spawn local stack (use external)
+  -m, --stackSetupMode=<option>  [default: 1] Stack setup mode
+                                 <options: None|Minimal|WithDrivers|WithLogger|0|1|2|3>
+  -n, --network=<value>          [default: local] Network key
+  -t, --suite=<value>            Test suite name (directory in tests)
 ```
 
 ## `devphase contract deploy [ARGS]`
@@ -193,91 +236,29 @@ FLAGS
   --sort=<value>     property to sort by (prepend '-' for descending)
 ```
 
-## `devphase contract test`
+## `devphase contract call [ARGS]`
 
-Run tests for specified contract(s)
-
-```
-USAGE
-  $ devphase contract test [-t <value>] [-n <value>] [-e] [-m None|Minimal|WithDrivers|WithLogger|0|1|2|3]
-
-FLAGS
-  -e, --externalStack            Don't spawn local stack (use external)
-  -m, --stackSetupMode=<option>  [default: 1] Stack setup mode
-                                 <options: None|Minimal|WithDrivers|WithLogger|0|1|2|3>
-  -n, --network=<value>          [default: local] Network key
-  -t, --suite=<value>            Test suite name (directory in tests)
-```
-
-## `devphase contract typegen`
-
-Generate type bindings for compiled contract
+Call contract
 
 ```
 USAGE
-  $ devphase contract typegen -c <value>
-
-FLAGS
-  -c, --contract=<value>  (required) Contract name
-```
-
-## `devphase contract validate`
-
-Compile contract
-
-```
-USAGE
-  $ devphase contract validate [-c <value>]
-
-FLAGS
-  -c, --contract=<value>  Contract name
-```
-
-## `devphase help [COMMANDS]`
-
-Display help for devphase.
-
-```
-USAGE
-  $ devphase help [COMMANDS] [-n]
+  $ devphase contract call [ARGS] -c <value> -i <value> -m <value> [-t InkCode|SidevmCode] [-a query|tx] [-n
+    <value>] [-l <value>] [-a <value>]
 
 ARGUMENTS
-  COMMANDS  Command to show help for.
+  ARGS  Call arguments
 
 FLAGS
-  -n, --nested-commands  Include all nested commands in the output.
-
-DESCRIPTION
-  Display help for devphase.
-```
-
-## `devphase init`
-
-Initiate devPHAse project
-
-```
-USAGE
-  $ devphase init [--json] [-s | -v]
-
-FLAGS
-  -s, --silent   No output
-  -v, --verbose  Verbose output
-  --json         Output in JSON format
-```
-
-## `devphase script [ARGS]`
-
-Run script
-
-```
-USAGE
-  $ devphase script [ARGS] [-n <value>]
-
-ARGUMENTS
-  ARGS  Script(s) to execute
-
-FLAGS
-  -n, --network=<value>  [default: local] Network key
+  -a, --accessor=<option>  [default: query] Method type: transaction or query
+                           <options: query|tx>
+  -a, --account=<value>    [default: alice] Account used to call (managed account key)
+  -c, --contract=<value>   (required) Contract name
+  -i, --id=<value>         (required) Contract ID
+  -l, --cluster=<value>    Target cluster Id
+  -m, --method=<value>     (required) Contract method to call (name)
+  -n, --network=<value>    [default: local] Target network to deploy (local default)
+  -t, --type=<option>      [default: InkCode]
+                           <options: InkCode|SidevmCode>
 ```
 
 ## `devphase stack run`
