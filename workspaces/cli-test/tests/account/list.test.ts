@@ -1,6 +1,5 @@
-import { expect, test } from '@oclif/test';
+import { cleanUpContext, createConfigFile, runCommand } from '@/utils';
 import chalk from 'chalk';
-import { cleanUpContext, createConfigFile } from '../before-all.test';
 
 
 describe('Command ' + chalk.cyan('account list'), () => {
@@ -15,26 +14,25 @@ describe('Command ' + chalk.cyan('account list'), () => {
         await createConfigFile();
     });
     
-    const pTest = test
-        .stdout()
-        .timeout(5_000)
-    ;
     
-    pTest
-        .command([
-            'account create',
-            '-a=sample',
-            '-n',
-            '-v'
-        ])
-        .command([
-            'account list',
-            '-v'
-        ])
-        .it('Should properly display created account in list', ctx => {
-            expect(ctx.stdout).to.include('Account created');
-            expect(ctx.stdout).to.include('sample');
-        })
-    ;
+    it('Should properly display created account in list', async function() {
+        {
+            const { stdout, stderr, status } = await runCommand(
+                'account create',
+                [ '-a=sample', '-n', '-v' ],
+                { timeout: 5_000 },
+            );
+        }
+        
+        {
+            const { stdout, stderr, status } = await runCommand(
+                'account list',
+                [ '-v' ],
+                { timeout: 5_000 },
+            );
+            
+            expect(stdout).to.include('sample');
+        }
+    });
     
 });

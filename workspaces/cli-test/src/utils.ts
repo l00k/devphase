@@ -1,6 +1,8 @@
 import { ProjectConfig, RecursivePartial, RunMode, RuntimeContext } from '@devphase/service';
+import { Exception } from '@devphase/service/dist/utils/Exception';
+import { TimeoutOptions } from '@devphase/service/dist/utils/timeout';
 import chalk from 'chalk';
-import childProcess from 'child_process';
+import childProcess, { ChildProcessWithoutNullStreams } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { Readable, Writable } from 'stream';
@@ -17,6 +19,39 @@ export {
     ROOT_PATH,
     CONTEXT_PATH
 };
+
+
+export function timeout (
+    callback : () => Promise<any>,
+    timeLimit : number
+)
+{
+    return new Promise(async(resolve, reject) => {
+        const _timeout = setTimeout(
+            () => reject('Timeouted'),
+            timeLimit
+        );
+        
+        try {
+            const result = await callback();
+            
+            clearTimeout(_timeout);
+            resolve(result);
+        }
+        catch (e) {
+            clearTimeout(_timeout);
+            reject(e);
+        }
+    });
+}
+
+export async function sleep<T> (
+    time : number
+) : Promise<T>
+{
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
 
 export async function createConfigFile (projectConfig : RecursivePartial<ProjectConfig> = {})
 {
@@ -76,6 +111,10 @@ export async function requestStackBinaries ()
 }
 
 
+export type RunCommandOptions = {
+    timeout? : number,
+}
+
 export type RunCommandResult = {
     stdout : string,
     stderr : string,
@@ -86,18 +125,23 @@ export type RunCommandResult = {
 export async function runCommand (
     command : string,
     args : string[],
-    timeout : number = 2_000
+    options : RunCommandOptions = {}
 ) : Promise<RunCommandResult>
 {
+    options = {
+        timeout: 2_000,
+        ...options
+    };
+    
     const result = childProcess.spawnSync(
         '../node_modules/.bin/devphase',
         [
-            command,
+            ...command.split(' '),
             ...args
         ],
         {
             cwd: CONTEXT_PATH,
-            timeout,
+            timeout: options.timeout,
         }
     );
     
@@ -110,28 +154,38 @@ export async function runCommand (
 }
 
 
+export type RunAsyncCommandOptions = {
+    timeout? : number,
+    waitFor? : (stdout : string, stderr : string) => boolean,
+}
+
 export type RunAsyncCommandResult = {
     stdin : Writable,
     stdout : Readable,
     stderr : Readable,
+    process : ChildProcessWithoutNullStreams,
     promise : Promise<[ number, string ]>
 }
 
 export async function runAsyncCommand (
     command : string,
     args : string[],
-    timeout : number = 2_000
+    options : RunAsyncCommandOptions = {}
 ) : Promise<RunAsyncCommandResult>
 {
+    options = {
+        timeout: 2_000,
+        ...options,
+    };
+    
     const child = childProcess.spawn(
         '../node_modules/.bin/devphase',
         [
-            command,
+            ...command.split(' '),
             ...args
         ],
         {
             cwd: CONTEXT_PATH,
-            timeout,
         }
     );
     
@@ -139,10 +193,26 @@ export async function runAsyncCommand (
     stdout.setEncoding('utf-8');
     stderr.setEncoding('utf-8');
     
+    if (options.waitFor) {
+        await timeout(() => new Promise(resolve => {
+            stdout.on('data', txt => {
+                if (options.waitFor(txt, undefined)) {
+                    resolve(true);
+                }
+            });
+            stderr.on('data', txt => {
+                if (options.waitFor(undefined, txt)) {
+                    resolve(true);
+                }
+            });
+        }), options.timeout);
+    }
+    
     return {
         stdin,
         stdout,
         stderr,
+        process: child,
         promise: new Promise(resolve => {
             child.once('close', (ret, signal) => {
                 resolve([ ret, signal ]);

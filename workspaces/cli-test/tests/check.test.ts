@@ -19,7 +19,7 @@ describe('Command ' + chalk.cyan('check'), () => {
         const { stdout, stderr, status } = await runCommand(
             'check',
             [ '-v' ],
-            5_000,
+            { timeout: 5_000 },
         );
         
         expect(stdout).to.include('Checking configuration file [failed]');
@@ -29,7 +29,7 @@ describe('Command ' + chalk.cyan('check'), () => {
         const { stdout, stderr, status } = await runCommand(
             'check',
             [ '-v' ],
-            5_000,
+            { timeout: 5_000 },
         );
         
         const stacksDirPath = path.join(
@@ -48,7 +48,7 @@ describe('Command ' + chalk.cyan('check'), () => {
             const { stdout, stderr, status } = await runCommand(
                 'check',
                 [ '-v' ],
-                5_000,
+                { timeout: 5_000 },
             );
             
             expect(stdout).to.include('Check dependencies [completed]');

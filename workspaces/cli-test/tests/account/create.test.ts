@@ -1,8 +1,5 @@
-import { expect, test } from '@oclif/test';
+import { cleanUpContext, createConfigFile, runCommand } from '@/utils';
 import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
-import { cleanUpContext, CONTEXT_PATH, createConfigFile } from '../before-all.test';
 
 
 describe('Command ' + chalk.cyan('account create'), () => {
@@ -17,43 +14,37 @@ describe('Command ' + chalk.cyan('account create'), () => {
         await createConfigFile();
     });
     
-    const pTest = test
-        .stdout()
-        .timeout(5_000)
-    ;
     
-    pTest
-        .command([
+    it('Should properly create account without passphrase', async function() {
+        const { stdout, stderr, status } = await runCommand(
             'account create',
-            '-a=sample',
-            '-n',
-            '-v'
-        ])
-        .it('Should properly create account without passphrase', ctx => {
-            expect(ctx.stdout).to.include('Account created');
-        })
-        ;
+            [ '-a=sample', '-n', '-v' ],
+            { timeout: 5_000 },
+        );
+        
+        expect(stdout).to.include('Account created');
+    });
     
-    pTest
-        .stderr()
-        .command([
-            'account create',
-            '-a=sample',
-            '-n',
-            '-v'
-        ])
-        .command([
-            'account create',
-            '-a=sample',
-            '-n',
-            '-v'
-        ])
-        .catch(e => {
-            expect(e.toString()).to.include('Account with given alias already exists');
-        })
-        .it('Should not be able to create duplicated account', ctx => {
-            expect(ctx.stdout).to.include('Account created');
-        })
-        ;
+    it('Account with given alias already exists', async function() {
+        {
+            const { stdout, stderr, status } = await runCommand(
+                'account create',
+                [ '-a=sample', '-n', '-v' ],
+                { timeout: 5_000 },
+            );
+            expect(stdout).to.include('Account created');
+        }
+        
+        {
+            const { stdout, stderr, status } = await runCommand(
+                'account create',
+                [ '-a=sample', '-n', '-v' ],
+                { timeout: 5_000 },
+            );
+            
+            expect(stderr).to.include('Account with given alias already exists');
+            expect(status).to.be.eql(1);
+        }
+    });
     
 });

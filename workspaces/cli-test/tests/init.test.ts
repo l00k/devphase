@@ -18,7 +18,7 @@ describe('Command ' + chalk.cyan('init'), () => {
         const { stdout, stderr, status } = await runCommand(
             'init',
             [ '-v' ],
-            5_000,
+            { timeout: 5_000 },
         );
         
         expect(stdout).to.include('Creating directories');

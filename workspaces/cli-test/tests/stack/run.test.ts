@@ -1,6 +1,5 @@
-import { expect, test } from '@oclif/test';
+import { cleanUpContext, createConfigFile, runCommand } from '@/utils';
 import chalk from 'chalk';
-import { cleanUpContext, createConfigFile } from '../before-all.test';
 
 
 describe('Command ' + chalk.cyan('stack run'), () => {
@@ -15,20 +14,18 @@ describe('Command ' + chalk.cyan('stack run'), () => {
         await createConfigFile();
     });
     
-    const pTest = test
-        .stdout()
-        .timeout(20_000)
-        .command([ 'stack run', '--timelimit=1' ])
-    ;
-    
-    pTest
-        .exit(0)
-        .it('Should properly start stack', ctx => {
-            expect(ctx.stdout).to.include('Starting stack');
-            expect(ctx.stdout).to.include('✔ Start node component');
-            expect(ctx.stdout).to.include('✔ Start pRuntime component');
-            expect(ctx.stdout).to.include('✔ Start pherry component');
-            expect(ctx.stdout).to.include('Time limit reached');
-        })
-    ;
+    it('Should properly start stack', async() => {
+        const { stdout, stderr, status } = await runCommand(
+            'stack run',
+            [ '--timelimit=1' ],
+            { timeout: 20_000 },
+        );
+        
+        expect(stdout).to.include('Starting stack');
+        expect(stdout).to.include('Start node component [completed]');
+        expect(stdout).to.include('Start pRuntime component [completed]');
+        expect(stdout).to.include('Start pherry component [completed]');
+        expect(stdout).to.include('Time limit reached');
+        expect(status).to.be.eql(1);
+    });
 });
