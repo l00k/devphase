@@ -7,7 +7,7 @@ jobs:
     build:
         executor:
             name: node/default
-            tag: '16'
+            tag: '18.16.0'
         steps:
             - checkout
             - node/install-packages:
@@ -28,7 +28,7 @@ jobs:
     test_cli:
         executor:
             name: node/default
-            tag: '16'
+            tag: '18.16.0'
         steps:
             - run:
                 command: |
