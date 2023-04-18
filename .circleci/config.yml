@@ -11,9 +11,15 @@ jobs:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
+            - restore_cache:
+                key: &deps1-cache deps1-{{ .Branch }}
             - run:
                 name: Install cargo contract
                 command: cargo install cargo-contract
+            - save_cache:
+                key: *deps1-cache
+                paths:
+                    - "~/.cargo"
             - run:
                 name: Build @devphase/service
                 command: |
