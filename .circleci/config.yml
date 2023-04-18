@@ -12,10 +12,12 @@ jobs:
             - node/install-packages:
                 pkg-manager: yarn
             - restore_cache:
-                key: &deps1-cache deps1-{{ .Branch }}
+                key: &deps1-cache deps1-{{ .Branch }}-1
             - run:
                 name: Install cargo contract
-                command: cargo install cargo-contract
+                command: |
+                    rustup target add wasm32-unknown-unknown
+                    cargo install cargo-contract
             - save_cache:
                 key: *deps1-cache
                 paths:
