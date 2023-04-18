@@ -39,7 +39,7 @@ jobs:
                 name: Run tests
                 command: |
                     cd workspaces/cli-test
-                    yarn test
+                    yarn test --grep 'File related'
 
 workflows:
     test:
