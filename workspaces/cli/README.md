@@ -384,7 +384,7 @@ const config : ProjectConfigOptions = {
     testing: {
         mocha: {}, // custom mocha configuration
         blockTime: 100, // block time override for spawning local testnet
-        envSetup: { // environment setup
+        stackSetupConfig: { // environment setup
             setup: {
                 custom: undefined, // custom setup procedure callback; (devPhase) => Promise<void>
                 timeout: 60 * 1000,
