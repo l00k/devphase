@@ -88,8 +88,6 @@ describe('File related ' + chalk.cyan('contract') + ' commands', () => {
                 { timeout: 300_000 },
             );
             
-            console.log({ stdout, stderr, status });
-            
             expect(stdout).to.include('Compilation [completed]');
             expect(stdout).to.include('Validation [completed]');
             expect(stdout).to.include('Type binding [completed]');
