@@ -4,7 +4,7 @@ orbs:
     node: circleci/node@4.7
 
 jobs:
-    build:
+    build_and_test:
         executor:
             name: node/default
             tag: '18.16.0'
@@ -25,21 +25,13 @@ jobs:
             - run:
                 name: Reinstall all dependencies
                 command: ./reinstall.sh
-    test_cli:
-        executor:
-            name: node/default
-            tag: '18.16.0'
-        steps:
             - run:
+                name: Run tests
                 command: |
                     cd workspaces/cli-test
                     yarn test
-                name: Run @devphase/cli tests
 
 workflows:
     test:
         jobs:
-            - build
-            - test_cli:
-                requires:
-                    - build
+            - build_and_test
