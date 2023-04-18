@@ -50,6 +50,13 @@ describe('Command ' + chalk.cyan('stack setup'), () => {
         );
     });
     
+    after(async function () {
+        if (stackCmd) {
+            stackCmd.process.kill('SIGINT');
+            await sleep(1_000);
+        }
+    });
+    
     
     it('Should properly setup stack in Minimal mode', async function() {
         this.timeout(20_000);
@@ -75,7 +82,7 @@ describe('Command ' + chalk.cyan('stack setup'), () => {
     
     it('Should properly setup stack in WithDrivers mode', async function() {
         this.timeout(60_000);
-        
+
         const { stdout, stderr, status } = await runCommand(
             'stack setup',
             [ '-m=2', '-v' ],
@@ -96,10 +103,10 @@ describe('Command ' + chalk.cyan('stack setup'), () => {
 
         expect(stdout).to.include('Stack is ready');
     });
-    
+
     it('Should properly setup stack in WithLogger mode', async function() {
         this.timeout(90_000);
-        
+
         const { stdout, stderr, status } = await runCommand(
             'stack setup',
             [ '-m=3', '-v' ],
