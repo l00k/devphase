@@ -6,6 +6,6 @@
     "timeout": 10000,
     "spec": [
         "tests/before-all.test.ts",
-        "tests/contract/*.test.ts"
+        "tests/**/*.test.ts"
     ]
 }
