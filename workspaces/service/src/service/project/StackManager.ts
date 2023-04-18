@@ -51,6 +51,17 @@ export class StackManager
             );
         }
         
+        // get default block time
+        const blockTime = runMode == RunMode.Testing
+            ? this._context.config.testing.blockTime
+            : this._context.config.stack.blockTime
+            ;
+        
+        options = {
+            blockTime,
+            ...options,
+        };
+        
         // prepare logs directory if required
         if (options.saveLogs) {
             fs.mkdirSync(this._runLogsPath, { recursive: true });
