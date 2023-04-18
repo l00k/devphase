@@ -6,7 +6,7 @@ orbs:
 jobs:
     build_and_test:
         docker:
-            image: cimg/rust:1.68.2-node
+            - image: cimg/rust:1.68.2-node
         steps:
             - checkout
             - node/install-packages:
