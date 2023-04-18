@@ -12,7 +12,7 @@ jobs:
             - node/install-packages:
                 pkg-manager: yarn
             - restore_cache:
-                key: &deps1-cache deps1-{{ .Branch }}-1
+                key: &deps1-cache deps1-{{ .Branch }}-2
             - run:
                 name: Install cargo contract
                 command: |
@@ -22,6 +22,7 @@ jobs:
                 key: *deps1-cache
                 paths:
                     - "~/.cargo"
+                    - "~/.rustup"
             - run:
                 name: Build @devphase/service
                 command: |
