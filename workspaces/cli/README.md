@@ -5,7 +5,7 @@ Development tool for Phala Phat contracts.
 ![](https://img.shields.io/badge/Coverage-97%25-83A603.svg?prefix=$coverage$)
 -->
 
-*Build for both latest devPHAse and Phala Blockchain release:*  
+*Tests for both latest devPHAse and Phala Blockchain release:*  
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/l00k/devphase/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/l00k/devphase/tree/master)
 
 
