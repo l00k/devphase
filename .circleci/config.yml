@@ -4,19 +4,40 @@ orbs:
     node: circleci/node@4.7
 
 jobs:
-    build_and_test:
-        executor: node/default
+    build:
+        executor:
+            name: node/default
+            tag: '18'
         steps:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
+            - compile_service:
+                command: |
+                    cd workspaces/service
+                    yarn compile
+                name: Build @devphase/service
+            - compile_cli:
+                command: |
+                    cd workspaces/cli
+                    yarn compile
+                name: Build @devphase/cli
             - run:
-                command: yarn test
-                name: Run tests
+                command: ./reinstall.sh
+                name: Reinstall all dependencies
+    test_cli:
+        executor:
+            name: node/default
+            tag: '18'
+        steps:
+            - run:
+                command: |
+                    cd workspaces/cli-test
+                    yarn test
+                name: Run @devphase/cli tests
 
 workflows:
-    main:
+    test:
         jobs:
-            - node/test:
-                version: '18.13'
-                pkg-manager: yarn
+            - build
+            - test
