@@ -6,8 +6,8 @@ orbs:
 jobs:
     build_and_test:
         executor:
-            name: node/default
-            tag: '18.16.0'
+            name: rust/default
+            tag: '1.68.2-node'
         steps:
             - checkout
             - node/install-packages:
