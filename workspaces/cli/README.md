@@ -343,8 +343,8 @@ const config : ProjectConfigOptions = {
             args: {
                 '--dev': true,
                 '--rpc-methods': 'Unsafe',
-                '--block-millisecs': '{{stack.blockTime}}',
-                '--ws-port': '{{stack.node.port}}'
+                '--ws-port': '{{stack.node.port}}',
+                '--block-millisecs': '{{stack.blockTime}}', // override at runtime
             },
             timeout: 10000,
         },
@@ -373,7 +373,7 @@ const config : ProjectConfigOptions = {
                 '--inject-key': '0000000000000000000000000000000000000000000000000000000000000001',
                 '--substrate-ws-endpoint': 'ws://localhost:{{stack.node.port}}',
                 '--pruntime-endpoint': 'http://localhost:{{stack.pruntime.port}}',
-                '--dev-wait-block-ms': '{{stack.blockTime}}',
+                '--dev-wait-block-ms': '{{stack.blockTime}}', // override at runtime
             },
             timeout: 2000,
         }
