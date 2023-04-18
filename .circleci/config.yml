@@ -6,11 +6,14 @@ orbs:
 jobs:
     build_and_test:
         docker:
-            image: cimg/rust:1.68.2-node
+            - image: cimg/rust:1.68.2-node
         steps:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
+            - run:
+                name: Install cargo contract
+                command: cargo install cargo-contract
             - run:
                 name: Build @devphase/service
                 command: |
