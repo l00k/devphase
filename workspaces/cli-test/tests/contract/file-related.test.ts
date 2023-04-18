@@ -149,7 +149,7 @@ describe('File related ' + chalk.cyan('contract') + ' commands', () => {
                 );
                 
                 expect(stdout).to.include('Validation [completed]');
-                expect(stdout).to.include('http_proxy [completed]');
+                expect(stdout).to.include('sample [completed]');
             });
             
             it('Should properly generate sample contract types', async function() {
