@@ -12,19 +12,19 @@ jobs:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
-            - compile_service:
+            - run:
+                name: Build @devphase/service
                 command: |
                     cd workspaces/service
                     yarn compile
-                name: Build @devphase/service
-            - compile_cli:
+            - run:
+                name: Build @devphase/cli
                 command: |
                     cd workspaces/cli
                     yarn compile
-                name: Build @devphase/cli
             - run:
-                command: ./reinstall.sh
                 name: Reinstall all dependencies
+                command: ./reinstall.sh
     test_cli:
         executor:
             name: node/default
@@ -40,4 +40,6 @@ workflows:
     test:
         jobs:
             - build
-            - test
+            - test_cli:
+                requires:
+                    - build
