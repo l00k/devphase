@@ -12,15 +12,6 @@
     },
     "private": true,
     "workspaces": [
-        "./workspaces/service",
-        "./workspaces/cli",
-        "./workspaces/cli-test",
-        "./workspaces/xsandbox"
-    ],
-    "dependencies": {
-        "@devphase/service": "*",
-        "@devphase/cli": "*",
-        "@devphase/cli-test": "*",
-        "@devphase/sandbox": "*"
-    }
+        "./workspaces/*"
+    ]
 }
