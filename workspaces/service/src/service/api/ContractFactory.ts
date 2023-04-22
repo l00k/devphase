@@ -42,6 +42,7 @@ export class ContractFactory
     public static readonly CODE_TYPE_MAP = {
         [ContractType.InkCode]: 'Ink',
         [ContractType.SidevmCode]: 'Sidevm',
+        [ContractType.IndeterministicInkCode]: 'Ink',
     }
     
     public readonly contractType : string;

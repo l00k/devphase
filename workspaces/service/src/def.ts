@@ -206,4 +206,5 @@ export enum ContractType
 {
     InkCode = 'InkCode',
     SidevmCode = 'SidevmCode',
+    IndeterministicInkCode = 'IndeterministicInkCode',
 }
