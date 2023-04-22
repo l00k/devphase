@@ -1,13 +1,21 @@
 {
-    "name": "root",
-    "version": "1.0.0",
-    "private": true,
-    "workspaces": [
-        "./workspaces/*"
-    ],
-    "scripts": {
-        "test": "ts-mocha"
+    "name": "@devphase/monorepo",
+    "version": "0.0.1",
+    "license": "MIT",
+    "author": {
+        "name": "l00k",
+        "email": "crypto@100k.dev"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/l00k/devphase.git"
+    },
+    "workspaces": [
+        "./workspaces/service",
+        "./workspaces/cli",
+        "./workspaces/cli-test",
+        "./workspaces/xsandbox"
+    ],
     "dependencies": {
         "@devphase/service": "*",
         "@devphase/cli": "*",
