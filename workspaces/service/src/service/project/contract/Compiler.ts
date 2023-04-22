@@ -38,7 +38,7 @@ export class Compiler
             contractName
         );
         
-        const args = [ 'contract', 'build' ];
+        const args = [ 'contract', 'build', '--output-json' ];
         if (releaseMode) {
             args.push('--release');
         }
@@ -56,29 +56,29 @@ export class Compiler
         
         // analyzing contracts output
         let outputDirectory : string;
-        let compilationTextOutput = '';
-        
-        const analyzeOutput = (text : string) => {
-            const lines = text.split('\n').map(line => line.trim());
-            const lineIdx = lines
-                .findIndex(line => line.includes('Your contract artifacts are ready'));
-            if (lineIdx !== -1) {
-                outputDirectory = lines[lineIdx + 1];
-            }
-            
-            compilationTextOutput += text;
-            
-            if (displayLogs) {
-                process.stdout.write(text);
-            }
-        };
         
         const [ stdin, stdout, stderr ] = child.stdio;
         stdout.setEncoding('utf-8');
         stderr.setEncoding('utf-8');
         
-        stdout.on('data', analyzeOutput);
-        stderr.on('data', analyzeOutput);
+        stdout.on('data', txt => {
+            try {
+                const output = JSON.parse(txt);
+                outputDirectory = output.target_directory;
+            }
+            catch (e) {
+                // ignore
+            }
+        });
+        
+        if (displayLogs) {
+            stdout.on('data', txt => {
+                process.stderr.write(txt);
+            });
+            stderr.on('data', txt => {
+                process.stderr.write(txt);
+            });
+        }
         
         const resultCode = await new Promise(resolve => {
             child.on('exit', code => resolve(code));
@@ -86,7 +86,6 @@ export class Compiler
         
         if (resultCode !== 0) {
             if (displayWarns) {
-                this._logger.log(compilationTextOutput);
                 this._logger.error('Failed building contract');
             }
             return { result: false };
@@ -94,7 +93,6 @@ export class Compiler
         
         if (!outputDirectory) {
             if (displayWarns) {
-                this._logger.log(compilationTextOutput);
                 this._logger.error('Unable to detect output directory');
             }
             return { result: false };
