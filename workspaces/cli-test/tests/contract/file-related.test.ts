@@ -17,10 +17,10 @@ describe('File related ' + chalk.cyan('contract') + ' commands', () => {
         
         await createConfigFile({
             stack: {
-                blockTime: 100,
+                blockTime: 50,
             },
             testing: {
-                blockTime: 100,
+                blockTime: 50,
             }
         });
     });
