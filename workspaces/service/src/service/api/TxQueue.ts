@@ -65,10 +65,10 @@ export class TxQueue
                                 resolve(result);
                             }
                         }
-                        else if (result.status.isFinalized) {
+                        if (result.status.isFinalized) {
                             resolve(result);
                         }
-                        else if (result.status.isInvalid) {
+                        if (result.status.isInvalid) {
                             reject(result);
                         }
                     });
@@ -78,7 +78,7 @@ export class TxQueue
             }
         });
         
-        for (let i=0; i<50; ++i) {
+        for (let i=0; i<200; ++i) {
             try {
                 return await submit();
             }
@@ -86,7 +86,7 @@ export class TxQueue
                 if (e?.message) {
                     if (e.message.includes('Priority is too low')) {
                         // try again
-                        await sleep(250);
+                        await sleep(50);
                         continue;
                     }
                     else if(e.message.includes('Transaction is outdated')) {
@@ -95,7 +95,7 @@ export class TxQueue
                         this.nonceTracker[address] = nonce + 1;
                     
                         // try again
-                        await sleep(250);
+                        await sleep(50);
                         continue;
                     }
                 }

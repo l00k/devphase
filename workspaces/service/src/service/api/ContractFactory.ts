@@ -164,8 +164,7 @@ export class ContractFactory
                 this.contractType,
                 this.metadata.source.wasm
             ),
-            keyringPair,
-            true
+            keyringPair
         );
     }
     
@@ -213,8 +212,7 @@ export class ContractFactory
                 options.storageDepositLimit,
                 options.deposit
             ),
-            keyringPair,
-            true
+            keyringPair
         );
         
         const instantiateEvent = result.events.find(({ event }) => {
@@ -232,13 +230,18 @@ export class ContractFactory
         
         // wait for instantation
         try {
+            const waitTime = Math.max(
+                50 * this._blockTime,
+                10_000,
+            );
+        
             await this._waitFor(
                 async() => {
                     const key = await this.api.query
                         .phalaRegistry.contractKeys(contractId);
                     return !key.isEmpty;
                 },
-                (50 * this._blockTime)
+                waitTime
             );
         }
         catch (e) {
@@ -257,8 +260,7 @@ export class ContractFactory
                     this.clusterId,
                     contractId
                 ),
-                keyringPair,
-                true
+                keyringPair
             );
         }
         
@@ -269,8 +271,7 @@ export class ContractFactory
                     contractId,
                     options.adjustStake
                 ),
-                keyringPair,
-                true
+                keyringPair
             );
         }
         

@@ -2,7 +2,7 @@ import type { ProjectConfigOptions } from '@devphase/service';
 
 const config : ProjectConfigOptions = {
     stack: {
-        blockTime: 100,
+        blockTime: 50,
         pruntime: {
             envs: {
                 RUST_LOG: 'debug,runtime::contracts=debug'
@@ -10,7 +10,7 @@ const config : ProjectConfigOptions = {
         }
     },
     testing: {
-        blockTime: 100,
+        blockTime: 50,
     }
 };
 

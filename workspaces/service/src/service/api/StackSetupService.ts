@@ -357,8 +357,7 @@ export class StackSetupService
                     null
                 )
             ),
-            this._suAccount,
-            true
+            this._suAccount
         );
         
         await this._waitFor(
@@ -388,8 +387,7 @@ export class StackSetupService
                         this._workerInfo.publicKey
                     )
                 ),
-                this._suAccount,
-                true
+                this._suAccount
             );
         }
         
@@ -455,8 +453,7 @@ export class StackSetupService
             this._api.tx.sudo.sudo(
                 this._api.tx.phalaPhatContracts.setPinkSystemCode(systemCode)
             ),
-            this._suAccount,
-            true
+            this._suAccount
         );
         
         await this._waitFor(
@@ -486,8 +483,7 @@ export class StackSetupService
         
         const result = await this._txQueue.submit(
             tx,
-            this._suAccount,
-            true
+            this._suAccount
         );
         
         const clusterCreatedEvent = result.events.find(({ event }) => {
@@ -512,8 +508,7 @@ export class StackSetupService
                 clusterId,
                 this._suAccount.address
             ),
-            this._suAccount,
-            true
+            this._suAccount
         );
         
         return {
@@ -680,8 +675,7 @@ export class StackSetupService
                 { gasLimit: 10e12 },
                 this._loggerId
             ),
-            this._suAccount,
-            true
+            this._suAccount
         );
         
         await this._waitFor(async() => {
@@ -701,8 +695,7 @@ export class StackSetupService
                 ContractType.SidevmCode,
                 '0x' + this._logServerSideVmWasm
             ),
-            this._suAccount,
-            true
+            this._suAccount
         );
     }
     
