@@ -89,7 +89,7 @@ export class StackSetupService
         this._accounts = this._devPhase.accounts;
         this._suAccount = this._devPhase.suAccount;
         this._blockTime = this._devPhase.runtimeContext.config.stack.blockTime;
-        this._waitTime = Math.max(20_000, 4 * this._blockTime);
+        this._waitTime = Math.max(20_000, 20 * this._blockTime);
     }
     
     

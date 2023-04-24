@@ -50,7 +50,10 @@ export class ContractFactory
     public readonly clusterId : string;
     
     protected _devPhase : DevPhase;
+    
     protected _blockTime : number;
+    protected _waitTime : number;
+    
     protected _systemContract : Contract;
     protected _eventQueue : EventQueue = new EventQueue();
     
@@ -88,6 +91,7 @@ export class ContractFactory
         
         instance._devPhase = devPhase;
         instance._blockTime = devPhase.blockTime;
+        instance._waitTime = Math.max(20_000, 20 * instance._blockTime);
         
         if (!options.clusterId) {
             options.clusterId = devPhase.mainClusterId;
@@ -230,18 +234,13 @@ export class ContractFactory
         
         // wait for instantation
         try {
-            const waitTime = Math.max(
-                50 * this._blockTime,
-                10_000,
-            );
-        
             await this._waitFor(
                 async() => {
                     const key = await this.api.query
                         .phalaRegistry.contractKeys(contractId);
                     return !key.isEmpty;
                 },
-                waitTime
+                this._waitTime
             );
         }
         catch (e) {
