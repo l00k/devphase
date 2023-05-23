@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
+[profile.release]
+overflow-checks = false
+
 [dependencies]
 ink = { version = "4.0.1", default-features = false }
 
@@ -13,10 +16,6 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 [lib]
 name = "flipper"
 path = "lib.rs"
-crate-type = [
-	# Used for normal contract Wasm blobs.
-	"cdylib",
-]
 
 [features]
 default = ["std"]

@@ -19,10 +19,6 @@ pink-extension-runtime = "0.4"
 [lib]
 name = "signing"
 path = "lib.rs"
-crate-type = [
-	# Used for normal contract Wasm blobs.
-	"cdylib",
-]
 
 [features]
 default = ["std"]

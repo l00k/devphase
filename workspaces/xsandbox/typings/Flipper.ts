@@ -17,6 +17,11 @@ export namespace Flipper {
         Ok? : boolean,
         Err? : InkPrimitives_LangError$3
         };
+    type InkPrimitives_Types_AccountId$5 = any;
+    type InkPrimitives_Types_Hash$6 = any;
+    type InkEnv_Types_NoChainExtension$7 = {
+
+        };
 
     /** */
     /** Queries */

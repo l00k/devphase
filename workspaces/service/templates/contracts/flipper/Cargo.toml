@@ -13,9 +13,6 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 [lib]
 name = "{{contract_name}}"
 path = "lib.rs"
-crate-type = [
-	"cdylib",
-]
 
 [features]
 default = ["std"]
