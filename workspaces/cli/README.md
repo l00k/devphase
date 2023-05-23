@@ -9,6 +9,19 @@ Development tool for Phala Phat contracts.
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/l00k/devphase/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/l00k/devphase/tree/master)
 
 
+## Requirements
+
+Requirements list for contract (building) commands
+
+- Cargo  
+`cargo 1.69.0 (6e9a83356 2023-04-12)` *
+- Cargo Contract  
+`cargo-contract-contract 3.0.1-unknown-x86_64-unknown-linux-gnu` *
+- Target `wasm32-unknown-unknown`
+- Component `rust-src`
+
+`*` - previous versions may also work, but it was not tested
+
 ## Install
 
 Add to your projects using package manager (`yarn@^1` / `npm`)  
