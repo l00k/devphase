@@ -12,8 +12,6 @@ import { StackBinaryDownloader } from '@/service/project/StackBinaryDownloader';
 import { Exception } from '@/utils/Exception';
 import { replacePlaceholders } from '@/utils/replacePlaceholders';
 import { replaceRecursive } from '@/utils/replaceRecursive';
-import { types as PhalaSDKTypes } from '@phala/sdk';
-import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import findUp from 'find-up';
 import fs from 'fs';
 import Listr from 'listr';
@@ -313,16 +311,13 @@ export class RuntimeContext
             networks: {
                 [RuntimeContext.NETWORK_LOCAL]: {
                     nodeUrl: 'ws://localhost:{{stack.node.port}}',
-                    nodeApiOptions: {
-                        types: {
-                            ...KhalaTypes,
-                            ...PhalaSDKTypes,
-                        },
-                        signedExtensions: {
-                            CheckMqSequence: {} // fix debug output
-                        }
-                    },
+                    nodeApiOptions: {},
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+                },
+                poc5: {
+                    nodeUrl: 'wss://poc5.phala.network/ws',
+                    workerUrl: 'https://poc5.phala.network/tee-api-1',
+                    defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000001',
                 }
             },
             accountsConfig: {

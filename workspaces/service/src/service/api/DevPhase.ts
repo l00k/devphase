@@ -15,7 +15,13 @@ import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import fs from 'fs';
 import path from 'path';
+import { types as PhalaSDKTypes } from '@phala/sdk';
+import { khalaDev as KhalaTypes } from '@phala/typedefs';
 
+
+type DevPhaseProps = {
+    -readonly [K in keyof DevPhase]?: DevPhase[K]
+}
 
 type WorkerInfo = {
     publicKey : string,
@@ -84,14 +90,18 @@ export class DevPhase
             ?? runtimeContext.config.stack.blockTime
             ;
         
-        Object.assign(instance, {
+        const instanceProps : DevPhaseProps = {
             blockTime,
-            ...options,
             networkConfig,
             runtimeContext,
-            api,
             workerUrl: networkConfig.workerUrl,
-        });
+            api,
+            ...options,
+        };
+        if (networkConfig.defaultClusterId) {
+            instanceProps.mainClusterId = networkConfig.defaultClusterId;
+        }
+        Object.assign(instance, instanceProps);
         
         // load accounts
         const accountManager = new AccountManager(runtimeContext);
@@ -132,11 +142,22 @@ export class DevPhase
     
     public async createApiPromise () : Promise<ApiPromise>
     {
-        return ApiPromise.create({
+        const options : ApiOptions = replaceRecursive({
             provider: this._apiProvider,
             noInitWarn: true,
-            ...this._apiOptions
-        });
+            types: {
+                ...KhalaTypes,
+                ...PhalaSDKTypes,
+            },
+            signedExtensions: {
+                CheckMqSequence: { // fix debug output
+                    extrinsic: {},
+                    payload: {},
+                }
+            }
+        }, this._apiOptions);
+    
+        return ApiPromise.create(options);
     }
     
     public async stackSetup (options : Partial<StackSetupOptions> = {}) : Promise<void>

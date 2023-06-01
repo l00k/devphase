@@ -1,5 +1,6 @@
 import { Exception } from '@/utils/Exception';
 import { sleep } from '@/utils/sleep';
+import { timeout } from '@/utils/timeout';
 import { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -11,7 +12,7 @@ export class TxQueue
     
     protected _api : ApiPromise;
     
-    public nonceTracker : Record<number, any> = {};
+    protected _nonceTracker : Record<number, any> = {};
     
     
     public constructor (api)
@@ -21,7 +22,7 @@ export class TxQueue
     
     public async nextNonce (address)
     {
-        const byCache = this.nonceTracker[address] || 0;
+        const byCache = this._nonceTracker[address] || 0;
         const byRpc = (
             await this._api.rpc.system.accountNextIndex(address)
         ).toNumber();
@@ -31,27 +32,27 @@ export class TxQueue
     
     protected _markNonceFailed (address, nonce)
     {
-        if (!this.nonceTracker[address]) {
+        if (!this._nonceTracker[address]) {
             return;
         }
-        if (nonce < this.nonceTracker[address]) {
-            this.nonceTracker[address] = nonce;
+        if (nonce < this._nonceTracker[address]) {
+            this._nonceTracker[address] = nonce;
         }
     }
     
-    async submit (
-        transaction : SubmittableExtrinsic<any>,
+    public async submit (
+        transaction : SubmittableExtrinsic<'promise'>,
         signer : KeyringPair,
         waitForFinalization = false
     ) : Promise<ISubmittableResult>
     {
         const address = signer.address;
         
-        let nonce = await this.nextNonce(address);
-        this.nonceTracker[address] = nonce + 1;
-        
-        const submit : any = () => new Promise(async(resolve, reject) => {
-            try {
+        const submit = () => new Promise<ISubmittableResult>(async(resolve, reject) => {
+            const nonce = await this.nextNonce(address);
+            this._nonceTracker[address] = nonce + 1;
+            
+            timeout(async() => {
                 await transaction
                     .signAndSend(signer, { nonce }, (result, extra) => {
                         if (result.status.isInBlock) {
@@ -71,11 +72,20 @@ export class TxQueue
                         if (result.status.isInvalid) {
                             reject(result);
                         }
-                    });
-            }
-            catch (e) {
-                reject(e);
-            }
+                        if (result.status.isDropped) {
+                            reject(result);
+                        }
+                        if (result.status.isUsurped) {
+                            reject(result);
+                        }
+                        if (result.status.isRetracted) {
+                            reject(result);
+                        }
+                        if (result.isError) {
+                            reject(result);
+                        }
+                    }).catch(e => reject(e));
+            }, 60_000).catch(e => reject(e));
         });
         
         for (let i=0; i<200; ++i) {
@@ -83,21 +93,25 @@ export class TxQueue
                 return await submit();
             }
             catch (e : any) {
-                if (e?.message) {
-                    if (e.message.includes('Priority is too low')) {
-                        // try again
-                        await sleep(50);
-                        continue;
-                    }
-                    else if(e.message.includes('Transaction is outdated')) {
-                        // increase nonce
-                        nonce = await this.nextNonce(address);
-                        this.nonceTracker[address] = nonce + 1;
-                    
-                        // try again
-                        await sleep(50);
-                        continue;
-                    }
+                const msg = typeof e == 'string'
+                    ? e.toLowerCase()
+                    : e?.message.toString().toLowerCase()
+                    ;
+            
+                if (
+                    msg.includes('priority is too low')
+                ) {
+                    await sleep(50);
+                    continue;
+                }
+                else if(
+                    msg.includes('transaction is outdated')
+                ) {
+                    continue;
+                }
+                else if (msg.includes('timeout')) {
+                    i += 9;
+                    continue;
                 }
                 
                 throw e;

@@ -416,14 +416,20 @@ const config : ProjectConfigOptions = {
     networks: {
         local: {
             nodeUrl: 'ws://localhost:{{stack.node.port}}',
-            nodeApiOptions: {
-                types: {
-                    ...KhalaTypes,
-                    ...PhalaSDKTypes,
-                }
-            },
+            nodeApiOptions: {},
             workerUrl: 'http://localhost:{{stack.pruntime.port}}',
+            defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000000', // set default cluster ID for further actions
             blockTime: 6000, // network block time (may be overriden in testing mode)
+        },
+        poc5: {
+            nodeUrl: 'wss://poc5.phala.network/ws',
+            workerUrl: 'https://poc5.phala.network/tee-api-1',
+            defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000001',
+        },
+        [networkKey]: {
+            nodeUrl: 'ws://...',
+            workerUrl: 'http://...',
+            defaultClusterId: '0x0abc...',
         }
     },
     /**

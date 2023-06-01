@@ -71,6 +71,7 @@ export type NetworkConfig = {
     nodeUrl : string,
     nodeApiOptions? : ApiOptions,
     workerUrl : string,
+    defaultClusterId? : string,
     blockTime? : number,
 };
 
