@@ -78,6 +78,9 @@ export class Compiler
             stderr.on('data', txt => {
                 process.stderr.write(txt);
             });
+        } else {
+            // To avoid the child process to hang on writing to stderr.
+            stderr.on('data', () => {});
         }
         
         const resultCode = await new Promise(resolve => {
