@@ -24,12 +24,23 @@ Requirements list for contract (building) commands
 
 ## Install
 
-Add to your projects using package manager (`yarn@^1` / `npm`)  
+Depending on how you manage your projects you can:
+1. You can add devPHAse to your project dependencies (`yarn@^1` / `npm`)  
 Sadly `yarn@^3` is not supported (check [#4](https://github.com/l00k/devphase/issues/4))  
 
 ```shell
 yarn add -D @devphase/cli
 yarn add -D typescript ts-node # required peer dependencies
+
+yarn devphase [command]
+```
+2. Install it globally and use `npx` to call it.  
+**Note:** this may be default in Phala's example repos
+```shell
+npm install -g @devphase/cli
+npm install -g typescript ts-node # required peer dependencies
+
+npx @devphase/cli [command]
 ```
 
 ## Sandbox
