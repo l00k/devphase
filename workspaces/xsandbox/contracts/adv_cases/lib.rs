@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
-#![feature(trace_macros)]
 
-use ink::AccountId;
+extern crate alloc;
+
 use ink as ink;
 use pink_extension as pink;
 
@@ -11,35 +11,41 @@ mod adv_cases {
     use super::pink;
     use pink::{PinkEnvironment};
 
-    use ink_prelude::{
-        string::{String},
-        vec::Vec,
+    use alloc::{
+        string::String,
+        vec::Vec
     };
-    use ink_storage::traits::{PackedLayout, SpreadAllocate, SpreadLayout};
-    use ink_storage::Mapping;
+    use ink::storage::traits::StorageLayout;
+    use ink::storage::Mapping;
     use scale::{Decode, Encode};
 
 
     #[derive(Debug, PartialEq, Eq, Encode, Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, StorageLayout)
+    )]
     pub enum Error {
         NotFound,
         Unknonw,
     }
 
     #[derive(Debug, PartialEq, Eq, Encode, Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[cfg_attr(
+        feature = "std",
+        derive(scale_info::TypeInfo, StorageLayout)
+    )]
     pub enum Error2 {
     }
 
     pub type Result<T> = core::result::Result<T, Error>;
 
     #[derive(
-        Debug, PartialEq, Eq, Encode, Decode, Clone, SpreadLayout, PackedLayout
+        Debug, PartialEq, Eq, Encode, Decode, Clone
     )]
     #[cfg_attr(
         feature = "std",
-        derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+        derive(scale_info::TypeInfo, StorageLayout)
     )]
     pub enum Role {
         User,
@@ -47,11 +53,11 @@ mod adv_cases {
     }
 
     #[derive(
-        Debug, PartialEq, Eq, Encode, Decode, Clone, SpreadLayout, PackedLayout
+        Debug, PartialEq, Eq, Encode, Decode, Clone
     )]
     #[cfg_attr(
         feature = "std",
-        derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+        derive(scale_info::TypeInfo, StorageLayout)
     )]
     pub struct User {
         active: bool,
@@ -63,8 +69,6 @@ mod adv_cases {
     }
 
     #[ink(storage)]
-    #[derive(SpreadAllocate)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct AdvCases {
         users: Mapping<u32, User>,
         users_num: u32,
@@ -74,9 +78,11 @@ mod adv_cases {
     impl AdvCases {
         #[ink(constructor)]
         pub fn default() -> Self {
-            ink::utils::initialize_contract(|this: &mut Self| {
-                this.users_num = 0;
-            })
+            Self {
+                users: Mapping::new(),
+                users_num: 0,
+                users_by_account: Mapping::new()
+            }
         }
 
         #[ink(message)]

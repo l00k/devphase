@@ -5,17 +5,17 @@ authors = ["[your_name] <[your_email]>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.0.1", default-features = false }
+ink = { version = "4.2.1", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
 
-pink-extension = { version = "0.1.17", default-features = false }
+pink-extension = { version = "0.4", default-features = false }
 pink-utils = { version = "0.1", default-features = false }
 
 [dev-dependencies]
-pink-extension-runtime = "0.1.3"
+pink-extension-runtime = { version = "0.4", default-features = false }
 
 [lib]
 name = "adv_cases"

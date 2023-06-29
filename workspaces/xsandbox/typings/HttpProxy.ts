@@ -13,8 +13,8 @@ export namespace HttpProxy {
         Ok? : never[],
         Err? : InkPrimitives_LangError$3
         };
-    type PinkExtension_ChainExtension_HttpRequest_HttpRequest$4 = { url: string, method: string, headers: [ string, string ][], body: number[] | DPT.HexString };
-    type PinkExtension_ChainExtension_HttpRequest_HttpResponse$7 = { status_code: number, reason_phrase: string, headers: [ string, string ][], body: number[] | DPT.HexString };
+    type PinkExtension_ChainExtension_HttpRequest_HttpRequest$4 = { url: string, method: string, headers: [ string, string ][], body: number[] | string };
+    type PinkExtension_ChainExtension_HttpRequest_HttpResponse$7 = { status_code: number, reason_phrase: string, headers: [ string, string ][], body: number[] | string };
     type Result$6 = {
         Ok? : PinkExtension_ChainExtension_HttpRequest_HttpResponse$7,
         Err? : InkPrimitives_LangError$3

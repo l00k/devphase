@@ -6,23 +6,41 @@ import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contrac
 import type { Codec } from "@polkadot/types/types";
 
 export namespace Signing {
-    type InkPrimitives_LangError = { CouldNotReadInput: null };
-    type Result = { Ok: boolean } | { Err: InkPrimitives_LangError };
+    type InkPrimitives_LangError$3 = {
+        CouldNotReadInput? : null
+        };
+    type Result$1 = {
+        Ok? : never[],
+        Err? : InkPrimitives_LangError$3
+        };
+    type Result$4 = {
+        Ok? : number[] | string,
+        Err? : InkPrimitives_LangError$3
+        };
+    type Result$5 = {
+        Ok? : boolean,
+        Err? : InkPrimitives_LangError$3
+        };
+    type InkPrimitives_Types_AccountId$6 = any;
+    type InkPrimitives_Types_Hash$7 = any;
+    type PinkExtension_ChainExtension_PinkExt$8 = {
+
+        };
 
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface Sign extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$4>>>;
         }
 
         export interface Verify extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[]): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[] | string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$5>>>;
         }
 
         export interface Test extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$1>>>;
         }
     }
 
