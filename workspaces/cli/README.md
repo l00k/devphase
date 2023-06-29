@@ -25,7 +25,7 @@ Requirements list for contract (building) commands
 ## Install
 
 Depending on how you manage your projects you can:
-1. You can add devPHAse to your project dependencies (`yarn@^1` / `npm`)  
+1. Add devPHAse to your project dependencies (`yarn@^1` / `npm`)  
 Sadly `yarn@^3` is not supported (check [#4](https://github.com/l00k/devphase/issues/4))  
 
 ```shell
