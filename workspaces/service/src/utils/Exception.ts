@@ -2,7 +2,7 @@ export class Exception
     extends Error
 {
     
-    public name : string = 'Throwable';
+    public name : string = 'Exception';
     public code : number;
     
     public constructor (
@@ -21,7 +21,7 @@ export class Exception
     
     public toString ()
     {
-        return this.name + ': ' + this.message;
+        return this.code + ': ' + this.message;
     }
     
     protected _initErrorMessage (message, error)

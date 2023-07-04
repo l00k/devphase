@@ -367,7 +367,7 @@ const config : ProjectConfigOptions = {
             args: {
                 '--dev': true,
                 '--rpc-methods': 'Unsafe',
-                '--ws-port': '{{stack.node.port}}',
+                '--rpc-port': '{{stack.node.port}}',
                 '--block-millisecs': '{{stack.blockTime}}', // override at runtime
             },
             timeout: 10000,

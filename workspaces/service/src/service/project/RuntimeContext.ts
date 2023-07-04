@@ -256,7 +256,7 @@ export class RuntimeContext
                     args: {
                         '--dev': true,
                         '--rpc-methods': 'Unsafe',
-                        '--ws-port': '{{stack.node.port}}',
+                        '--rpc-port': '{{stack.node.port}}',
                         '--base-path': '.',
                         '--block-millisecs': '{{stack.blockTime}}', // override at runtime
                     },

@@ -334,7 +334,7 @@ export class StackManager
                             cleanup();
                             reject(
                                 new Exception(
-                                    `Failed to start ${binaryName} component`,
+                                    `Failed to start ${binaryName} component.\n${text}`,
                                     1666286544430
                                 )
                             );
