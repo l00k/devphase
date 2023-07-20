@@ -17,6 +17,7 @@ mod adv_cases {
     };
     use ink::storage::traits::StorageLayout;
     use ink::storage::Mapping;
+    use ink::storage::Lazy;
     use scale::{Decode, Encode};
 
 
@@ -73,6 +74,7 @@ mod adv_cases {
         users: Mapping<u32, User>,
         users_num: u32,
         users_by_account: Mapping<AccountId, u64>,
+        lazy_user: Lazy<User>,
     }
 
     impl AdvCases {
@@ -81,7 +83,8 @@ mod adv_cases {
             Self {
                 users: Mapping::new(),
                 users_num: 0,
-                users_by_account: Mapping::new()
+                users_by_account: Mapping::new(),
+                lazy_user: Default::default(),
             }
         }
 
@@ -115,6 +118,11 @@ mod adv_cases {
         #[ink(message)]
         pub fn get_user_by_result(&self, idx : u32) -> Result<User> {
             self.users.get(idx).ok_or(Error::NotFound)
+        }
+
+        #[ink(message)]
+        pub fn get_lazy_user(&self) -> Option<User> {
+            self.lazy_user.get()
         }
 
         #[ink(message)]

@@ -5,31 +5,51 @@ import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/b
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import type { Codec } from "@polkadot/types/types";
 
-export namespace HttpProxy {
-    type InkPrimitives_LangError$3 = {
+
+/** */
+/** Exported types */
+/** */
+export type Result<Ok, Err> = {
+    Ok? : Ok,
+    Err? : Err
+    };
+
+export namespace InkPrimitives {
+    export type LangError = {
         CouldNotReadInput? : null
         };
-    type Result$1 = {
-        Ok? : never[],
-        Err? : InkPrimitives_LangError$3
-        };
-    type PinkExtension_ChainExtension_HttpRequest_HttpRequest$4 = { url: string, method: string, headers: [ string, string ][], body: number[] | string };
-    type PinkExtension_ChainExtension_HttpRequest_HttpResponse$7 = { status_code: number, reason_phrase: string, headers: [ string, string ][], body: number[] | string };
-    type Result$6 = {
-        Ok? : PinkExtension_ChainExtension_HttpRequest_HttpResponse$7,
-        Err? : InkPrimitives_LangError$3
-        };
+}
 
+export namespace PinkExtension {
+    export namespace ChainExtension {
+        export namespace HttpRequest {
+            export type HttpRequest = {
+                url: string,
+                method: string,
+                headers: [ string, string ][],
+                body: number[] | string
+                };
+            export type HttpResponse = {
+                status_code: number,
+                reason_phrase: string,
+                headers: [ string, string ][],
+                body: number[] | string
+                };
+        }
+    }
+}
+
+export namespace HttpProxy {
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface Request extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, request: PinkExtension_ChainExtension_HttpRequest_HttpRequest$4): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$6>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, request: PinkExtension.ChainExtension.HttpRequest.HttpRequest): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<PinkExtension.ChainExtension.HttpRequest.HttpResponse, InkPrimitives.LangError>>>>;
         }
     }
 
-    export interface MapMessageQuery extends DPT.MapMessageQuery {
+    interface MapMessageQuery extends DPT.MapMessageQuery {
         request: ContractQuery.Request;
     }
 
@@ -39,7 +59,7 @@ export namespace HttpProxy {
     namespace ContractTx {
     }
 
-    export interface MapMessageTx extends DPT.MapMessageTx {
+    interface MapMessageTx extends DPT.MapMessageTx {
     }
 
     /** */

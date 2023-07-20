@@ -5,97 +5,103 @@ import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/b
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import type { Codec } from "@polkadot/types/types";
 
-export namespace AdvCases {
-    type InkPrimitives_LangError$3 = {
+
+/** */
+/** Exported types */
+/** */
+export type Result<Ok, Err> = {
+    Ok? : Ok,
+    Err? : Err
+    };
+export type Option<Some> = {
+    None? : null,
+    Some? : Some
+    };
+
+export namespace InkPrimitives {
+    export type LangError = {
         CouldNotReadInput? : null
         };
-    type Result$1 = {
-        Ok? : never[],
-        Err? : InkPrimitives_LangError$3
-        };
-    type AdvCases_AdvCases_Role$5 = {
+
+    export namespace Types {
+        export type AccountId = any;
+        export type Hash = any;
+    }
+}
+
+export namespace AdvCases {
+    export type Role = {
         User? : null,
         Admin? : null
         };
-    type AdvCases_AdvCases_User$4 = { active: boolean, name: string, role: AdvCases_AdvCases_Role$5, age: number, salery: number, favorite_numbers: number[] | string };
-    type Result$6 = {
-        Ok? : AdvCases_AdvCases_User$4,
-        Err? : InkPrimitives_LangError$3
+    export type User = {
+        active: boolean,
+        name: string,
+        role: AdvCases.Role,
+        age: number,
+        salery: number,
+        favorite_numbers: number[] | string
         };
-    type Result$7 = {
-        Ok? : [ number, number, number, number ],
-        Err? : InkPrimitives_LangError$3
-        };
-    type AdvCases_AdvCases_Error$11 = {
+    export type Error = {
         NotFound? : null,
         Unknonw? : null
         };
-    type Result$10 = {
-        Ok? : AdvCases_AdvCases_User$4,
-        Err? : AdvCases_AdvCases_Error$11
-        };
-    type Result$9 = {
-        Ok? : Result$10,
-        Err? : InkPrimitives_LangError$3
-        };
-    type Result$12 = {
-        Ok? : number[] | string,
-        Err? : InkPrimitives_LangError$3
-        };
-    type Result$13 = {
-        Ok? : [ number, string ],
-        Err? : InkPrimitives_LangError$3
-        };
-    type AdvCases_AdvCases_Error2$15 = {
+    export type Error2 = {
 
         };
-    type Result$16 = {
-        Ok? : number,
-        Err? : InkPrimitives_LangError$3
-        };
-    type InkPrimitives_Types_AccountId$17 = any;
-    type InkPrimitives_Types_Hash$18 = any;
-    type PinkExtension_ChainExtension_PinkExt$19 = {
+}
 
-        };
+export namespace PinkExtension {
+    export namespace ChainExtension {
+        export type PinkExt = {
 
+            };
+    }
+}
+
+export namespace AdvCases {
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface GetUser extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, idx: number): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$6>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, idx: number): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<AdvCases.User, InkPrimitives.LangError>>>>;
         }
 
         export interface GetIntegers extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$7>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<[ number, number, number, number ], InkPrimitives.LangError>>>>;
         }
 
         export interface GetUserByResult extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, idx: number): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$9>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, idx: number): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<Result<AdvCases.User, AdvCases.Error>, InkPrimitives.LangError>>>>;
+        }
+
+        export interface GetLazyUser extends DPT.ContractQuery {
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<Option<AdvCases.User>, InkPrimitives.LangError>>>>;
         }
 
         export interface GetArray extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, text: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$12>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, text: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<number[] | string, InkPrimitives.LangError>>>>;
         }
 
         export interface GetTuple extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, text: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$13>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, text: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<[ number, string ], InkPrimitives.LangError>>>>;
         }
 
         export interface Sample extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, value: AdvCases_AdvCases_Error2$15): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$16>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, value: AdvCases.Error2): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<number, InkPrimitives.LangError>>>>;
         }
 
         export interface HandleReq extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$1>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<never[], InkPrimitives.LangError>>>>;
         }
     }
 
-    export interface MapMessageQuery extends DPT.MapMessageQuery {
+    interface MapMessageQuery extends DPT.MapMessageQuery {
         getUser: ContractQuery.GetUser;
         getIntegers: ContractQuery.GetIntegers;
         getUserByResult: ContractQuery.GetUserByResult;
+        getLazyUser: ContractQuery.GetLazyUser;
         getArray: ContractQuery.GetArray;
         getTuple: ContractQuery.GetTuple;
         sample: ContractQuery.Sample;
@@ -107,11 +113,11 @@ export namespace AdvCases {
     /** */
     namespace ContractTx {
         export interface Add extends DPT.ContractTx {
-            (options: ContractOptions, user: AdvCases_AdvCases_User$4): DPT.SubmittableExtrinsic;
+            (options: ContractOptions, user: AdvCases.User): DPT.SubmittableExtrinsic;
         }
     }
 
-    export interface MapMessageTx extends DPT.MapMessageTx {
+    interface MapMessageTx extends DPT.MapMessageTx {
         add: ContractTx.Add;
     }
 

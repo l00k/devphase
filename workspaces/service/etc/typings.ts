@@ -10,15 +10,9 @@ import type { AnyJson, Codec } from '@polkadot/types/types';
 export * from '@polkadot/types-codec/types/interfaces';
 
 
-export interface FixedArray<L extends number, T>
-    extends ArrayLike<T>
-{
-    length : L
-}
-
 type SnakeToCamelCase<Key extends string> = Key extends `${infer FirstPart}_${infer FirstLetter}${infer LastPart}`
-    ? `${Lowercase<FirstPart>}${Uppercase<FirstLetter>}${SnakeToCamelCase<LastPart>}`
-    : `${Lowercase<Key>}`;
+    ? `${Uncapitalize<FirstPart>}${Uppercase<FirstLetter>}${SnakeToCamelCase<LastPart>}`
+    : `${Uncapitalize<Key>}`;
 
 type SnakeToCamelCaseOpt<Key extends string> = Key extends `${infer FirstPart}_${infer FirstLetter}${infer LastPart}`
     ? `${FirstPart}${Uppercase<FirstLetter>}${SnakeToCamelCase<LastPart>}`

@@ -5,38 +5,40 @@ import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/b
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import type { Codec } from "@polkadot/types/types";
 
-export namespace PhatHello {
-    type InkPrimitives_LangError$3 = {
+
+/** */
+/** Exported types */
+/** */
+export type Result<Ok, Err> = {
+    Ok? : Ok,
+    Err? : Err
+    };
+
+export namespace InkPrimitives {
+    export type LangError = {
         CouldNotReadInput? : null
         };
-    type Result$1 = {
-        Ok? : never[],
-        Err? : InkPrimitives_LangError$3
-        };
-    type PhatHello_PhatHello_Error$6 = {
+}
+
+export namespace PhatHello {
+    export type Error = {
         InvalidEthAddress? : null,
         HttpRequestFailed? : null,
         InvalidResponseBody? : null
         };
-    type Result$5 = {
-        Ok? : string,
-        Err? : PhatHello_PhatHello_Error$6
-        };
-    type Result$4 = {
-        Ok? : Result$5,
-        Err? : InkPrimitives_LangError$3
-        };
+}
 
+export namespace PhatHello {
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface GetEthBalance extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, account: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$4>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, account: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<Result<string, PhatHello.Error>, InkPrimitives.LangError>>>>;
         }
     }
 
-    export interface MapMessageQuery extends DPT.MapMessageQuery {
+    interface MapMessageQuery extends DPT.MapMessageQuery {
         getEthBalance: ContractQuery.GetEthBalance;
     }
 
@@ -46,7 +48,7 @@ export namespace PhatHello {
     namespace ContractTx {
     }
 
-    export interface MapMessageTx extends DPT.MapMessageTx {
+    interface MapMessageTx extends DPT.MapMessageTx {
     }
 
     /** */

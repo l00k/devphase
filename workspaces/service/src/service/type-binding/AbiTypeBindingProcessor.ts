@@ -3,6 +3,7 @@ import { ContractMetadata } from '@/typings/ContractMetadata';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
+import { StructureKind } from 'ts-morph';
 import * as TsMorph from 'ts-morph';
 
 
@@ -13,10 +14,14 @@ export class AbiTypeBindingProcessor
     
     
     public constructor (
-        protected readonly _abi : ContractMetadata.ABI
+        protected readonly _abi : ContractMetadata.ABI,
+        protected readonly _contractName : string,
     )
     {
-        this.structTypeBuilder = new StructTypeBuilder(this._abi.types);
+        this.structTypeBuilder = new StructTypeBuilder(
+            this._abi.types,
+            this._contractName
+        );
         this.structTypeBuilder.build();
     }
     
@@ -41,17 +46,22 @@ export class AbiTypeBindingProcessor
         );
         
         // create context
-        const context = new AbiTypeBindingProcessor(abi);
+        const context = new AbiTypeBindingProcessor(abi, contractName);
         
         // imports
         file.addStatements(context.getImportStatements());
+        
+        // type structures
+        file.addStatements([
+            '\n\n/** */\n/** Exported types */\n/** */\n',
+            ...context.structTypeBuilder.getExportedStructures()
+        ]);
         
         // main module
         file.addModule({
             isExported: true,
             name: contractName,
             statements: [
-                ...context.structTypeBuilder.getTypeStatements(),
                 ...context.buildMapMessageQueryInterface(),
                 ...context.buildMapMessageTxInterface(),
                 ...context.buildContractClass(),
@@ -66,37 +76,37 @@ export class AbiTypeBindingProcessor
     {
         return [
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namespaceImport: 'PhalaSdk',
                 moduleSpecifier: '@phala/sdk',
             },
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namespaceImport: 'DevPhase',
                 moduleSpecifier: '@devphase/service',
             },
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namespaceImport: 'DPT',
                 moduleSpecifier: '@devphase/service/etc/typings',
             },
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namedImports: [ 'ContractCallResult', 'ContractQuery' ],
                 moduleSpecifier: '@polkadot/api-contract/base/types',
             },
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namedImports: [ 'ContractCallOutcome', 'ContractOptions' ],
                 moduleSpecifier: '@polkadot/api-contract/types',
             },
             {
-                kind: TsMorph.StructureKind.ImportDeclaration,
+                kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
                 namedImports: [ 'Codec' ],
                 moduleSpecifier: '@polkadot/types/types',
@@ -109,7 +119,9 @@ export class AbiTypeBindingProcessor
         const queriesModuleInterfaces : TsMorph.InterfaceDeclarationStructure[] = [];
         
         const queryMessages = this._abi.spec.messages
-            .filter(message => message.mutates === false);
+            .filter(message => message.mutates === false)
+            ;
+            
         for (const queryMessage of queryMessages) {
             const name = this.formatInterfaceName(queryMessage.label);
             const returnType = queryMessage.returnType
@@ -118,25 +130,25 @@ export class AbiTypeBindingProcessor
             
             queriesModuleInterfaces.push({
                 isExported: true,
-                kind: TsMorph.StructureKind.Interface,
+                kind: StructureKind.Interface,
                 name,
                 extends: [ 'DPT.ContractQuery' ],
                 callSignatures: [
                     {
-                        kind: TsMorph.StructureKind.CallSignature,
+                        kind: StructureKind.CallSignature,
                         parameters: [
                             {
-                                kind: TsMorph.StructureKind.Parameter,
+                                kind: StructureKind.Parameter,
                                 name: 'certificateData',
                                 type: 'PhalaSdk.CertificateData'
                             },
                             {
-                                kind: TsMorph.StructureKind.Parameter,
+                                kind: StructureKind.Parameter,
                                 name: 'options',
                                 type: 'ContractOptions'
                             },
                             ...queryMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
-                                kind: TsMorph.StructureKind.Parameter,
+                                kind: StructureKind.Parameter,
                                 name: arg.label,
                                 
                                 type: this.structTypeBuilder.getNativeType(arg.type.type),
@@ -151,19 +163,19 @@ export class AbiTypeBindingProcessor
         return [
             <TsMorph.ModuleDeclarationStructure>{
                 docs: [ '', 'Queries', '' ],
-                kind: TsMorph.StructureKind.Module,
+                kind: StructureKind.Module,
+                declarationKind: TsMorph.ModuleDeclarationKind.Namespace,
                 name: 'ContractQuery',
                 statements: queriesModuleInterfaces,
             },
             <TsMorph.InterfaceDeclarationStructure>{
-                isExported: true,
-                kind: TsMorph.StructureKind.Interface,
+                kind: StructureKind.Interface,
                 name: 'MapMessageQuery',
                 extends: [ 'DPT.MapMessageQuery' ],
                 properties: this._abi.spec.messages
                     .filter(message => message.mutates === false)
                     .map(message => ({
-                        kind: TsMorph.StructureKind.PropertySignature,
+                        kind: StructureKind.PropertySignature,
                         name: this.formatContractMethodName(message.label),
                         type: 'ContractQuery.' + this.formatInterfaceName(message.label),
                     }))
@@ -176,26 +188,28 @@ export class AbiTypeBindingProcessor
         const txsModuleInterfaces : TsMorph.InterfaceDeclarationStructure[] = [];
         
         const txMessages = this._abi.spec.messages
-            .filter(message => message.mutates === true);
+            .filter(message => message.mutates === true)
+            ;
+            
         for (const txMessage of txMessages) {
             const name = this.formatInterfaceName(txMessage.label);
             
             txsModuleInterfaces.push({
                 isExported: true,
-                kind: TsMorph.StructureKind.Interface,
+                kind: StructureKind.Interface,
                 name,
                 extends: [ 'DPT.ContractTx' ],
                 callSignatures: [
                     {
-                        kind: TsMorph.StructureKind.CallSignature,
+                        kind: StructureKind.CallSignature,
                         parameters: [
                             {
-                                kind: TsMorph.StructureKind.Parameter,
+                                kind: StructureKind.Parameter,
                                 name: 'options',
                                 type: 'ContractOptions'
                             },
                             ...txMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
-                                kind: TsMorph.StructureKind.Parameter,
+                                kind: StructureKind.Parameter,
                                 name: arg.label,
                                 type: this.structTypeBuilder.getNativeType(arg.type.type),
                             })),
@@ -209,19 +223,18 @@ export class AbiTypeBindingProcessor
         return [
             <TsMorph.ModuleDeclarationStructure>{
                 docs: [ '', 'Transactions', '' ],
-                kind: TsMorph.StructureKind.Module,
+                kind: StructureKind.Module,
                 name: 'ContractTx',
                 statements: txsModuleInterfaces,
             },
             <TsMorph.InterfaceDeclarationStructure>{
-                isExported: true,
-                kind: TsMorph.StructureKind.Interface,
+                kind: StructureKind.Interface,
                 name: 'MapMessageTx',
                 extends: [ 'DPT.MapMessageTx' ],
                 properties: this._abi.spec.messages
                     .filter(message => message.mutates === true)
                     .map(message => ({
-                        kind: TsMorph.StructureKind.PropertySignature,
+                        kind: StructureKind.PropertySignature,
                         name: this.formatContractMethodName(message.label),
                         type: 'ContractTx.' + this.formatInterfaceName(message.label),
                     }))
@@ -236,7 +249,7 @@ export class AbiTypeBindingProcessor
                 docs: [ '', 'Contract', '' ],
                 isExported: true,
                 hasDeclareKeyword: true,
-                kind: TsMorph.StructureKind.Class,
+                kind: StructureKind.Class,
                 name: 'Contract',
                 extends: 'DPT.Contract',
                 getAccessors: [
@@ -260,7 +273,7 @@ export class AbiTypeBindingProcessor
                 docs: [ '', 'Contract factory', '' ],
                 isExported: true,
                 hasDeclareKeyword: true,
-                kind: TsMorph.StructureKind.Class,
+                kind: StructureKind.Class,
                 name: 'Factory',
                 extends: 'DevPhase.ContractFactory',
                 methods: this._abi.spec.constructors.map(constructor => ({

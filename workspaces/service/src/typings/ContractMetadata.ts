@@ -89,6 +89,11 @@ export namespace ContractMetadata
                     }>
                 }
             },
+            params?: Array<{
+                name? : string,
+                type : number,
+                typeName : string,
+            }>
             path : string[],
         };
         

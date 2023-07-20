@@ -3,6 +3,7 @@ import { Exception } from '@/utils/Exception';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import * as TsMorph from 'ts-morph';
+import { StructureKind } from 'ts-morph';
 
 
 type InternalTypeDef = {
@@ -13,22 +14,42 @@ type InternalTypeDef = {
 export type BuiltType = {
     native : string,
     codec : string,
+    refName? : string,
 }
 
+export type TypeStatement = {
+    declaration : TsMorph.KindedStructure<any>,
+    path : string[],
+    refs : string[],
+}
+
+export type NamespaceStatement = {
+    declarations : TsMorph.KindedStructure<any>[],
+    children : NamespaceStatement[],
+}
+
+type TypeTree = {
+    [node : string] : TypeTree | string
+};
 
 export class StructTypeBuilder
 {
     
+    protected _contractName : string;
     protected _definedTypes : Record<number, InternalTypeDef>;
     
     protected _builtTypes : Record<number, BuiltType> = {};
-    protected _typeStatements : Record<string, TsMorph.KindedStructure<any>> = {};
+    protected _typeStatements : Record<string, TypeStatement> = {};
     
     protected _newTypeIdx : number = 0;
     
     
-    public constructor (types : ContractMetadata.TypeDef[])
+    public constructor (
+        types : ContractMetadata.TypeDef[],
+        contractName : string,
+    )
     {
+        this._contractName = contractName;
         this._definedTypes = Object.fromEntries(
             types.map(typeDef => {
                 return [
@@ -52,6 +73,7 @@ export class StructTypeBuilder
         
         return this._builtTypes;
     }
+    
     
     public getNativeType (typeIdx : number) : string
     {
@@ -77,10 +99,70 @@ export class StructTypeBuilder
         return this._builtTypes[typeIdx].codec;
     }
     
-    public getTypeStatements () : TsMorph.KindedStructure<any>[]
+    public getExportedStructures () : TsMorph.KindedStructure<any>[]
     {
-        return Object.values(this._typeStatements);
+        // build namespaces
+        const root : TsMorph.KindedStructure<any>[] = [];
+        const namespaces : Record<string, TsMorph.KindedStructure<any>[]> = {
+            '': root,
+        };
+        
+        const buildNamespaceTree = (namespace : string[]) => {
+            if (namespace.length == 0) {
+                return;
+            }
+            
+            const parentNamespaceNodes = namespace.slice(0, -1);
+            buildNamespaceTree(parentNamespaceNodes);
+            
+            const parentRef = this.getTypeNameFromPath(parentNamespaceNodes);
+            const name = namespace[namespace.length - 1];
+            const nsReference = this.getTypeNameFromPath(namespace);
+            
+            if (!namespaces[nsReference]) {
+                const namespaceStruct : any = {
+                    isExported: true,
+                    kind: StructureKind.Module,
+                    declarationKind: TsMorph.ModuleDeclarationKind.Namespace,
+                    name,
+                    statements: [],
+                };
+                
+                namespaces[nsReference] = namespaceStruct.statements;
+                
+                if (parentRef == '') {
+                    root.push(namespaceStruct);
+                }
+                else {
+                    namespaces[parentRef].push(namespaceStruct);
+                }
+            }
+        };
+        
+        const entries = Object.entries(this._typeStatements)
+            .sort(([,a], [,b]) => a.path.length < b.path.length ? -1 : 1)
+            .sort(([aName,a], [bName,b]) => b.refs[aName] ? -1 : 0)
+            ;
+        
+        for (const [ key, node ] of entries) {
+            const path = [ ...node.path ];
+        
+            const name = path.pop();
+            const nsParts = path;
+            
+            if (nsParts.length >= 1) {
+                buildNamespaceTree(nsParts);
+            }
+            
+            const nsReference = this.getTypeNameFromPath(nsParts);
+            
+            const namespace = namespaces[nsReference];
+            namespace.push(node.declaration);
+        }
+        
+        return <any> root;
     }
+    
     
     
     public getArgsString (args : ContractMetadata.Argument[]) : string
@@ -95,7 +177,7 @@ export class StructTypeBuilder
     }
     
     
-    public buildType (typeIdx : number)
+    public buildType (typeIdx : number) : BuiltType
     {
         const typeDef = this._definedTypes[typeIdx];
         
@@ -169,7 +251,7 @@ export class StructTypeBuilder
         const { native, codec } = this.buildType(type);
         
         return {
-            native: `DPT.FixedArray<${native}, ${len}>`,
+            native: `${native}[]`,
             codec: `DPT.IVec<${codec}>`,
         };
     }
@@ -184,7 +266,7 @@ export class StructTypeBuilder
             return {
                 native: `${native}[] | string`,
                 codec: `DPT.IVec<${codec}>`,
-            }
+            };
         }
         
         return {
@@ -192,6 +274,7 @@ export class StructTypeBuilder
             codec: `DPT.IVec<${codec}>`,
         };
     }
+    
     
     public buildComposite (typeDef : ContractMetadata.Type.Composite) : BuiltType
     {
@@ -201,44 +284,79 @@ export class StructTypeBuilder
                     fields
                 }
             },
+            params,
             path
         } = typeDef;
         
-        const compositeName = path
-            ? this.getTypeNameFromPath(path, ++this._newTypeIdx)
+        const name = path
+            ? path[path.length - 1]
             : 'Composite' + (++this._newTypeIdx)
         ;
+        const refName = path
+            ? this.getTypeNameFromPath(path)
+            : name
+        ;
+        
+        const directRefs : string[] = [];
         
         let declaration : TsMorph.TypeAliasDeclarationStructure;
         
-        const isSimpleObject = fields.find(field => !field.name) === undefined;
+        const isSimpleObject = fields && fields.find(field => !field.name) === undefined;
+        const isParameterizedObject = params && params.find(param => !param.name) === undefined;
         if (isSimpleObject) {
             const strFields = fields
                 .map(field => {
-                    const { native } = this.buildType(field.type);
+                    const { native, refName } = this.buildType(field.type);
+                    
+                    if (refName) {
+                        directRefs.push(refName);
+                    }
+                    
                     return field.name + ': ' + native;
                 })
-                .join(', ');
+                .join(',\n');
             
             declaration = {
+                isExported: true,
                 kind: TsMorph.StructureKind.TypeAlias,
-                name: compositeName,
-                type: '{ ' + strFields + ' }',
+                name,
+                type: '{\n' + strFields + '\n}',
+            };
+        }
+        else if (isParameterizedObject) {
+            // todo ld 2023-07-19 16:57:07 - no implementation yet
+            declaration = {
+                isExported: true,
+                kind: TsMorph.StructureKind.TypeAlias,
+                name,
+                type: 'any',
             };
         }
         else {
             declaration = {
+                isExported: true,
                 kind: TsMorph.StructureKind.TypeAlias,
-                name: compositeName,
+                name,
                 type: 'any',
             };
         }
         
-        this._typeStatements[compositeName] = declaration;
+        const refs = directRefs.reduce((acc, c) => [
+            ...acc,
+            ...this._typeStatements[c].refs,
+            c,
+        ], []);
+        
+        this._typeStatements[refName] = {
+            declaration,
+            path: this.getPreparedPath(path),
+            refs,
+        };
         
         return {
-            native: compositeName,
-            codec: `DPT.IJson<${compositeName}>`,
+            native: refName,
+            codec: `DPT.IJson<${refName}>`,
+            refName
         };
     }
     
@@ -252,56 +370,94 @@ export class StructTypeBuilder
             path
         } = typeDef;
         
-        const variantName = path
-            ? this.getTypeNameFromPath(path, ++this._newTypeIdx)
+        const name = path
+            ? path[path.length - 1]
             : 'Variant' + (++this._newTypeIdx)
         ;
+        const refName = path
+            ? this.getTypeNameFromPath(path)
+            : name
+        ;
+        
+        const directRefs : string[] = [];
         
         // collect variants
         const builtVariants : Record<string, string> = {};
+        
+        const typeParameters : string[] = [];
+        const typeParamValues : string[] = [];
         
         if (variants) {
             for (const variant of variants) {
                 const { name, fields } = variant;
                 
-                let innerType;
                 if (!fields?.length) {
-                    innerType = 'null';
+                    builtVariants[name] = null;
                 }
                 else if (fields.length === 1) {
-                    const { native } = this.buildType(fields[0].type);
-                    innerType = native;
+                    const { native, refName } = this.buildType(fields[0].type);
+                    
+                    if (refName) {
+                        directRefs.push(refName);
+                    }
+                    
+                    typeParameters.push(name);
+                    typeParamValues.push(native);
+                    
+                    builtVariants[name] = name;
                 }
                 else {
                     const tupleParts = fields
                         .map(field => {
-                            const { native } = this.buildType(fields[0].type);
+                            const { native, refName } = this.buildType(fields[0].type);
+                    
+                            if (refName) {
+                                directRefs.push(refName);
+                            }
+                            
                             return native;
                         })
                         .join(', ');
                     
-                    innerType = '[' + tupleParts + ']';
+                    builtVariants[name] = '[' + tupleParts + ']';
                 }
-                
-                builtVariants[name] = innerType;
             }
         }
         
         const declarationInnerType = Object.entries(builtVariants)
             .map(([ name, propType ]) => `${name}? : ${propType}`)
             .join(',\n')
-            ;
+        ;
         
         const declaration : TsMorph.TypeAliasDeclarationStructure = {
+            isExported: true,
             kind: TsMorph.StructureKind.TypeAlias,
-            name: variantName,
+            name,
+            typeParameters,
             type: '{\n' + declarationInnerType + '\n}',
         };
-        this._typeStatements[variantName] = declaration;
+        
+        const refs = directRefs.reduce((acc, c) => [
+            ...acc,
+            ...this._typeStatements[c].refs,
+            c,
+        ], []);
+        
+        this._typeStatements[refName] = {
+            declaration,
+            path: this.getPreparedPath(path),
+            refs,
+        };
+        
+        let parameterizedName = refName;
+        if (typeParameters.length) {
+            parameterizedName += `<${typeParamValues.join(', ')}>`;
+        }
         
         return {
-            native: variantName,
-            codec: `DPT.IJson<${variantName}>`,
+            native: parameterizedName,
+            codec: `DPT.IJson<${parameterizedName}>`,
+            refName
         };
     }
     
@@ -325,16 +481,28 @@ export class StructTypeBuilder
         };
     }
     
+    
+    public getPreparedPath (path : string[]) : string[]
+    {
+        const formated = path
+            .map(part => upperFirst(camelCase(part)))
+        ;
+    
+        return formated[0] == this._contractName && formated[1] == this._contractName
+            ? formated.slice(1) // dedupe
+            : formated
+            ;
+    }
+    
     public getTypeNameFromPath (
         path : string[],
-        idx : number
+        idx? : number
     ) : string
     {
-        const pathName = path
-            .map(part => upperFirst(camelCase(part)))
-            .join('_')
+        const pathName = this.getPreparedPath(path)
+            .join('.')
         ;
-        return pathName + '$' + idx.toString();
+        return pathName + (idx ? '$' + idx.toString() : '');
     }
     
 }

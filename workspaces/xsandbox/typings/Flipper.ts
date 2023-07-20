@@ -5,34 +5,45 @@ import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/b
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import type { Codec } from "@polkadot/types/types";
 
-export namespace Flipper {
-    type InkPrimitives_LangError$3 = {
+
+/** */
+/** Exported types */
+/** */
+export type Result<Ok, Err> = {
+    Ok? : Ok,
+    Err? : Err
+    };
+
+export namespace InkPrimitives {
+    export type LangError = {
         CouldNotReadInput? : null
         };
-    type Result$1 = {
-        Ok? : never[],
-        Err? : InkPrimitives_LangError$3
-        };
-    type Result$4 = {
-        Ok? : boolean,
-        Err? : InkPrimitives_LangError$3
-        };
-    type InkPrimitives_Types_AccountId$5 = any;
-    type InkPrimitives_Types_Hash$6 = any;
-    type InkEnv_Types_NoChainExtension$7 = {
 
-        };
+    export namespace Types {
+        export type AccountId = any;
+        export type Hash = any;
+    }
+}
 
+export namespace InkEnv {
+    export namespace Types {
+        export type NoChainExtension = {
+
+            };
+    }
+}
+
+export namespace Flipper {
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface Get extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$4>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<boolean, InkPrimitives.LangError>>>>;
         }
     }
 
-    export interface MapMessageQuery extends DPT.MapMessageQuery {
+    interface MapMessageQuery extends DPT.MapMessageQuery {
         get: ContractQuery.Get;
     }
 
@@ -45,7 +56,7 @@ export namespace Flipper {
         }
     }
 
-    export interface MapMessageTx extends DPT.MapMessageTx {
+    interface MapMessageTx extends DPT.MapMessageTx {
         flip: ContractTx.Flip;
     }
 

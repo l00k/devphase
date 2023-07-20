@@ -5,46 +5,53 @@ import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/b
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
 import type { Codec } from "@polkadot/types/types";
 
-export namespace Signing {
-    type InkPrimitives_LangError$3 = {
+
+/** */
+/** Exported types */
+/** */
+export type Result<Ok, Err> = {
+    Ok? : Ok,
+    Err? : Err
+    };
+
+export namespace InkPrimitives {
+    export type LangError = {
         CouldNotReadInput? : null
         };
-    type Result$1 = {
-        Ok? : never[],
-        Err? : InkPrimitives_LangError$3
-        };
-    type Result$4 = {
-        Ok? : number[] | string,
-        Err? : InkPrimitives_LangError$3
-        };
-    type Result$5 = {
-        Ok? : boolean,
-        Err? : InkPrimitives_LangError$3
-        };
-    type InkPrimitives_Types_AccountId$6 = any;
-    type InkPrimitives_Types_Hash$7 = any;
-    type PinkExtension_ChainExtension_PinkExt$8 = {
 
-        };
+    export namespace Types {
+        export type AccountId = any;
+        export type Hash = any;
+    }
+}
 
+export namespace PinkExtension {
+    export namespace ChainExtension {
+        export type PinkExt = {
+
+            };
+    }
+}
+
+export namespace Signing {
     /** */
     /** Queries */
     /** */
     namespace ContractQuery {
         export interface Sign extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$4>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<number[] | string, InkPrimitives.LangError>>>>;
         }
 
         export interface Verify extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[] | string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$5>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[] | string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<boolean, InkPrimitives.LangError>>>>;
         }
 
         export interface Test extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result$1>>>;
+            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<never[], InkPrimitives.LangError>>>>;
         }
     }
 
-    export interface MapMessageQuery extends DPT.MapMessageQuery {
+    interface MapMessageQuery extends DPT.MapMessageQuery {
         sign: ContractQuery.Sign;
         verify: ContractQuery.Verify;
         test: ContractQuery.Test;
@@ -56,7 +63,7 @@ export namespace Signing {
     namespace ContractTx {
     }
 
-    export interface MapMessageTx extends DPT.MapMessageTx {
+    interface MapMessageTx extends DPT.MapMessageTx {
     }
 
     /** */
