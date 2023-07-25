@@ -1,6 +1,6 @@
 {
     "name": "@devphase/service",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "license": "MIT",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -26,24 +26,24 @@
     },
     "dependencies": {
         "@phala/ink-validator": "^0.1.0",
-        "@phala/sdk": "^0.4.0",
+        "@phala/sdk": "^0.4.1",
         "@phala/typedefs": "^0.2.33",
-        "@types/chai": "^4.3.3",
-        "@types/mocha": "^10.0.0",
+        "@types/chai": "^4.3.5",
+        "@types/mocha": "^10.0.1",
         "axios": "^0.27.2",
-        "chai": "^4.3.6",
+        "chai": "^4.3.7",
         "chai-as-promised": "^7.1.1",
         "chalk": "^4.1.2",
         "chokidar": "^3.5.3",
         "compare-versions": "^5.0.3",
         "find-up": "^5.0.0",
-        "glob": "^8.0.3",
+        "glob": "^8.1.0",
         "listr": "^0.14.3",
         "lodash": "^4.17.21",
-        "mocha": "^10.0.0",
+        "mocha": "^10.2.0",
         "prompts": "^2.4.2",
         "ts-morph": "^16.0.0",
-        "tsconfig-paths": "^4.1.0"
+        "tsconfig-paths": "^4.2.0"
     },
     "peerDependencies": {
         "@polkadot/api": "^9.8.1",
@@ -53,18 +53,18 @@
         "@polkadot/util-crypto": "^10.1.12",
         "@polkadot/wasm-crypto": "^6.3.1",
         "ts-node": "^10.9.1",
-        "typescript": "^4.8.4"
+        "typescript": "^4.9.5"
     },
     "devDependencies": {
         "@types/listr": "^0.14.4",
-        "@types/node": "^16.11.64",
-        "@typescript-eslint/eslint-plugin": "^5.42.0",
-        "@typescript-eslint/parser": "^5.42.0",
-        "eslint": "^8.27.0",
+        "@types/node": "^16.18.39",
+        "@typescript-eslint/eslint-plugin": "^5.62.0",
+        "@typescript-eslint/parser": "^5.62.0",
+        "eslint": "^8.45.0",
         "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
         "ttypescript": "^1.5.15",
-        "typescript": "^4.8.4",
+        "typescript": "^4.9.5",
         "typescript-transform-paths": "^3.4.6"
     },
     "engines": {

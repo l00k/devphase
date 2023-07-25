@@ -3,8 +3,8 @@ import { ContractMetadata } from '@/typings/ContractMetadata';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
 import path from 'path';
-import { StructureKind } from 'ts-morph';
 import * as TsMorph from 'ts-morph';
+import { StructureKind } from 'ts-morph';
 
 
 export class AbiTypeBindingProcessor
@@ -54,7 +54,7 @@ export class AbiTypeBindingProcessor
         // type structures
         file.addStatements([
             '\n\n/** */\n/** Exported types */\n/** */\n',
-            ...context.structTypeBuilder.getExportedStructures()
+            ...context.structTypeBuilder.getExportedTypeStructures()
         ]);
         
         // main module
@@ -68,6 +68,9 @@ export class AbiTypeBindingProcessor
                 ...context.buildFactoryClass(),
             ]
         });
+        
+        // reformat
+        file.formatText({});
         
         file.saveSync();
     }
@@ -90,12 +93,6 @@ export class AbiTypeBindingProcessor
             {
                 kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
-                namespaceImport: 'DPT',
-                moduleSpecifier: '@devphase/service/etc/typings',
-            },
-            {
-                kind: StructureKind.ImportDeclaration,
-                isTypeOnly: true,
                 namedImports: [ 'ContractCallResult', 'ContractQuery' ],
                 moduleSpecifier: '@polkadot/api-contract/base/types',
             },
@@ -108,9 +105,27 @@ export class AbiTypeBindingProcessor
             {
                 kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
-                namedImports: [ 'Codec' ],
-                moduleSpecifier: '@polkadot/types/types',
+                namespaceImport: 'DPT',
+                moduleSpecifier: '@devphase/service/etc/typings',
             },
+            {
+                kind: StructureKind.ImportDeclaration,
+                isTypeOnly: true,
+                namespaceImport: 'PT',
+                moduleSpecifier: '@polkadot/types',
+            },
+            {
+                kind: StructureKind.ImportDeclaration,
+                isTypeOnly: true,
+                namespaceImport: 'PTI',
+                moduleSpecifier: '@polkadot/types/interfaces',
+            },
+            {
+                kind: StructureKind.ImportDeclaration,
+                isTypeOnly: true,
+                namespaceImport: 'PTT',
+                moduleSpecifier: '@polkadot/types/types',
+            }
         ];
     }
     
@@ -140,21 +155,26 @@ export class AbiTypeBindingProcessor
                             {
                                 kind: StructureKind.Parameter,
                                 name: 'certificateData',
-                                type: 'PhalaSdk.CertificateData'
+                                type: 'PhalaSdk.CertificateData',
+                                leadingTrivia: '\n',
+                                trailingTrivia: ',\n'
                             },
                             {
                                 kind: StructureKind.Parameter,
                                 name: 'options',
-                                type: 'ContractOptions'
+                                type: 'ContractOptions',
+                                leadingTrivia: '',
+                                trailingTrivia: ',\n'
                             },
                             ...queryMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
                                 kind: StructureKind.Parameter,
                                 name: arg.label,
-                                
-                                type: this.structTypeBuilder.getNativeType(arg.type.type),
+                                type: this.structTypeBuilder.getFlexibleType(arg.type.type),
+                                leadingTrivia: '',
+                                trailingTrivia: ',\n'
                             })),
                         ],
-                        returnType: `DPT.CallResult<DPT.CallOutcome<${returnType}>>`,
+                        returnType: `DPT.CallReturn<\n${returnType}\n>`,
                     }
                 ]
             });
@@ -275,15 +295,9 @@ export class AbiTypeBindingProcessor
                 hasDeclareKeyword: true,
                 kind: StructureKind.Class,
                 name: 'Factory',
-                extends: 'DevPhase.ContractFactory',
+                extends: 'DevPhase.ContractFactory<Contract>',
                 methods: this._abi.spec.constructors.map(constructor => ({
                     name: 'instantiate',
-                    typeParameters: [
-                        {
-                            name: 'T',
-                            default: 'Contract',
-                        }
-                    ],
                     parameters: [
                         {
                             name: 'constructor',
@@ -299,7 +313,7 @@ export class AbiTypeBindingProcessor
                             type: 'DevPhase.InstantiateOptions'
                         },
                     ],
-                    returnType: 'Promise<T>'
+                    returnType: 'Promise<Contract>'
                 })),
             }
         ];

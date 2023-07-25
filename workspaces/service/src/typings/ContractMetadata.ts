@@ -62,14 +62,16 @@ export namespace ContractMetadata
             }
         };
         
+        export type VariantDscr = {
+            fields : Array<TypeRef>,
+            index : number,
+            name : string,
+        };
+        
         export type Variant = {
             def : {
                 variant : {
-                    variants : Array<{
-                        fields : Array<TypeRef>,
-                        index : number,
-                        name : string,
-                    }>
+                    variants : VariantDscr[]
                 },
             },
             params : {
@@ -79,17 +81,19 @@ export namespace ContractMetadata
             path : string[],
         };
         
+        export type CompositeField = {
+            name? : string,
+            type : number,
+            typeName : string,
+        };
+        
         export type Composite = {
             def : {
                 composite : {
-                    fields : Array<{
-                        name? : string,
-                        type : number,
-                        typeName : string,
-                    }>
+                    fields : CompositeField[]
                 }
             },
-            params?: Array<{
+            params? : Array<{
                 name? : string,
                 type : number,
                 typeName : string,

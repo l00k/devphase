@@ -136,7 +136,7 @@ export class ContractManager
             }
         );
         
-        return contractFactory.attach(contractDef.contractId);
+        return <any> contractFactory.attach(contractDef.contractId);
     }
     
     public async createNew (

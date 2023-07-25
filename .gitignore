@@ -1,4 +1,5 @@
 /standalone/*
+/workspaces/phat-bricks
 
 **/*.rs.bk
 Cargo.lock

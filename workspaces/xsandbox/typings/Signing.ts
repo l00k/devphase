@@ -1,35 +1,41 @@
 import type * as PhalaSdk from "@phala/sdk";
 import type * as DevPhase from "@devphase/service";
-import type * as DPT from "@devphase/service/etc/typings";
 import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/base/types";
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
-import type { Codec } from "@polkadot/types/types";
+import type * as DPT from "@devphase/service/etc/typings";
+import type * as PT from "@polkadot/types";
+import type * as PTI from "@polkadot/types/interfaces";
+import type * as PTT from "@polkadot/types/types";
 
 
 /** */
 /** Exported types */
 /** */
-export type Result<Ok, Err> = {
-    Ok? : Ok,
-    Err? : Err
-    };
 
 export namespace InkPrimitives {
-    export type LangError = {
-        CouldNotReadInput? : null
-        };
+    export interface LangError {
+        couldNotReadInput?: null;
+    }
 
-    export namespace Types {
-        export type AccountId = any;
-        export type Hash = any;
+    export namespace LangError$ {
+        export enum Enum {
+            CouldNotReadInput = "CouldNotReadInput"
+        }
+
+        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput;
+        export type Codec = DPT.Enum<InkPrimitives.LangError$.Enum.CouldNotReadInput, never, never, PTT.Codec>;
     }
 }
 
 export namespace PinkExtension {
     export namespace ChainExtension {
-        export type PinkExt = {
+        export type PinkExt = any;
 
-            };
+        export namespace PinkExt$ {
+            export type Enum = any;
+            export type Human = any;
+            export type Codec = any;
+        }
     }
 }
 
@@ -39,15 +45,43 @@ export namespace Signing {
     /** */
     namespace ContractQuery {
         export interface Sign extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<number[] | string, InkPrimitives.LangError>>>>;
+            (
+                certificateData: PhalaSdk.CertificateData,
+                options: ContractOptions,
+                message: string | PT.Text,
+            ): DPT.CallReturn<
+                DPT.Result$.Codec<
+                    PT.Vec<PT.U8>,
+                    InkPrimitives.LangError$.Codec
+                >
+            >;
         }
 
         export interface Verify extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string, signature: number[] | string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<boolean, InkPrimitives.LangError>>>>;
+            (
+                certificateData: PhalaSdk.CertificateData,
+                options: ContractOptions,
+                message: string | PT.Text,
+                signature: number[] | string | PT.Vec<PT.U8>,
+            ): DPT.CallReturn<
+                DPT.Result$.Codec<
+                    PT.Bool,
+                    InkPrimitives.LangError$.Codec
+                >
+            >;
         }
 
         export interface Test extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions, message: string): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<never[], InkPrimitives.LangError>>>>;
+            (
+                certificateData: PhalaSdk.CertificateData,
+                options: ContractOptions,
+                message: string | PT.Text,
+            ): DPT.CallReturn<
+                DPT.Result$.Codec<
+                    PTT.ITuple<[]>,
+                    InkPrimitives.LangError$.Codec
+                >
+            >;
         }
     }
 
@@ -77,7 +111,7 @@ export namespace Signing {
     /** */
     /** Contract factory */
     /** */
-    export declare class Factory extends DevPhase.ContractFactory {
-        instantiate<T = Contract>(constructor: "default", params: never[], options?: DevPhase.InstantiateOptions): Promise<T>;
+    export declare class Factory extends DevPhase.ContractFactory<Contract> {
+        instantiate(constructor: "default", params: never[], options?: DevPhase.InstantiateOptions): Promise<Contract>;
     }
 }

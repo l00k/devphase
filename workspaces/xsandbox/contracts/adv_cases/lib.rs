@@ -5,21 +5,19 @@ extern crate alloc;
 use ink as ink;
 use pink_extension as pink;
 
-
 #[pink::contract(env=PinkEnvironment)]
 mod adv_cases {
-    use super::pink;
-    use pink::{PinkEnvironment};
-
     use alloc::{
         string::String,
         vec::Vec
     };
-    use ink::storage::traits::StorageLayout;
-    use ink::storage::Mapping;
     use ink::storage::Lazy;
+    use ink::storage::Mapping;
+    use ink::storage::traits::StorageLayout;
+    use pink::PinkEnvironment;
     use scale::{Decode, Encode};
 
+    use super::pink;
 
     #[derive(Debug, PartialEq, Eq, Encode, Decode)]
     #[cfg_attr(
@@ -28,7 +26,7 @@ mod adv_cases {
     )]
     pub enum Error {
         NotFound,
-        Unknonw,
+        Unknown,
     }
 
     #[derive(Debug, PartialEq, Eq, Encode, Decode)]
@@ -37,9 +35,11 @@ mod adv_cases {
         derive(scale_info::TypeInfo, StorageLayout)
     )]
     pub enum Error2 {
+        Sample(u8),
     }
 
     pub type Result<T> = core::result::Result<T, Error>;
+    pub type Result2<T> = core::result::Result<T, Error2>;
 
     #[derive(
         Debug, PartialEq, Eq, Encode, Decode, Clone
@@ -50,7 +50,7 @@ mod adv_cases {
     )]
     pub enum Role {
         User,
-        Admin,
+        Admin(u8),
     }
 
     #[derive(
@@ -95,18 +95,31 @@ mod adv_cases {
         }
 
         #[ink(message)]
-        pub fn get_user(&self, idx : u32) -> User {
-            let user = self.users.get(idx);
-            match user {
-                None => User {
-                    active: false,
-                    name: String::from("none"),
-                    role: Role::Admin,
-                    age: 0,
-                    salery: 0,
-                    favorite_numbers: Vec::new(),
-                },
-                Some(user) => user,
+        pub fn get_user(&self, idx : u32) -> Option<User> {
+            self.users.get(idx)
+        }
+
+        #[ink(message)]
+        pub fn get_sample_user(&self, idx : u64) -> User {
+            User {
+                active: false,
+                name: String::from("Simple user"),
+                role: Role::User,
+                age: 0,
+                salery: idx,
+                favorite_numbers: Vec::new(),
+            }
+        }
+
+        #[ink(message)]
+        pub fn get_sample_admin(&self, idx : u8) -> User {
+            User {
+                active: false,
+                name: String::from("Nice admin"),
+                role: Role::Admin(idx),
+                age: 0,
+                salery: 0,
+                favorite_numbers: Vec::new(),
             }
         }
 
@@ -127,7 +140,12 @@ mod adv_cases {
 
         #[ink(message)]
         pub fn get_array(&self, text : String) -> Vec<u64> {
-            Vec::new()
+            let mut v = Vec::new();
+            v.push(5);
+            v.push(6);
+            v.push(7);
+            v.push(8);
+            v
         }
 
         #[ink(message)]
@@ -136,8 +154,8 @@ mod adv_cases {
         }
 
         #[ink(message)]
-        pub fn sample(&self, value : Error2) -> u8 {
-            1
+        pub fn sample(&self, value : u8) -> Result2<u8> {
+            Err(Error2::Sample(value))
         }
 
         #[ink(message)]

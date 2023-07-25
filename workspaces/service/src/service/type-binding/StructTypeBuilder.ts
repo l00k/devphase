@@ -13,14 +13,27 @@ type InternalTypeDef = {
 
 export type BuiltType = {
     native : string,
+    human : string,
     codec : string,
     refName? : string,
 }
 
-export type TypeStatement = {
-    declaration : TsMorph.KindedStructure<any>,
+export type BuiltInType = BuiltType & {
+    params? : number,
+}
+
+export type TypeStatement<T extends TsMorph.KindedStructure<any> = any> = {
+    declaration : T,
     path : string[],
     refs : string[],
+}
+
+enum TypeStatementType
+{
+    Native = 'Native',
+    Human = 'Human',
+    Codec = 'Codec',
+    Enum = 'Enum' // special type for variants
 }
 
 export type NamespaceStatement = {
@@ -37,6 +50,26 @@ export class StructTypeBuilder
     
     protected _contractName : string;
     protected _definedTypes : Record<number, InternalTypeDef>;
+    
+    protected _builtInTypes : Record<string, BuiltInType> = {
+        '^Result$': { native: 'DPT.Result', human: 'DPT.Result$.Human', codec: 'DPT.Result\$.Codec', params: 2 },
+        '^Option$': { native: 'DPT.Option', human: 'DPT.Option$.Human', codec: 'DPT.Option\$.Codec', params: 1 },
+        '^([A-Za-z0-9]+)$': { native: 'any', human: 'any', codec: 'PT.$1' },
+        '^PrimitiveTypes\.(.*?)$': { native: 'string | number[]', human: 'string', codec: 'PTI.$1' },
+        '^InkPrimitives\.Types\.(.*?)$': { native: 'string | number[]', human: 'string', codec: 'PTI.$1' },
+        
+        // non handled
+        '^InkStorage.Lazy.Lazy$': {
+            native: 'DPT.InkStorage.Lazy.Lazy',
+            human: 'DPT.InkStorage.Lazy.Lazy',
+            codec: 'DPT.InkStorage.Lazy.Lazy',
+            params: 2,
+        },
+        '^InkStorage\..*$': { native: 'any', human: 'any', codec: 'any' },
+        '^InkStorageTraits\..*$': { native: 'any', human: 'any', codec: 'any' },
+    };
+    
+    protected _usedBuiltInTypes : Set<string> = new Set();
     
     protected _builtTypes : Record<number, BuiltType> = {};
     protected _typeStatements : Record<string, TypeStatement> = {};
@@ -67,7 +100,7 @@ export class StructTypeBuilder
     {
         for (const [ idx, typeDef ] of Object.entries(this._definedTypes)) {
             if (!this._builtTypes[idx]) {
-                this.buildType(Number(idx));
+                this._buildType(Number(idx));
             }
         }
         
@@ -75,31 +108,44 @@ export class StructTypeBuilder
     }
     
     
-    public getNativeType (typeIdx : number) : string
+    public getBuiltType (typeIdx : number) : BuiltType
     {
         if (!this._builtTypes[typeIdx]) {
             throw new Exception(
                 'Unknown type',
-                1667305507276
+                1690148900922
             );
         }
         
-        return this._builtTypes[typeIdx].native;
+        return this._builtTypes[typeIdx];
+    }
+    
+    public getNativeType (typeIdx : number) : string
+    {
+        const builtType = this.getBuiltType(typeIdx);
+        return builtType.native;
+    }
+    
+    public getHumanType (typeIdx : number) : string
+    {
+        const builtType = this.getBuiltType(typeIdx);
+        return builtType.human;
     }
     
     public getCodecType (typeIdx : number) : string
     {
-        if (!this._builtTypes[typeIdx]) {
-            throw new Exception(
-                'Unknown type',
-                1667305512350
-            );
-        }
-        
-        return this._builtTypes[typeIdx].codec;
+        const builtType = this.getBuiltType(typeIdx);
+        return builtType.codec;
     }
     
-    public getExportedStructures () : TsMorph.KindedStructure<any>[]
+    public getFlexibleType (typeIdx : number) : string
+    {
+        const builtType = this.getBuiltType(typeIdx);
+        return `${builtType.native} | ${builtType.codec}`;
+    }
+    
+    
+    public getExportedTypeStructures () : TsMorph.KindedStructure<any>[]
     {
         // build namespaces
         const root : TsMorph.KindedStructure<any>[] = [];
@@ -115,9 +161,9 @@ export class StructTypeBuilder
             const parentNamespaceNodes = namespace.slice(0, -1);
             buildNamespaceTree(parentNamespaceNodes);
             
-            const parentRef = this.getTypeNameFromPath(parentNamespaceNodes);
+            const parentRef = this._getTypeNameFromPath(parentNamespaceNodes);
             const name = namespace[namespace.length - 1];
-            const nsReference = this.getTypeNameFromPath(namespace);
+            const nsReference = this._getTypeNameFromPath(namespace);
             
             if (!namespaces[nsReference]) {
                 const namespaceStruct : any = {
@@ -140,13 +186,13 @@ export class StructTypeBuilder
         };
         
         const entries = Object.entries(this._typeStatements)
-            .sort(([,a], [,b]) => a.path.length < b.path.length ? -1 : 1)
-            .sort(([aName,a], [bName,b]) => b.refs[aName] ? -1 : 0)
-            ;
+            .sort(([ , a ], [ , b ]) => a.path.length < b.path.length ? -1 : 1)
+            .sort(([ aName, a ], [ bName, b ]) => b.refs[aName] ? -1 : 0)
+        ;
         
         for (const [ key, node ] of entries) {
             const path = [ ...node.path ];
-        
+            
             const name = path.pop();
             const nsParts = path;
             
@@ -154,15 +200,14 @@ export class StructTypeBuilder
                 buildNamespaceTree(nsParts);
             }
             
-            const nsReference = this.getTypeNameFromPath(nsParts);
+            const nsReference = this._getTypeNameFromPath(nsParts);
             
             const namespace = namespaces[nsReference];
             namespace.push(node.declaration);
         }
         
-        return <any> root;
+        return <any>root;
     }
-    
     
     
     public getArgsString (args : ContractMetadata.Argument[]) : string
@@ -171,13 +216,13 @@ export class StructTypeBuilder
             return 'never[]';
         }
         else {
-            const argTypes : string[] = args.map(arg => this.getNativeType(arg.type.type));
+            const argTypes : string[] = args.map(arg => this.getFlexibleType(arg.type.type));
             return '[' + argTypes.join(', ') + ']';
         }
     }
     
     
-    public buildType (typeIdx : number) : BuiltType
+    protected _buildType (typeIdx : number) : BuiltType
     {
         const typeDef = this._definedTypes[typeIdx];
         
@@ -185,23 +230,24 @@ export class StructTypeBuilder
             return this._builtTypes[typeIdx];
         }
         
+        // builtin types
         if (typeDef.kind === 'primitive') {
-            this._builtTypes[typeIdx] = this.buildPrimitive(<any>typeDef.meta);
+            this._builtTypes[typeIdx] = this._buildPrimitive(<any>typeDef.meta);
         }
         else if (typeDef.kind === 'array') {
-            this._builtTypes[typeIdx] = this.buildArray(<any>typeDef.meta);
+            this._builtTypes[typeIdx] = this._buildArray(<any>typeDef.meta);
         }
         else if (typeDef.kind === 'sequence') {
-            this._builtTypes[typeIdx] = this.buildSequence(<any>typeDef.meta);
-        }
-        else if (typeDef.kind === 'composite') {
-            this._builtTypes[typeIdx] = this.buildComposite(<any>typeDef.meta);
-        }
-        else if (typeDef.kind === 'variant') {
-            this._builtTypes[typeIdx] = this.buildVariant(<any>typeDef.meta);
+            this._builtTypes[typeIdx] = this._buildSequence(<any>typeDef.meta);
         }
         else if (typeDef.kind === 'tuple') {
-            this._builtTypes[typeIdx] = this.buildTuple(<any>typeDef.meta);
+            this._builtTypes[typeIdx] = this._buildTuple(<any>typeDef.meta);
+        }
+        else if (typeDef.kind === 'composite') {
+            this._builtTypes[typeIdx] = this._buildComposite(<any>typeDef.meta);
+        }
+        else if (typeDef.kind === 'variant') {
+            this._builtTypes[typeIdx] = this._buildVariant(<any>typeDef.meta);
         }
         else {
             throw new Exception(
@@ -214,69 +260,101 @@ export class StructTypeBuilder
     }
     
     
-    public buildPrimitive (typeDef : ContractMetadata.Type.Primitive) : BuiltType
+    protected _buildPrimitive (typeDef : ContractMetadata.Type.Primitive) : BuiltType
     {
         const { primitive } = typeDef.def;
         
         if (primitive === 'bool') {
             return {
                 native: 'boolean',
-                codec: 'DPT.IJson<boolean>'
+                human: 'boolean',
+                codec: 'PT.Bool'
             };
         }
-        else if ([ 'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128' ].includes(primitive)) {
+        else if (
+            [
+                'f32', 'f64', // non used
+                'u8', 'u16', 'u32', 'u64', 'u128', 'u256',
+                'i8', 'i16', 'i32', 'i64', 'i128', 'i256',
+                'usize',
+            ].includes(primitive)
+        ) {
+            const codec = primitive === 'usize'
+                ? 'USize'
+                : primitive.toUpperCase()
+            ;
             return {
                 native: 'number',
-                codec: 'DPT.INumber'
+                human: 'number',
+                codec: `PT.${codec}`
             };
         }
         else if ([ 'str' ].includes(primitive)) {
             return {
                 native: 'string',
-                codec: 'DPT.IText'
+                human: 'string',
+                codec: 'PT.Text'
             };
         }
         else {
-            // todo ld 2022-10-31 09:00:10
             throw new Exception(
-                'Unknown type. Please submit ticket for that issue.',
+                'Unknown type. Please submit ticket for this issue.',
                 1667223448403
             );
         }
     }
     
-    public buildArray (typeDef : ContractMetadata.Type.ArrayType) : BuiltType
+    protected _buildArray (typeDef : ContractMetadata.Type.ArrayType) : BuiltType
     {
         const { array: { len, type } } = typeDef.def;
-        const { native, codec } = this.buildType(type);
+        const { native, codec } = this._buildType(type);
         
         return {
             native: `${native}[]`,
-            codec: `DPT.IVec<${codec}>`,
+            human: `${native}[]`,
+            codec: `PT.VecFixed<${codec}>`,
         };
     }
     
-    public buildSequence (typeDef : ContractMetadata.Type.Sequence) : BuiltType
+    protected _buildSequence (typeDef : ContractMetadata.Type.Sequence) : BuiltType
     {
         const { sequence: { type } } = typeDef.def;
-        const { native, codec } = this.buildType(type);
+        const { native, codec } = this._buildType(type);
         
         // special case of Vec<Number>
         if (native === 'number') {
             return {
                 native: `${native}[] | string`,
-                codec: `DPT.IVec<${codec}>`,
+                human: `${native}[] | string`,
+                codec: `PT.Vec<${codec}>`,
             };
         }
         
         return {
             native: `${native}[]`,
-            codec: `DPT.IVec<${codec}>`,
+            human: `${native}[]`,
+            codec: `PT.Vec<${codec}>`,
+        };
+    }
+    
+    protected _buildTuple (typeDef : ContractMetadata.Type.Tuple) : BuiltType
+    {
+        const name = 'Tuple' + (++this._newTypeIdx);
+        
+        const types = typeDef.def.tuple.map(type => this._buildType(type));
+        const nativeTypes = types.map(type => type.native);
+        const humanTypes = types.map(type => type.human);
+        const codecTypes = types.map(type => type.codec);
+        
+        return {
+            native: nativeTypes.length ? `[${nativeTypes.join(', ')}]` : 'never[]',
+            human: humanTypes.length ? `[${humanTypes.join(', ')}]` : 'never[]',
+            codec: `PTT.ITuple<[${codecTypes.join(', ')}]>`,
         };
     }
     
     
-    public buildComposite (typeDef : ContractMetadata.Type.Composite) : BuiltType
+    protected _buildComposite (typeDef : ContractMetadata.Type.Composite) : BuiltType
     {
         const {
             def: {
@@ -288,57 +366,143 @@ export class StructTypeBuilder
             path
         } = typeDef;
         
+        // define name
         const name = path
             ? path[path.length - 1]
             : 'Composite' + (++this._newTypeIdx)
         ;
         const refName = path
-            ? this.getTypeNameFromPath(path)
+            ? this._getTypeNameFromPath(path)
             : name
         ;
         
-        const directRefs : string[] = [];
+        // built inner types
+        if (fields?.length > 0) {
+            fields.forEach(field => {
+                this._buildType(field.type);
+            });
+        }
         
-        let declaration : TsMorph.TypeAliasDeclarationStructure;
+        if (params?.length > 0) {
+            params.forEach(param => {
+                this._buildType(param.type);
+            });
+        }
         
-        const isSimpleObject = fields && fields.find(field => !field.name) === undefined;
-        const isParameterizedObject = params && params.find(param => !param.name) === undefined;
-        if (isSimpleObject) {
-            const strFields = fields
-                .map(field => {
-                    const { native, refName } = this.buildType(field.type);
-                    
-                    if (refName) {
-                        directRefs.push(refName);
-                    }
-                    
-                    return field.name + ': ' + native;
-                })
-                .join(',\n');
+        // detect built in types
+        const builtInType = this._detectBuiltInType(refName);
+        if (builtInType) {
+            // collect type parameters
+            const typeParameters : BuiltType[][] = [];
+            if (params?.length > 0) {
+                for (const param of params) {
+                    typeParameters.push([
+                        this._buildType(param.type)
+                    ]);
+                }
+            }
             
-            declaration = {
-                isExported: true,
-                kind: TsMorph.StructureKind.TypeAlias,
-                name,
-                type: '{\n' + strFields + '\n}',
+            // prepare usage name with parameters
+            const typeParametersUsage = this._buildTypeParametersUsage(
+                typeParameters
+                    .slice(0, builtInType.params ?? 0)
+            );
+            
+            return {
+                native: `${builtInType.native}${typeParametersUsage.native}`,
+                human: `${builtInType.human}${typeParametersUsage.human}`,
+                codec: `${builtInType.codec}${typeParametersUsage.codec}`,
             };
         }
-        else if (isParameterizedObject) {
-            // todo ld 2023-07-19 16:57:07 - no implementation yet
-            declaration = {
-                isExported: true,
-                kind: TsMorph.StructureKind.TypeAlias,
-                name,
-                type: 'any',
+        
+        // simple object case (all fields are named)
+        const isSimpleObject = fields && fields.find(field => !field.name) === undefined;
+        const isParametrizedObject = params && params.length > 0;
+        
+        if (isParametrizedObject) {
+            throw new Exception(
+                `Type parameters not implemented yet. Type ${refName}`,
+                1690242994589
+            );
+        }
+        
+        if (isSimpleObject) {
+            const native = this._buildCompositeTypeStatement(
+                path,
+                fields,
+                TypeStatementType.Native
+            );
+            const human = this._buildCompositeTypeStatement(
+                path,
+                fields,
+                TypeStatementType.Human
+            );
+            const codec = this._buildCompositeTypeStatement(
+                path,
+                fields,
+                TypeStatementType.Codec
+            );
+            
+            return {
+                native,
+                human,
+                codec,
+                refName: native
             };
         }
-        else {
-            declaration = {
-                isExported: true,
-                kind: TsMorph.StructureKind.TypeAlias,
-                name,
-                type: 'any',
-            };
+        
+        throw new Exception(
+            `Unable to handle type ${refName}. Please submit ticket for this issue.`,
+            1690242871378
+        );
+    }
+    
+    protected _buildCompositeTypeStatement (
+        path : string[],
+        fields : ContractMetadata.Type.CompositeField[],
+        typeStatementType : TypeStatementType
+    ) : string
+    {
+        // define name
+        const name = path
+            ? path[path.length - 1]
+            : 'Composite' + (++this._newTypeIdx)
+        ;
+        const refName = path
+            ? this._getTypeNameFromPath(path)
+            : name
+        ;
+        
+        const structureName = typeStatementType == TypeStatementType.Native
+            ? name
+            : typeStatementType.toString()
+        ;
+        
+        const typeStatementPath = typeStatementType == TypeStatementType.Native
+            ? this._getPreparedPath(path)
+            : this._getPreparedPath([
+                ...path.slice(0, -1),
+                `${name}$`,
+                structureName
+            ])
+        ;
+        
+        const fullRefName = refName + (
+                typeStatementType != TypeStatementType.Native
+                    ? `$.${typeStatementType.toString()}`
+                    : ''
+            )
+        ;
+        
+        // find refs
+        const directRefs : string[] = [];
+        if (fields.length > 0) {
+            fields.forEach(field => {
+                const { refName } = this._buildType(field.type);
+                if (refName) {
+                    directRefs.push(refName);
+                }
+            });
         }
         
         const refs = directRefs.reduce((acc, c) => [
@@ -347,20 +511,36 @@ export class StructTypeBuilder
             c,
         ], []);
         
-        this._typeStatements[refName] = {
+        // create declaration
+        const declaration : TsMorph.InterfaceDeclarationStructure = {
+            isExported: true,
+            kind: TsMorph.StructureKind.Interface,
+            name: structureName,
+            properties: fields.map(field => {
+                const builtType = this.getBuiltType(field.type);
+                return {
+                    kind: TsMorph.StructureKind.PropertySignature,
+                    name: camelCase(field.name),
+                    type: builtType[typeStatementType.toString().toLowerCase()],
+                };
+            }),
+        };
+        
+        if (typeStatementType == TypeStatementType.Codec) {
+            declaration.extends = [ `DPT.Json<${refName}, ${refName}$.Human>` ];
+        }
+        
+        this._typeStatements[fullRefName] = {
             declaration,
-            path: this.getPreparedPath(path),
+            path: typeStatementPath,
             refs,
         };
         
-        return {
-            native: refName,
-            codec: `DPT.IJson<${refName}>`,
-            refName
-        };
-    }
+        return fullRefName;
+    };
     
-    public buildVariant (typeDef : ContractMetadata.Type.Variant) : BuiltType
+    
+    protected _buildVariant (typeDef : ContractMetadata.Type.Variant) : BuiltType
     {
         const {
             def: {
@@ -370,72 +550,152 @@ export class StructTypeBuilder
             path
         } = typeDef;
         
+        // built type name
         const name = path
             ? path[path.length - 1]
             : 'Variant' + (++this._newTypeIdx)
         ;
         const refName = path
-            ? this.getTypeNameFromPath(path)
+            ? this._getTypeNameFromPath(path)
             : name
         ;
         
-        const directRefs : string[] = [];
-        
-        // collect variants
-        const builtVariants : Record<string, string> = {};
-        
-        const typeParameters : string[] = [];
-        const typeParamValues : string[] = [];
-        
-        if (variants) {
-            for (const variant of variants) {
-                const { name, fields } = variant;
-                
-                if (!fields?.length) {
-                    builtVariants[name] = null;
+        // build inner types
+        if (variants?.length > 0) {
+            variants.forEach(variant => {
+                if (variant?.fields?.length > 0) {
+                    variant?.fields?.forEach(field => {
+                        this._buildType(field.type);
+                    });
                 }
-                else if (fields.length === 1) {
-                    const { native, refName } = this.buildType(fields[0].type);
-                    
-                    if (refName) {
-                        directRefs.push(refName);
-                    }
-                    
-                    typeParameters.push(name);
-                    typeParamValues.push(native);
-                    
-                    builtVariants[name] = name;
-                }
-                else {
-                    const tupleParts = fields
-                        .map(field => {
-                            const { native, refName } = this.buildType(fields[0].type);
-                    
-                            if (refName) {
-                                directRefs.push(refName);
-                            }
-                            
-                            return native;
-                        })
-                        .join(', ');
-                    
-                    builtVariants[name] = '[' + tupleParts + ']';
-                }
-            }
+            });
         }
         
-        const declarationInnerType = Object.entries(builtVariants)
-            .map(([ name, propType ]) => `${name}? : ${propType}`)
-            .join(',\n')
+        // detect built in type
+        const builtInType = this._detectBuiltInType(refName);
+        if (builtInType) {
+            // collect type parameters
+            const typeParameters : Record<string, BuiltType[]> = {};
+            if (variants?.length > 0) {
+                for (const variant of variants) {
+                    const { name, fields } = variant;
+                    if (fields?.length > 0) {
+                        typeParameters[name] = fields
+                            .map(field => this._buildType(field.type))
+                        ;
+                    }
+                }
+            }
+            
+            // prepare usage name with parameters
+            const typeParametersUsage = this._buildTypeParametersUsage(
+                Object.values(typeParameters)
+            );
+            
+            return {
+                native: `${builtInType.native}${typeParametersUsage.native}`,
+                human: `${builtInType.human}${typeParametersUsage.human}`,
+                codec: `${builtInType.codec}${typeParametersUsage.codec}`,
+            };
+        }
+        
+        // create variant structures
+        const native = this._buildVaraiantTypeStatement(
+            path,
+            variants,
+            TypeStatementType.Native
+        );
+        this._buildVaraiantTypeStatement(
+            path,
+            variants,
+            TypeStatementType.Enum
+        );
+        
+        const human = this._buildVaraiantTypeStatement(
+            path,
+            variants,
+            TypeStatementType.Human
+        );
+        const codec = this._buildVaraiantTypeStatement(
+            path,
+            variants,
+            TypeStatementType.Codec
+        );
+        
+        return {
+            native,
+            human,
+            codec,
+            refName: native
+        };
+    }
+    
+    protected _buildVaraiantTypeStatement (
+        path : string[],
+        variants : ContractMetadata.Type.VariantDscr[],
+        typeStatementType : TypeStatementType
+    ) : string
+    {
+        // define name
+        const name = path
+            ? path[path.length - 1]
+            : 'Variant' + (++this._newTypeIdx)
+        ;
+        const refName = path
+            ? this._getTypeNameFromPath(path)
+            : name
         ;
         
-        const declaration : TsMorph.TypeAliasDeclarationStructure = {
-            isExported: true,
-            kind: TsMorph.StructureKind.TypeAlias,
-            name,
-            typeParameters,
-            type: '{\n' + declarationInnerType + '\n}',
-        };
+        const structureName = typeStatementType == TypeStatementType.Native
+            ? name
+            : `${typeStatementType.toString()}`
+        ;
+        
+        const typeStatementPath = typeStatementType == TypeStatementType.Native
+            ? this._getPreparedPath(path)
+            : this._getPreparedPath([
+                ...path.slice(0, -1),
+                name + '$',
+                structureName
+            ])
+        ;
+        
+        const fullRefName = refName + (
+                typeStatementType != TypeStatementType.Native
+                    ? `$.${typeStatementType.toString()}`
+                    : ''
+            )
+        ;
+        
+        if (!variants) {
+            this._typeStatements[fullRefName] = {
+                declaration: <TsMorph.TypeAliasDeclarationStructure>{
+                    isExported: true,
+                    kind: TsMorph.StructureKind.TypeAlias,
+                    name: structureName,
+                    type: 'any'
+                },
+                path: typeStatementPath,
+                refs: [],
+            };
+            
+            return fullRefName;
+        }
+        
+        // find refs
+        const directRefs : string[] = [];
+        if (variants.length > 0) {
+            variants.forEach(variant => {
+                if (variant?.fields?.length > 0) {
+                    variant.fields.forEach(field => {
+                        const { refName } = this._builtTypes[field.type];
+                        if (refName) {
+                            directRefs.push(refName);
+                        }
+                    });
+                }
+            });
+        }
         
         const refs = directRefs.reduce((acc, c) => [
             ...acc,
@@ -443,63 +703,223 @@ export class StructTypeBuilder
             c,
         ], []);
         
-        this._typeStatements[refName] = {
+        // group possible variants
+        const possibleVariants : string[] = [];
+        const valuedVariants : Record<string, BuiltType[]> = {};
+        
+        for (const variant of variants) {
+            possibleVariants.push(variant.name);
+            
+            if (variant?.fields?.length > 0) {
+                valuedVariants[variant.name] = variant.fields
+                    .map(field => this._builtTypes[field.type])
+                ;
+            }
+        }
+        
+        const typeProp = typeStatementType.toString().toLowerCase();
+        let declaration : TsMorph.KindedStructure<any> = null;
+        
+        if (typeStatementType == TypeStatementType.Enum) {
+            declaration = <TsMorph.EnumDeclarationStructure>{
+                isExported: true,
+                kind: TsMorph.StructureKind.Enum,
+                name: structureName,
+                members: possibleVariants.map(variantName => {
+                    const builtTypes = valuedVariants[variantName];
+                    const type = builtTypes === undefined
+                        ? 'null'
+                        : this._buildTupleOrDirectUsage(builtTypes, typeStatementType)
+                    ;
+                    
+                    return {
+                        kind: TsMorph.StructureKind.EnumMember,
+                        name: variantName,
+                        value: variantName,
+                    };
+                }),
+            };
+        }
+        else if (typeStatementType == TypeStatementType.Native) {
+            declaration = <TsMorph.InterfaceDeclarationStructure>{
+                isExported: true,
+                kind: TsMorph.StructureKind.Interface,
+                name: structureName,
+                properties: possibleVariants.map(variantName => {
+                    const builtTypes = valuedVariants[variantName];
+                    const type = builtTypes === undefined
+                        ? 'null'
+                        : this._buildTupleOrDirectUsage(builtTypes, typeStatementType)
+                    ;
+                    
+                    return {
+                        kind: TsMorph.StructureKind.PropertySignature,
+                        name: camelCase(variantName),
+                        hasQuestionToken: true,
+                        type,
+                    };
+                }),
+            };
+        }
+        else if (typeStatementType == TypeStatementType.Human) {
+            const typeVariantsAlt = [
+                ...possibleVariants
+                    .filter(variantName => !valuedVariants[variantName])
+                    .map(variantName => `${refName}$.Enum.${variantName}`),
+            ];
+            
+            if (Object.values(valuedVariants).length > 0) {
+                const valuedVariantsStruct = '{\n'
+                    + Object.entries(valuedVariants)
+                        .map(([ variantName, variantType ]) => {
+                            return variantName + '?: ' + this._buildTupleOrDirectUsage(variantType, typeStatementType);
+                        })
+                    + '\n}';
+                typeVariantsAlt.push(valuedVariantsStruct);
+            }
+        
+            declaration = <TsMorph.TypeAliasDeclarationStructure>{
+                isExported: true,
+                kind: TsMorph.StructureKind.TypeAlias,
+                name: structureName,
+                type: typeVariantsAlt.join('\n| ')
+            };
+        }
+        else if (typeStatementType == TypeStatementType.Codec) {
+            const typeVariantsAlt = possibleVariants.map(variantName => {
+                const variantValues = valuedVariants[variantName];
+                const nativeVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Native);
+                const humanVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Human);
+                const codecVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Codec);
+            
+                return 'DPT.Enum<'
+                    + `${refName}$.Enum.${variantName}`
+                    + ', ' + nativeVariantValue
+                    + ', ' + humanVariantValue
+                    + ', ' + codecVariantValue
+                    + '>'
+            });
+        
+            declaration = <TsMorph.TypeAliasDeclarationStructure>{
+                isExported: true,
+                kind: TsMorph.StructureKind.TypeAlias,
+                name: structureName,
+                type: typeVariantsAlt.join('\n| ')
+            };
+        }
+        
+        this._typeStatements[fullRefName] = {
             declaration,
-            path: this.getPreparedPath(path),
+            path: typeStatementPath,
             refs,
         };
         
-        let parameterizedName = refName;
-        if (typeParameters.length) {
-            parameterizedName += `<${typeParamValues.join(', ')}>`;
+        return fullRefName;
+    };
+    
+    
+    protected _detectBuiltInType(refName : string) : BuiltInType
+    {
+        for (const [ pattern, builtInType ] of Object.entries(this._builtInTypes)) {
+            const regex = new RegExp(pattern);
+            const matches = refName.match(regex);
+            if (matches) {
+                return {
+                    ...builtInType,
+                    native: refName.replace(regex, builtInType.native),
+                    human: refName.replace(regex, builtInType.human),
+                    codec: refName.replace(regex, builtInType.codec),
+                }
+            }
         }
         
-        return {
-            native: parameterizedName,
-            codec: `DPT.IJson<${parameterizedName}>`,
-            refName
-        };
+        return null;
     }
     
-    public buildTuple (typeDef : ContractMetadata.Type.Tuple) : BuiltType
+    protected _buildTupleOrDirectUsage (
+        builtTypes : BuiltType[],
+        typeStatementType : TypeStatementType
+    ) : string
     {
-        const name = 'Tuple' + (++this._newTypeIdx);
+        const typeProp = typeStatementType.toString().toLowerCase();
         
-        const types = typeDef.def.tuple.map(type => this.buildType(type));
-        const nativeTypes = types
-            .map(type => type.native)
-            .join(', ')
-        ;
-        const codecTypes = types
-            .map(type => type.codec)
-            .join(', ')
-        ;
-        
-        return {
-            native: nativeTypes ? `[ ${nativeTypes} ]` : 'never[]',
-            codec: `DPT.ITuple<[ ${codecTypes} ]>`,
-        };
+        if (!builtTypes?.length) {
+            return typeStatementType == TypeStatementType.Codec
+                ? 'PTT.Codec'
+                : 'never'
+                ;
+        }
+        else if (builtTypes.length == 1) {
+            return builtTypes[0][typeProp];
+        }
+        else {
+            return '[ '
+                + builtTypes
+                    .map(type => type[typeProp])
+                    .join(', ')
+                + ' ]';
+        }
     }
     
+    protected _buildTypeParametersUsage (
+        typeParameters : BuiltType[][]
+    ) : BuiltType
+    {
+        function innerBuild (
+            typeParameters : BuiltType[][],
+            typeStatementType : TypeStatementType
+        ) : string
+        {
+            const prop = typeStatementType.toString().toLowerCase();
+            return typeParameters
+                .map(typeParameter => {
+                    return typeParameter.length > 1
+                        ? '[' + typeParameter.map(_tp => _tp[prop]).join(', ') + ']'
+                        : typeParameter[0][prop]
+                        ;
+                })
+                .join(',\n')
+                ;
+        }
+        
+        let native = innerBuild(typeParameters, TypeStatementType.Native);
+        let human = innerBuild(typeParameters, TypeStatementType.Human);
+        let codec = innerBuild(typeParameters, TypeStatementType.Codec);
+        
+        if (typeParameters.length > 0) {
+            native = `<\n${native}\n>`;
+            human = `<\n${human}\n>`;
+            codec = `<\n${codec}\n>`;
+        }
+        
+        return { native, human, codec };
+    }
     
-    public getPreparedPath (path : string[]) : string[]
+    protected _getPreparedPath (path : string[]) : string[]
     {
         const formated = path
-            .map(part => upperFirst(camelCase(part)))
+            .map(part => {
+                const isSuffixed = part[part.length - 1] == '$';
+                return upperFirst(camelCase(part)) + (isSuffixed ? '$' : '');
+            })
         ;
-    
-        return formated[0] == this._contractName && formated[1] == this._contractName
+        
+        const dedupe = formated[0] == formated[1]
+            && formated.length > 2
+            ;
+        
+        return dedupe
             ? formated.slice(1) // dedupe
             : formated
             ;
     }
     
-    public getTypeNameFromPath (
+    protected _getTypeNameFromPath (
         path : string[],
         idx? : number
     ) : string
     {
-        const pathName = this.getPreparedPath(path)
+        const pathName = this._getPreparedPath(path)
             .join('.')
         ;
         return pathName + (idx ? '$' + idx.toString() : '');

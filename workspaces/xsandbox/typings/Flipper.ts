@@ -1,35 +1,41 @@
 import type * as PhalaSdk from "@phala/sdk";
 import type * as DevPhase from "@devphase/service";
-import type * as DPT from "@devphase/service/etc/typings";
 import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/base/types";
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
-import type { Codec } from "@polkadot/types/types";
+import type * as DPT from "@devphase/service/etc/typings";
+import type * as PT from "@polkadot/types";
+import type * as PTI from "@polkadot/types/interfaces";
+import type * as PTT from "@polkadot/types/types";
 
 
 /** */
 /** Exported types */
 /** */
-export type Result<Ok, Err> = {
-    Ok? : Ok,
-    Err? : Err
-    };
 
 export namespace InkPrimitives {
-    export type LangError = {
-        CouldNotReadInput? : null
-        };
+    export interface LangError {
+        couldNotReadInput?: null;
+    }
 
-    export namespace Types {
-        export type AccountId = any;
-        export type Hash = any;
+    export namespace LangError$ {
+        export enum Enum {
+            CouldNotReadInput = "CouldNotReadInput"
+        }
+
+        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput;
+        export type Codec = DPT.Enum<InkPrimitives.LangError$.Enum.CouldNotReadInput, never, never, PTT.Codec>;
     }
 }
 
 export namespace InkEnv {
     export namespace Types {
-        export type NoChainExtension = {
+        export type NoChainExtension = any;
 
-            };
+        export namespace NoChainExtension$ {
+            export type Enum = any;
+            export type Human = any;
+            export type Codec = any;
+        }
     }
 }
 
@@ -39,7 +45,15 @@ export namespace Flipper {
     /** */
     namespace ContractQuery {
         export interface Get extends DPT.ContractQuery {
-            (certificateData: PhalaSdk.CertificateData, options: ContractOptions): DPT.CallResult<DPT.CallOutcome<DPT.IJson<Result<boolean, InkPrimitives.LangError>>>>;
+            (
+                certificateData: PhalaSdk.CertificateData,
+                options: ContractOptions,
+            ): DPT.CallReturn<
+                DPT.Result$.Codec<
+                    PT.Bool,
+                    InkPrimitives.LangError$.Codec
+                >
+            >;
         }
     }
 
@@ -71,8 +85,8 @@ export namespace Flipper {
     /** */
     /** Contract factory */
     /** */
-    export declare class Factory extends DevPhase.ContractFactory {
-        instantiate<T = Contract>(constructor: "new", params: [boolean], options?: DevPhase.InstantiateOptions): Promise<T>;
-        instantiate<T = Contract>(constructor: "default", params: never[], options?: DevPhase.InstantiateOptions): Promise<T>;
+    export declare class Factory extends DevPhase.ContractFactory<Contract> {
+        instantiate(constructor: "new", params: [boolean | PT.Bool], options?: DevPhase.InstantiateOptions): Promise<Contract>;
+        instantiate(constructor: "default", params: never[], options?: DevPhase.InstantiateOptions): Promise<Contract>;
     }
 }

@@ -36,7 +36,7 @@ export type InstantiateOptions = {
 }
 
 
-export class ContractFactory
+export class ContractFactory<T extends Contract = Contract>
 {
 
     public static readonly CODE_TYPE_MAP = {
@@ -76,7 +76,7 @@ export class ContractFactory
     }
     
     
-    public static async create<T extends ContractFactory> (
+    public static async create<T extends ContractFactory<any>> (
         devPhase : DevPhase,
         metadata : ContractMetadata.Metadata,
         options : CreateOptions = {}
@@ -176,7 +176,7 @@ export class ContractFactory
     /**
      * Creating contract instance
      */
-    public async instantiate<T extends Contract> (
+    public async instantiate (
         constructor : string,
         params : any[] = [],
         options : InstantiateOptions = {}
@@ -314,7 +314,7 @@ export class ContractFactory
     }
     
     
-    public async attach<T extends Contract> (
+    public async attach (
         contractId : string
     ) : Promise<T>
     {

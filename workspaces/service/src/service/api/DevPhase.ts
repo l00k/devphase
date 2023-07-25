@@ -191,10 +191,10 @@ export class DevPhase
     }
     
     
-    public async getFactory<T extends ContractFactory> (
+    public async getFactory<T extends Contract> (
         artifactPathOrName : string,
         options : GetFactoryOptions = {}
-    ) : Promise<T>
+    ) : Promise<ContractFactory<T>>
     {
         options = {
             clusterId: this.mainClusterId,

@@ -102,4 +102,13 @@ export abstract class BaseCommand<T extends typeof Command>
         return {};
     }
     
+    public async catch (error)
+    {
+        if (this.flags.verbose) {
+            console.trace(error);
+        }
+    
+        throw error;
+    }
+    
 }
