@@ -8,7 +8,7 @@ describe('Http proxy', () => {
     let factory : HttpProxy.Factory;
     let contract : HttpProxy.Contract;
     let signer : KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
     
     before(async function() {
         factory = await this.devPhase.getFactory(
@@ -19,17 +19,14 @@ describe('Http proxy', () => {
         await factory.deploy();
         
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
         
         contract = await factory.instantiate('new', []);
     });
     
     describe('default constructor', () => {
         it('Proper execute request using GET method', async function() {
-            const { output } = await contract.query.request(certificate, {}, {
+            const { output } = await contract.query.request(signer.address, { cert }, {
                 method: 'GET',
                 url: 'https://httpbin.org/anything',
                 body: null,
@@ -50,7 +47,7 @@ describe('Http proxy', () => {
         });
         
         it('Proper execute request using POST method', async function() {
-            const { output } = await contract.query.request(certificate, {}, {
+            const { output } = await contract.query.request(signer.address, { cert }, {
                 method: 'POST',
                 url: 'https://httpbin.org/anything',
                 body: '0x' + Buffer.from(JSON.stringify({ ok: 123 })).toString('hex'),

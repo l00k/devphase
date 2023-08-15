@@ -1,8 +1,9 @@
 import type * as PhalaSdk from '@phala/sdk';
 import type { ApiPromise } from '@polkadot/api';
 import type { Abi, ContractPromise } from '@polkadot/api-contract';
-import type * as Base from '@polkadot/api-contract/base/types';
-import type { AbiMessage, ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types';
+import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types';
+import type * as PACBT from '@polkadot/api-contract/base/types';
+import type * as PACT from '@polkadot/api-contract/types';
 import type { ApiBase } from '@polkadot/api/base';
 import type * as Submittable from '@polkadot/api/submittable/types';
 import type { DecorateMethod } from '@polkadot/api/types';
@@ -17,7 +18,6 @@ export type ToAnyJson<T> = T extends Object
     }
     : T
     ;
-
 
 
 export interface Json<N extends any, H extends any>
@@ -123,12 +123,14 @@ export interface CallOutcome<T extends PTT.Codec = PTT.Codec>
 }
 
 export interface CallResult<T>
-    extends Base.ContractCallResult<'promise', T>
+    extends PACBT.ContractCallResult<'promise', T>
 {
 }
 
 export type CallReturn<T extends PTT.Codec> = CallResult<CallOutcome<T>>;
 
+export type ContractCallOrigin = string | AccountId | Uint8Array;
+export type ContractCallOptions = PACT.ContractOptions & PhalaSdk.PinkContractQueryOptions;
 
 export interface MessageMeta
 {
@@ -139,7 +141,7 @@ export interface MessageMeta
 export interface ContractQuery
     extends MessageMeta
 {
-    (certificateData : PhalaSdk.CertificateData, options : ContractOptions, ...params : any[]) : CallResult<CallOutcome<any>>;
+    (origin : ContractCallOrigin, options : ContractCallOptions, ...params : any[]) : CallResult<CallOutcome<any>>;
 }
 
 export interface MapMessageQuery
@@ -156,7 +158,7 @@ export interface SubmittableExtrinsic
 export interface ContractTx
     extends MessageMeta
 {
-    (options : ContractOptions, ...params : any[]) : SubmittableExtrinsic;
+    (options : PACT.ContractOptions, ...params : any[]) : SubmittableExtrinsic;
 }
 
 export interface MapMessageTx
@@ -186,7 +188,7 @@ export namespace InkInstantiateResult$
 
 
 export declare class Contract
-    extends ContractPromise
+    extends PhalaSdk.PinkContractPromise
 {
     
     public readonly api : ApiPromise;
@@ -204,11 +206,12 @@ export declare class Contract
     public get query () : MapMessageQuery;
     public get tx () : MapMessageTx;
     
-    public sidevmQuery : PhalaSdk.SidevmQuery;
+    // todo ld 2023-08-10 01:12:10 - to remove?
+    //public sidevmQuery : PhalaSdk.SidevmQuery;
     
-    public instantiate (
-        instantiateOpts : InkInstantiateOpts,
-        cert : PhalaSdk.CertificateData
-    ) : CallReturn<Json<InkInstantiateResult, InkInstantiateResult$.Human>>;
+    // public instantiate (
+    //     instantiateOpts : InkInstantiateOpts,
+    //     cert : PhalaSdk.CertificateData
+    // ) : CallReturn<Json<InkInstantiateResult, InkInstantiateResult$.Human>>;
     
 }

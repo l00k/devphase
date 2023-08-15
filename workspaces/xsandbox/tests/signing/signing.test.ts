@@ -8,7 +8,7 @@ describe('Signing', () => {
     let factory : Signing.Factory;
     let contract : Signing.Contract;
     let signer : KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
     
     before(async function() {
         factory = await this.devPhase.getFactory(
@@ -19,10 +19,7 @@ describe('Signing', () => {
         await factory.deploy();
         
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
     
     describe('default constructor', () => {
@@ -32,7 +29,7 @@ describe('Signing', () => {
         const message = 'hi, how are ya?';
         
         it('Should be able derive keypair & sign/verify messages', async function() {
-            const response = await contract.query.test(certificate, {}, message);
+            const response = await contract.query.test(signer.address, { cert }, message);
             console.log(response.output.toJSON());
         });
     });

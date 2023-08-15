@@ -2,6 +2,7 @@ import type { Accounts, AccountsConfig, NetworkConfig } from '@/def';
 import { ContractType, StackSetupOptions, SystemContract, SystemContractFileMap } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
+import { PRuntimeApi } from '@/service/api/PRuntimeApi';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
@@ -13,6 +14,7 @@ import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
+import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { types as PhalaSDKTypes } from '@phala/sdk';
@@ -24,6 +26,7 @@ type DevPhaseProps = {
 }
 
 type WorkerInfo = {
+    initalized : boolean,
     publicKey : string,
     ecdhPublicKey : string,
 }
@@ -51,12 +54,13 @@ export class DevPhase
     public readonly mainClusterId : string = '0x0000000000000000000000000000000000000000000000000000000000000000';
     
     public readonly runtimeContext : RuntimeContext;
+    public readonly workerInfo : WorkerInfo;
     
     protected _apiProvider : WsProvider;
     protected _apiOptions : ApiOptions;
     protected _eventQueue : EventQueue = new EventQueue();
-    protected _workerInfo : WorkerInfo;
     protected _systemContracts : Record<string, Promise<Contract>> = {};
+    
     // clusterId => driverName => Contract
     protected _driverContracts : Record<string, Record<string, Promise<Contract>>> = {};
     
@@ -101,6 +105,10 @@ export class DevPhase
         if (networkConfig.defaultClusterId) {
             instanceProps.mainClusterId = networkConfig.defaultClusterId;
         }
+        
+        instanceProps.workerInfo = await DevPhase.getWorkerInfo(networkConfig.workerUrl);
+        
+        // assign props
         Object.assign(instance, instanceProps);
         
         // load accounts
@@ -126,10 +134,7 @@ export class DevPhase
             );
         }
         
-        const suAccountCert = await PhalaSdk.signCertificate({
-            api,
-            pair: suAccount,
-        });
+        const suAccountCert = await PhalaSdk.signCertificate({ pair: suAccount });
         
         Object.assign(instance, {
             accounts,
@@ -188,6 +193,29 @@ export class DevPhase
     {
         await this._eventQueue.destroy();
         await this.api.disconnect();
+    }
+    
+    
+    public static async getWorkerInfo (workerUrl : string) : Promise<WorkerInfo>
+    {
+        const workerInfo : WorkerInfo = {
+            initalized: false,
+            publicKey: null,
+            ecdhPublicKey: null,
+        };
+        
+        const workerRpc = new PRuntimeApi(workerUrl);
+        const response = await workerRpc.getInfo();
+        
+        workerInfo.initalized = response.initialized;
+        if (!workerInfo.initalized) {
+            return workerInfo;
+        }
+        
+        workerInfo.publicKey = '0x' + response.publicKey;
+        workerInfo.ecdhPublicKey = '0x' + response.ecdhPublicKey;
+        
+        return workerInfo;
     }
     
     
@@ -262,8 +290,8 @@ export class DevPhase
                 this._driverContracts[clusterId][driverName] = new Promise(async(resolve, reject) => {
                     try {
                         const { output } = await systemContract.query['system::getDriver'](
-                            this.suAccountCert,
-                            {},
+                            this.suAccount.address,
+                            { cert: this.suAccountCert },
                             name
                         );
                         

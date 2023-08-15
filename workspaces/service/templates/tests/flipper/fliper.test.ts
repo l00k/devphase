@@ -20,10 +20,7 @@ describe('Flipper', () => {
         await factory.deploy();
         
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        certificate = await PhalaSdk.signCertificate({ pair: signer });
     });
     
     describe('default constructor', () => {

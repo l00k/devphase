@@ -27,7 +27,7 @@ import Listr from 'listr';
 import path from 'path';
 
 
-type WorkerInfo = {
+type WorkerInfoEx = {
     workerUrl : string,
     api : AxiosInstance,
     rpc : PRuntimeApi,
@@ -67,7 +67,7 @@ export class StackSetupService
     protected _logServerMetadata : ContractMetadata.Metadata;
     protected _logServerSideVmWasm : string;
     
-    protected _workerInfo : WorkerInfo;
+    protected _workerInfo : WorkerInfoEx;
     protected _clusterInfo : ClusterInfo;
     
     protected _systemContract : Contract;
@@ -98,10 +98,7 @@ export class StackSetupService
         this._api = this._devPhase.api;
         this._txQueue = new TxQueue(this._api);
         
-        this._suAccountCert = await PhalaSdk.signCertificate({
-            api: this._api,
-            pair: this._suAccount,
-        });
+        this._suAccountCert = await PhalaSdk.signCertificate({ pair: this._suAccount });
         
         const setupStackVersion = StackSetupService.MAP_STACK_TO_SETUP[this._context.config.stack.version] ?? 'default';
         const setupStackMethod = 'setupStack_' + setupStackVersion;
@@ -127,7 +124,7 @@ export class StackSetupService
             {
                 title: 'Fetch worker info',
                 task: async() => {
-                    this._workerInfo = await this.getWorkerInfo(options.workerUrl);
+                    this._workerInfo = await this.getWorkerInfoEx(options.workerUrl);
                 }
             },
             {
@@ -285,8 +282,8 @@ export class StackSetupService
                     skip: async() => {
                         const result = await this._driverContracts.SidevmOperation
                             .query['sidevmOperation::canDeploy'](
-                            this._suAccountCert,
-                            {},
+                            this._suAccount.address,
+                            { cert: this._suAccountCert },
                             this._loggerId
                         );
                         
@@ -321,29 +318,16 @@ export class StackSetupService
     }
     
     
-    public async getWorkerInfo (workerUrl : string) : Promise<WorkerInfo>
+    public async getWorkerInfoEx (workerUrl : string) : Promise<WorkerInfoEx>
     {
-        const workerInfo : WorkerInfo = {
+        const workerInfo = await DevPhase.getWorkerInfo(workerUrl);
+    
+        return {
             workerUrl,
             api: axios.create({ baseURL: workerUrl }),
             rpc: new PRuntimeApi(workerUrl),
-            initalized: false,
-            publicKey: null,
-            ecdhPublicKey: null,
+            ...workerInfo,
         };
-        
-        const response = await workerInfo.rpc.getInfo();
-        
-        workerInfo.initalized = response.initialized;
-        
-        if (!workerInfo.initalized) {
-            return workerInfo;
-        }
-        
-        workerInfo.publicKey = '0x' + response.publicKey;
-        workerInfo.ecdhPublicKey = '0x' + response.ecdhPublicKey;
-        
-        return workerInfo;
     }
     
     public async registerWorker ()
@@ -554,8 +538,8 @@ export class StackSetupService
     ) : Promise<boolean>
     {
         const { output } = await this._systemContract.query['system::getDriver'](
-            this._suAccountCert,
-            {},
+            this._suAccount.address,
+            { cert: this._suAccountCert },
             name
         );
         
@@ -597,25 +581,25 @@ export class StackSetupService
         await contractFactory.deploy();
         
         // create instance
-        const instantiationEst = await contractFactory.estimateInstatiationFee(
-            'default',
-            [],
-            {
-                asAccount: this._suAccount,
-                ...instantiateOpts
-            }
-        );
+        // todo ld 2023-08-10 23:46:28
+        // const instantiationEst = await contractFactory.estimateInstatiationFee(
+        //     'default',
+        //     [],
+        //     {
+        //         asAccount: this._suAccount,
+        //         ...instantiateOpts
+        //     }
+        // );
         
         instantiateOpts = {
             asAccount: this._suAccount,
-            gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
-            storageDepositLimit: instantiationEst.storageDeposit.isCharge
-                ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
-                : 0,
+            // gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
+            // storageDepositLimit: instantiationEst.storageDeposit.isCharge
+            //     ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
+            //     : 0,
             adjustStake: 10e12,
             ...instantiateOpts
         };
-        instantiateOpts.gasLimit = instantiateOpts.gasLimit * 100;
         
         const instance = await contractFactory.instantiate(
             'default',
@@ -628,17 +612,18 @@ export class StackSetupService
         // set driver
         const { gasRequired, storageDeposit } = await this._systemContract.query
             ['system::setDriver'](
-            this._suAccountCert,
-            {},
-            name,
-            instance.contractId
-        );
+                this._suAccount.address,
+                { cert: this._suAccountCert},
+                name,
+                instance.contractId
+            );
         
         const options = {
             value: 0,
             gasLimit: gasRequired,
             storageDepositLimit: storageDeposit.isCharge ? storageDeposit.asCharge : null
         };
+        
         await this._txQueue.submit(
             this._systemContract.tx['system::setDriver'](
                 options,
@@ -659,8 +644,8 @@ export class StackSetupService
         
         await this._waitFor(async() => {
             const { output } = await this._systemContract.query['system::getDriver'](
-                this._suAccountCert,
-                {},
+                this._suAccount.address,
+                { cert: this._suAccountCert },
                 name
             );
             
@@ -679,12 +664,12 @@ export class StackSetupService
         );
         
         await this._waitFor(async() => {
-            const result = await this._driverContracts.SidevmOperation
-                .query['sidevmOperation::canDeploy'](
-                this._suAccountCert,
-                {},
-                this._loggerId
-            );
+            const result = await this._driverContracts.SidevmOperation.query
+                ['sidevmOperation::canDeploy'](
+                    this._suAccount.address,
+                    { cert: this._suAccountCert },
+                    this._loggerId
+                );
             const output = result.output.toJSON();
             return output?.ok;
         }, this._waitTime);
@@ -717,6 +702,16 @@ export class StackSetupService
         );
         
         return result;
+    }
+    
+    
+    protected async testTask()
+    {
+        const endpoints = (
+            await this._api.query.phalaRegistry.endpoints(this._workerInfo.publicKey)
+        ).toJSON();
+        
+        console.dir(endpoints, { depth: 10 });
     }
     
 }

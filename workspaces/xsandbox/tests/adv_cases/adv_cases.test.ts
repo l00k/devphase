@@ -8,14 +8,11 @@ describe('Adv cases', () => {
     let factory : AdvCases.Factory;
     let contract : AdvCases.Contract;
     let signer : KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
     
     before(async function() {
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
     
     beforeEach(async function() {
@@ -33,7 +30,7 @@ describe('Adv cases', () => {
         });
         
         it('Getting sample user', async function() {
-            const response = await contract.query.getUser(certificate, {}, 3);
+            const response = await contract.query.getUser(signer.address, { cert }, 3);
             
             const native = response.output.toJSON();
             console.dir(native, { depth: 10 });

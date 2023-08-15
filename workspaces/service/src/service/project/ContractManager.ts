@@ -415,10 +415,7 @@ export class ContractManager
             );
         }
         
-        const certificate : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({
-            api: devPhase.api,
-            pair: signer,
-        });
+        const certificate : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({ pair: signer });
         
         // prepare method call
         if (!instance[callType][methodName]) {

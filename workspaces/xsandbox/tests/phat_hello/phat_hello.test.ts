@@ -9,7 +9,7 @@ describe('PhatHello', () => {
     let factory : PhatHello.Factory;
     let contract : PhatHello.Contract;
     let signer : KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
     
     before(async function() {
         factory = await this.devPhase.getFactory(
@@ -20,10 +20,7 @@ describe('PhatHello', () => {
         await factory.deploy();
         
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
     
     describe('new constructor', () => {
@@ -34,7 +31,7 @@ describe('PhatHello', () => {
         const hex_address = stringToHex(address);
         
         it('Should be able to query balance of an account on Ethereum', async function() {
-            const response = await contract.query.getEthBalance(certificate, {}, hex_address);
+            const response = await contract.query.getEthBalance(signer.address, { cert }, hex_address);
             const human = response.output.toHuman();
             const primitive = response.output.toPrimitive();
             const json = response.output.toJSON();
