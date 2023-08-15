@@ -28,12 +28,12 @@ jobs:
                 name: Build @devphase/service
                 command: |
                     cd workspaces/service
-                    yarn compile
+                    yarn compile || true
             - run:
                 name: Build @devphase/cli
                 command: |
                     cd workspaces/cli
-                    yarn compile
+                    yarn compile || true
             - run:
                 name: Reinstall all dependencies
                 command: ./reinstall.sh

@@ -7,9 +7,9 @@
         ]
     },
     "include": [
-        "src"
+        "./src"
     ],
     "exclude": [
-        "src/api/**"
+        "./src/api/**"
     ]
 }

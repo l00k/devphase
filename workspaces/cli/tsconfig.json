@@ -30,8 +30,8 @@
         }
     },
     "include": [
-        "src",
-        "tests"
+        "./src",
+        "./tests"
     ],
     "ts-node": {
         "transpileOnly": true,
