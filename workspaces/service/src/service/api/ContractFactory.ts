@@ -238,13 +238,6 @@ export class ContractFactory<T extends Contract = Contract>
         
         if (options.useEstimation) {
             const estimation = await this.estimateInstatiationFee(constructor, params, options);
-            
-            // todo ld 2023-08-16 14:36:22
-            console.dir(
-                estimation.toJSON(),
-                { depth: 10 }
-            );
-            
             if (!estimation.result.isOk) {
                 throw new Exception(
                     'Failed to estimate instantiation fees',
@@ -384,7 +377,7 @@ export class ContractFactory<T extends Contract = Contract>
         
         const instantiateReturn = await blueprint.query[constructor](
             keyringPair.address,
-            { cert },
+            { cert, salt: options.salt },
             ...params
         );
         

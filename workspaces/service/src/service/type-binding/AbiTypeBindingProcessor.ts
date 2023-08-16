@@ -105,7 +105,7 @@ export class AbiTypeBindingProcessor
             {
                 kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
-                namedImports: [ 'ContractExecResult', 'ContractInstantiateResult' ],
+                namedImports: [ 'ContractExecResult' ],
                 moduleSpecifier: '@polkadot/types/interfaces/contracts',
             },
             {
@@ -139,21 +139,16 @@ export class AbiTypeBindingProcessor
     {
         const queriesModuleInterfaces : TsMorph.InterfaceDeclarationStructure[] = [];
         
-        const messages : ({ constructor : boolean } & ContractMetadata.Message)[] = <any>[
-            ...this._abi.spec.constructors.map(constructor => ({ constructor: true, ...constructor })),
-            ...this._abi.spec.messages
-        ];
+        const messages = this._abi.spec.messages;
         
         for (const message of messages) {
             const name = this.formatInterfaceName(message.label);
             
-            const returnType = message.constructor == true
-                ? 'ContractInstantiateResult'
-                : message.mutates == true
-                    ? 'ContractExecResult'
-                    : message.returnType
-                        ? this.structTypeBuilder.getCodecType(message.returnType.type)
-                        : null
+            const returnType = message.mutates == true
+                ? 'ContractExecResult'
+                : message.returnType
+                    ? this.structTypeBuilder.getCodecType(message.returnType.type)
+                    : null
             ;
             
             queriesModuleInterfaces.push({
