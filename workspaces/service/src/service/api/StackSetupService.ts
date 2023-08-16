@@ -581,23 +581,27 @@ export class StackSetupService
         await contractFactory.deploy();
         
         // create instance
-        // todo ld 2023-08-10 23:46:28
-        // const instantiationEst = await contractFactory.estimateInstatiationFee(
-        //     'default',
-        //     [],
-        //     {
-        //         asAccount: this._suAccount,
-        //         ...instantiateOpts
-        //     }
-        // );
+        const instantiationEst = await contractFactory.estimateInstatiationFee(
+            'default',
+            [],
+            {
+                asAccount: this._suAccount,
+                ...instantiateOpts
+            }
+        );
+        
+        console.dir(
+            instantiationEst.toJSON(),
+            { depth: 10 },
+        );
         
         instantiateOpts = {
             asAccount: this._suAccount,
+            // todo ld 2023-08-15 09:32:55
             // gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
             // storageDepositLimit: instantiationEst.storageDeposit.isCharge
             //     ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
             //     : 0,
-            adjustStake: 10e12,
             ...instantiateOpts
         };
         

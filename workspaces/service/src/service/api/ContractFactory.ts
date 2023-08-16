@@ -8,7 +8,7 @@ import { Exception } from '@/utils/Exception';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
-import { Abi, ContractPromise } from '@polkadot/api-contract';
+import { Abi } from '@polkadot/api-contract';
 import { KeyringPair } from '@polkadot/keyring/types';
 import type { ContractInstantiateResult } from '@polkadot/types/interfaces/contracts';
 import { BN } from '@polkadot/util/bn';
@@ -39,18 +39,19 @@ export type InstantiateOptions = {
 
 export class ContractFactory<T extends Contract = Contract>
 {
-
+    
     public static readonly CODE_TYPE_MAP = {
         [ContractType.InkCode]: 'Ink',
         [ContractType.SidevmCode]: 'Sidevm',
         [ContractType.IndeterministicInkCode]: 'Ink',
-    }
+    };
     
     public readonly contractType : string;
     public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
     
     protected _devPhase : DevPhase;
+    protected _phatRegistry : PhalaSdk.OnChainRegistry;
     
     protected _blockTime : number;
     protected _waitTime : number;
@@ -65,18 +66,6 @@ export class ContractFactory<T extends Contract = Contract>
         return this._devPhase.api;
     }
     
-    protected async init (
-        loadSystemContract : boolean = false
-    )
-    {
-        await this._eventQueue.init(this._devPhase.api);
-        
-        if (loadSystemContract) {
-            this._systemContract = await this._devPhase.getSystemContract(this.clusterId);
-        }
-    }
-    
-    
     public static async create<T extends ContractFactory<any>> (
         devPhase : DevPhase,
         metadata : ContractMetadata.Metadata,
@@ -86,8 +75,8 @@ export class ContractFactory<T extends Contract = Contract>
         options = {
             systemContract: false,
             ...options,
-        }
-    
+        };
+        
         const instance = new ContractFactory();
         
         instance._devPhase = devPhase;
@@ -104,9 +93,43 @@ export class ContractFactory<T extends Contract = Contract>
             clusterId: options.clusterId,
         });
         
-        await instance.init(!options.systemContract);
+        await instance._init(!options.systemContract);
         
         return <any>instance;
+    }
+    
+    protected async _init (
+        loadSystemContract : boolean = false
+    )
+    {
+        await this._eventQueue.init(this._devPhase.api);
+        
+        // create registry
+        const clusterInfo : any = (
+            await this.api.query.phalaPhatContracts.clusters(this.clusterId)
+        ).toJSON();
+        
+        this._phatRegistry = await PhalaSdk.OnChainRegistry.create(
+            this.api,
+            {
+                clusterId: this.clusterId,
+                pruntimeURL: this._devPhase.workerUrl,
+                workerId: this._devPhase.workerInfo.publicKey,
+                systemContractId: this._systemContract?.contractId,
+                autoConnect: true,
+                skipCheck: true, // todo ld 2023-08-10 23:45:02 - dirty hack!
+            }
+        );
+        // todo ld 2023-08-15 06:07:03 - dirty hack!
+        this._phatRegistry.clusterInfo = {
+            ...clusterInfo,
+            gasPrice: new BN(1)
+        };
+        
+        // load system contract
+        if (loadSystemContract) {
+            this._systemContract = await this._devPhase.getSystemContract(this.clusterId);
+        }
     }
     
     
@@ -123,7 +146,7 @@ export class ContractFactory<T extends Contract = Contract>
             ...options
         };
         
-        const keyringPair : KeyringPair = <any> (
+        const keyringPair : KeyringPair = <any>(
             typeof options.asAccount === 'string'
                 ? this._devPhase.accounts[options.asAccount]
                 : options.asAccount
@@ -137,7 +160,7 @@ export class ContractFactory<T extends Contract = Contract>
                     1679713544635
                 );
             }
-        
+            
             const cert = await PhalaSdk.signCertificate({ pair: keyringPair });
             
             const codeType = ContractFactory.CODE_TYPE_MAP[this.contractType];
@@ -285,33 +308,31 @@ export class ContractFactory<T extends Contract = Contract>
     ) : Promise<ContractInstantiateResult>
     {
         const systemContract = await this._devPhase.getSystemContract(this.clusterId);
-
-        const abi = new Abi(this.metadata);
-        const callData = abi.findConstructor(constructor).toU8a(params);
-        const salt = typeof options.salt == 'number'
-            ? '0x' + options.salt.toString(16)
-            : options.salt
-        ;
-
-        const keyringPair : any = typeof options.asAccount === 'string'
-            ? this._devPhase.accounts[options.asAccount]
-            : options.asAccount;
-
-        const cert = await PhalaSdk.signCertificate({ pair: keyringPair });
-
-        // todo ld 2023-08-10 01:16:30
-        // @ts-ignore
-        const instantiateReturn = await systemContract.instantiate({
-            codeHash: this.metadata.source.hash,
-            salt,
-            instantiateData: callData,
-            deposit: options.deposit,
-            transfer: options.transfer
-        }, cert);
         
-        console.log(instantiateReturn);
-
-        return <any> instantiateReturn;
+        const abi = new Abi(this.metadata);
+        
+        const keyringPair : KeyringPair = <any>(
+            typeof options.asAccount === 'string'
+                ? this._devPhase.accounts[options.asAccount]
+                : options.asAccount
+        );
+        
+        const cert = await PhalaSdk.signCertificate({ pair: keyringPair });
+        
+        const blueprint = new PhalaSdk.PinkBlueprintPromise(
+            this.api,
+            this._phatRegistry,
+            abi,
+            this.metadata.source.hash,
+        );
+        
+        const instantiateReturn = await blueprint.query[constructor](
+            keyringPair.address,
+            { cert },
+            ...params
+        );
+        
+        return <any>instantiateReturn;
     }
     
     
@@ -321,28 +342,7 @@ export class ContractFactory<T extends Contract = Contract>
     {
         const api : any = await this._devPhase.createApiPromise();
         
-        const clusterInfo = (
-            await api.query.phalaPhatContracts.clusters(this.clusterId)
-        ).toJSON();
-        
-        const onChainRegistry = await PhalaSdk.OnChainRegistry.create(
-            api,
-            {
-                clusterId: this.clusterId,
-                pruntimeURL: this._devPhase.workerUrl,
-                workerId: this._devPhase.workerInfo.publicKey,
-                systemContractId: this._systemContract?.contractId,
-                autoConnect: true,
-                skipCheck: true, // todo ld 2023-08-10 23:45:02 - dirty hack!
-            }
-        );
-        // todo ld 2023-08-15 06:07:03 - dirty hack!
-        onChainRegistry.clusterInfo = {
-            ...clusterInfo,
-            gasPrice: new BN(1)
-        };
-        
-        const contractKey = await onChainRegistry.getContractKey(contractId);
+        const contractKey = await this._phatRegistry.getContractKey(contractId);
         if (!contractKey) {
             throw new Exception(
                 'Contract key is not ready yet',
@@ -352,7 +352,7 @@ export class ContractFactory<T extends Contract = Contract>
         
         const instance = new PhalaSdk.PinkContractPromise(
             api,
-            onChainRegistry,
+            this._phatRegistry,
             this.metadata,
             contractId,
             contractKey
@@ -364,7 +364,6 @@ export class ContractFactory<T extends Contract = Contract>
             
             // todo ld 2023-08-10 01:11:22
             // sidevmQuery: phala.sidevmQuery,
-            // instantiate: phala.instantiate,
         });
         
         return <any>instance;

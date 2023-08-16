@@ -16,56 +16,6 @@ import _ from 'lodash';
 import path from 'path';
 
 
-export type ContractDefinition = {
-    name : string,
-    type : ContractType,
-    network : string,
-    contractId : string,
-    clusterId? : string,
-}
-
-export type ContractCreateNewOptions = {
-    name? : string,
-    template? : string,
-};
-
-export type ContractCompileOptions = {
-    contractName? : string,
-    watch? : boolean,
-    release? : boolean,
-};
-
-export type ContractValidateOptions = {
-    contractName? : string,
-};
-
-export type ContractCompilationResult = {
-    compilation : CompilationResult,
-    validation : ValidationResult,
-    typeBinding : boolean,
-}
-
-export type ContractDeployOptions = {
-    contractType? : ContractType,
-    clusterId? : string,
-    network? : string,
-    account : string,
-};
-
-export type ContractCallOptions = {
-    contractType? : ContractType,
-    clusterId? : string,
-    network? : string,
-    account : string,
-};
-
-export enum ContractCallType
-{
-    Query = 'query',
-    Tx = 'tx',
-};
-
-
 export class ContractManager
 {
     
@@ -82,7 +32,7 @@ export class ContractManager
     )
     {}
     
-    public async loadContractsDefFromStorageFile () : Promise<ContractDefinition[]>
+    public async loadContractsDefFromStorageFile () : Promise<ContractManager.ContractDefinition[]>
     {
         const contractsStoragePath = path.join(
             this._runtimeContext.paths.project,
@@ -98,7 +48,7 @@ export class ContractManager
     }
     
     protected async _addContractDefToStorageFile (
-        contractDef : ContractDefinition
+        contractDef : ContractManager.ContractDefinition
     )
     {
         const contractsStoragePath = path.join(
@@ -106,7 +56,7 @@ export class ContractManager
             'contracts.json'
         );
         
-        let currentData : ContractDefinition[] = await this.loadContractsDefFromStorageFile();
+        let currentData : ContractManager.ContractDefinition[] = await this.loadContractsDefFromStorageFile();
         if (!currentData) {
             currentData = [];
         }
@@ -123,7 +73,7 @@ export class ContractManager
     }
     
     public async loadContract<T extends Contract> (
-        contractDef : ContractDefinition,
+        contractDef : ContractManager.ContractDefinition,
     ) : Promise<T>
     {
         const devPhase = this._runtimeContext.getDevPhase();
@@ -140,7 +90,7 @@ export class ContractManager
     }
     
     public async createNew (
-        options : ContractCreateNewOptions
+        options : ContractManager.ContractCreateNewOptions
     )
     {
         const contractNameValidator = value => /^[a-z][a-z0-9_]+$/.test(value);
@@ -231,15 +181,15 @@ export class ContractManager
     }
     
     public async compile (
-        options : ContractCompileOptions
-    ) : Promise<Record<string, ContractCompilationResult>>
+        options : ContractManager.ContractCompileOptions
+    ) : Promise<Record<string, ContractManager.ContractCompilationResult>>
     {
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
         const compiler = new Compiler(this._runtimeContext);
         const validator = new Validator(this._runtimeContext);
         const typeBinder = new TypeBinder(this._runtimeContext);
         
-        const compilationResults : Record<string, ContractCompilationResult> = {};
+        const compilationResults : Record<string, ContractManager.ContractCompilationResult> = {};
         
         const listr = await multiContractExecutor.exec(
             options.contractName,
@@ -291,7 +241,7 @@ export class ContractManager
     }
     
     public async validate (
-        options : ContractValidateOptions
+        options : ContractManager.ContractValidateOptions
     ) : Promise<Record<string, ValidationResult>>
     {
         const multiContractExecutor = new MultiContractExecutor(this._runtimeContext);
@@ -325,7 +275,7 @@ export class ContractManager
         contractName : string,
         constructor : string,
         ctorArgs : string[],
-        options : ContractDeployOptions
+        options : ContractManager.ContractDeployOptions
     )
     {
         options = {
@@ -381,10 +331,10 @@ export class ContractManager
     public async contractCall (
         contractName : string,
         contractId : string,
-        callType : ContractCallType = ContractCallType.Query,
+        callType : ContractManager.ContractCallType = ContractManager.ContractCallType.Query,
         methodName : string,
         args : string[],
-        options : ContractCallOptions
+        options : ContractManager.ContractCallOptions
     ) : Promise<any>
     {
         options = {
@@ -415,7 +365,7 @@ export class ContractManager
             );
         }
         
-        const certificate : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({ pair: signer });
+        const cert : PhalaSdk.CertificateData = await PhalaSdk.signCertificate({ pair: signer });
         
         // prepare method call
         if (!instance[callType][methodName]) {
@@ -427,9 +377,9 @@ export class ContractManager
         
         let result : any;
         
-        if (callType === ContractCallType.Query) {
+        if (callType === ContractManager.ContractCallType.Query) {
             const contractCall = instance.query[methodName];
-            const outcome = await contractCall(<any>certificate, {}, ...args);
+            const outcome = await contractCall(signer.address, { cert }, ...args);
             
             result = {
                 output: outcome.output.toJSON(),
@@ -452,4 +402,56 @@ export class ContractManager
         return result;
     }
     
+}
+
+
+export namespace ContractManager {
+    export type ContractDefinition = {
+        name : string,
+        type : ContractType,
+        network : string,
+        contractId : string,
+        clusterId? : string,
+    }
+    
+    export type ContractCreateNewOptions = {
+        name? : string,
+        template? : string,
+    };
+    
+    export type ContractCompileOptions = {
+        contractName? : string,
+        watch? : boolean,
+        release? : boolean,
+    };
+    
+    export type ContractValidateOptions = {
+        contractName? : string,
+    };
+    
+    export type ContractCompilationResult = {
+        compilation : CompilationResult,
+        validation : ValidationResult,
+        typeBinding : boolean,
+    }
+    
+    export type ContractDeployOptions = {
+        contractType? : ContractType,
+        clusterId? : string,
+        network? : string,
+        account : string,
+    };
+    
+    export type ContractCallOptions = {
+        contractType? : ContractType,
+        clusterId? : string,
+        network? : string,
+        account : string,
+    };
+    
+    export enum ContractCallType
+    {
+        Query = 'query',
+        Tx = 'tx',
+    };
 }

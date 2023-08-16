@@ -1,5 +1,5 @@
 import { BaseCommand } from '@/base/BaseCommand';
-import { ContractCallType, ContractManager, ContractType, RunMode, RuntimeContext } from '@devphase/service';
+import { ContractManager, ContractType, RunMode, RuntimeContext } from '@devphase/service';
 import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 
@@ -32,8 +32,8 @@ export class ContractCallCommand
         accessor: Flags.string({
             summary: 'Method type: transaction or query',
             char: 'a',
-            default: ContractCallType.Query,
-            options: Object.values(ContractCallType)
+            default: ContractManager.ContractCallType.Query,
+            options: Object.values(ContractManager.ContractCallType)
         }),
         method: Flags.string({
             summary: 'Contract method to call (name)',

@@ -60,7 +60,9 @@ export class TxHandler
             catch (e : any) {
                 const msg = typeof e == 'string'
                     ? e.toLowerCase()
-                    : e?.message.toString().toLowerCase()
+                    : e?.message
+                        ? e?.message.toString().toLowerCase()
+                        : String(e)
                     ;
             
                 if (

@@ -95,8 +95,10 @@ export class TxQueue
             catch (e : any) {
                 const msg = typeof e == 'string'
                     ? e.toLowerCase()
-                    : e?.message.toString().toLowerCase()
-                    ;
+                    : e?.message
+                        ? e?.message.toString().toLowerCase()
+                        : String(e)
+                        ;
             
                 if (
                     msg.includes('priority is too low')

@@ -1,5 +1,5 @@
 import { BaseCommand } from '@/base/BaseCommand';
-import { ContractDefinition, ContractManager, RunMode } from '@devphase/service';
+import { ContractManager, RunMode } from '@devphase/service';
 import { ux } from '@oclif/core';
 import { table } from '@oclif/core/lib/cli-ux/styled/table';
 import chalk from 'chalk';
@@ -23,7 +23,7 @@ export class ContractListCommand
         
         const contractManager = new ContractManager(this.runtimeContext);
         
-        let contractDefinitions : ContractDefinition[] = await contractManager.loadContractsDefFromStorageFile();
+        let contractDefinitions : ContractManager.ContractDefinition[] = await contractManager.loadContractsDefFromStorageFile();
         contractDefinitions = sortBy(contractDefinitions, [ 'type', 'network', 'name' ]);
         
         const contractsOutput = Object.values(contractDefinitions)

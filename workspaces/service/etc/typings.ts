@@ -209,9 +209,4 @@ export declare class Contract
     // todo ld 2023-08-10 01:12:10 - to remove?
     //public sidevmQuery : PhalaSdk.SidevmQuery;
     
-    // public instantiate (
-    //     instantiateOpts : InkInstantiateOpts,
-    //     cert : PhalaSdk.CertificateData
-    // ) : CallReturn<Json<InkInstantiateResult, InkInstantiateResult$.Human>>;
-    
 }
