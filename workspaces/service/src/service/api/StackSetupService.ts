@@ -16,6 +16,7 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
+import { sleep } from '@/utils/sleep';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
@@ -581,30 +582,6 @@ export class StackSetupService
         await contractFactory.deploy();
         
         // create instance
-        const instantiationEst = await contractFactory.estimateInstatiationFee(
-            'default',
-            [],
-            {
-                asAccount: this._suAccount,
-                ...instantiateOpts
-            }
-        );
-        
-        console.dir(
-            instantiationEst.toJSON(),
-            { depth: 10 },
-        );
-        
-        instantiateOpts = {
-            asAccount: this._suAccount,
-            // todo ld 2023-08-15 09:32: - temporarly disable
-            // gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
-            // storageDepositLimit: instantiationEst.storageDeposit.isCharge
-            //     ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
-            //     : 0,
-            ...instantiateOpts
-        };
-        
         const instance = await contractFactory.instantiate(
             'default',
             [],
@@ -706,16 +683,6 @@ export class StackSetupService
         );
         
         return result;
-    }
-    
-    
-    protected async testTask()
-    {
-        const endpoints = (
-            await this._api.query.phalaRegistry.endpoints(this._workerInfo.publicKey)
-        ).toJSON();
-        
-        console.dir(endpoints, { depth: 10 });
     }
     
 }

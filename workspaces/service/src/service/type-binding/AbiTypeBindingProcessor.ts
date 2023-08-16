@@ -105,6 +105,12 @@ export class AbiTypeBindingProcessor
             {
                 kind: StructureKind.ImportDeclaration,
                 isTypeOnly: true,
+                namedImports: [ 'ContractExecResult', 'ContractInstantiateResult' ],
+                moduleSpecifier: '@polkadot/types/interfaces/contracts',
+            },
+            {
+                kind: StructureKind.ImportDeclaration,
+                isTypeOnly: true,
                 namespaceImport: 'DPT',
                 moduleSpecifier: '@devphase/service/etc/typings',
             },
@@ -133,15 +139,22 @@ export class AbiTypeBindingProcessor
     {
         const queriesModuleInterfaces : TsMorph.InterfaceDeclarationStructure[] = [];
         
-        const queryMessages = this._abi.spec.messages
-            .filter(message => message.mutates === false)
-            ;
+        const messages : ({ constructor : boolean } & ContractMetadata.Message)[] = <any>[
+            ...this._abi.spec.constructors.map(constructor => ({ constructor: true, ...constructor })),
+            ...this._abi.spec.messages
+        ];
+        
+        for (const message of messages) {
+            const name = this.formatInterfaceName(message.label);
             
-        for (const queryMessage of queryMessages) {
-            const name = this.formatInterfaceName(queryMessage.label);
-            const returnType = queryMessage.returnType
-                ? this.structTypeBuilder.getCodecType(queryMessage.returnType.type)
-                : null;
+            const returnType = message.constructor == true
+                ? 'ContractInstantiateResult'
+                : message.mutates == true
+                    ? 'ContractExecResult'
+                    : message.returnType
+                        ? this.structTypeBuilder.getCodecType(message.returnType.type)
+                        : null
+            ;
             
             queriesModuleInterfaces.push({
                 isExported: true,
@@ -154,19 +167,19 @@ export class AbiTypeBindingProcessor
                         parameters: [
                             {
                                 kind: StructureKind.Parameter,
-                                name: 'certificateData',
-                                type: 'PhalaSdk.CertificateData',
+                                name: 'origin',
+                                type: 'DPT.ContractCallOrigin',
                                 leadingTrivia: '\n',
                                 trailingTrivia: ',\n'
                             },
                             {
                                 kind: StructureKind.Parameter,
                                 name: 'options',
-                                type: 'ContractOptions',
+                                type: 'DPT.ContractCallOptions',
                                 leadingTrivia: '',
                                 trailingTrivia: ',\n'
                             },
-                            ...queryMessage.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
+                            ...message.args.map<TsMorph.ParameterDeclarationStructure>(arg => ({
                                 kind: StructureKind.Parameter,
                                 name: arg.label,
                                 type: this.structTypeBuilder.getFlexibleType(arg.type.type),
@@ -192,8 +205,7 @@ export class AbiTypeBindingProcessor
                 kind: StructureKind.Interface,
                 name: 'MapMessageQuery',
                 extends: [ 'DPT.MapMessageQuery' ],
-                properties: this._abi.spec.messages
-                    .filter(message => message.mutates === false)
+                properties: messages
                     .map(message => ({
                         kind: StructureKind.PropertySignature,
                         name: this.formatContractMethodName(message.label),

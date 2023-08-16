@@ -5,6 +5,7 @@ import { EventQueue } from '@/service/api/EventQueue';
 import { TxHandler } from '@/service/api/TxHandler';
 import type { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
+import { Logger } from '@/utils/Logger';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
@@ -23,11 +24,13 @@ export type CreateOptions = {
 export type DeployOptions = {
     forceUpload? : boolean,
     asAccount? : AccountKey | KeyringPair,
+    waitReady? : boolean,
 }
 
 export type InstantiateOptions = {
     salt? : string | number,
     asAccount? : AccountKey | KeyringPair,
+    useEstimation? : boolean,
     transfer? : number,
     gasLimit? : number,
     storageDepositLimit? : number,
@@ -49,6 +52,8 @@ export class ContractFactory<T extends Contract = Contract>
     public readonly contractType : string;
     public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
+    
+    protected _logger : Logger = new Logger('ContractFactory');
     
     protected _devPhase : DevPhase;
     protected _phatRegistry : PhalaSdk.OnChainRegistry;
@@ -143,6 +148,7 @@ export class ContractFactory<T extends Contract = Contract>
         options = {
             forceUpload: false,
             asAccount: 'alice',
+            waitReady: true,
             ...options
         };
         
@@ -152,22 +158,22 @@ export class ContractFactory<T extends Contract = Contract>
                 : options.asAccount
         );
         
+        const cert = await PhalaSdk.signCertificate({ pair: keyringPair });
+        
+        const codeType = ContractFactory.CODE_TYPE_MAP[this.contractType];
+        if (!codeType) {
+            throw new Exception(
+                `Unable to map contract type <${this.contractType}> to code type`,
+                1679713421053
+            );
+        }
+        
         // verify is it required to upload resource
         if (!options.forceUpload) {
             if (!this._systemContract) {
                 throw new Exception(
                     'System contract is not ready',
                     1679713544635
-                );
-            }
-            
-            const cert = await PhalaSdk.signCertificate({ pair: keyringPair });
-            
-            const codeType = ContractFactory.CODE_TYPE_MAP[this.contractType];
-            if (!codeType) {
-                throw new Exception(
-                    `Unable to map contract type <${this.contractType}> to code type`,
-                    1679713421053
                 );
             }
             
@@ -193,6 +199,18 @@ export class ContractFactory<T extends Contract = Contract>
             ),
             keyringPair
         );
+        
+        await this._waitFor(async() => {
+            const { output } = await this._systemContract.query['system::codeExists'](
+                keyringPair.address,
+                { cert },
+                this.metadata.source.hash,
+                codeType
+            );
+            
+            const codeExists = output.toJSON();
+            return codeExists?.ok;
+        }, this._waitTime);
     }
     
     
@@ -208,14 +226,47 @@ export class ContractFactory<T extends Contract = Contract>
         options = {
             salt: 1000000000 + Math.round(Math.random() * 8999999999),
             asAccount: 'alice',
+            useEstimation: true,
+            
             transfer: 0,
-            gasLimit: 1e12,
-            storageDepositLimit: null,
             deposit: 0,
             transferToCluster: 1e12,
             adjustStake: 1e12,
+            
             ...options
         };
+        
+        if (options.useEstimation) {
+            const estimation = await this.estimateInstatiationFee(constructor, params, options);
+            
+            // todo ld 2023-08-16 14:36:22
+            console.dir(
+                estimation.toJSON(),
+                { depth: 10 }
+            );
+            
+            if (!estimation.result.isOk) {
+                throw new Exception(
+                    'Failed to estimate instantiation fees',
+                    1692189343801
+                );
+            }
+            
+            options = {
+                gasLimit: estimation.gasRequired.refTime.toNumber(),
+                storageDepositLimit: estimation.storageDeposit.isCharge
+                    ? (estimation.storageDeposit.asCharge.toNumber() ?? 0)
+                    : 0,
+                ...options,
+            }
+        }
+        else {
+            options = {
+                gasLimit: 1e12,
+                storageDepositLimit: null,
+                ...options,
+            };
+        }
         
         const abi = new Abi(this.metadata);
         const callData = abi.findConstructor(constructor).toU8a(params);
@@ -304,9 +355,14 @@ export class ContractFactory<T extends Contract = Contract>
     public async estimateInstatiationFee (
         constructor : string,
         params : any[] = [],
-        options : InstantiateOptions
+        options : InstantiateOptions = {}
     ) : Promise<ContractInstantiateResult>
     {
+        options = {
+            asAccount: 'alice',
+            ...options
+        }
+    
         const systemContract = await this._devPhase.getSystemContract(this.clusterId);
         
         const abi = new Abi(this.metadata);
@@ -361,9 +417,6 @@ export class ContractFactory<T extends Contract = Contract>
         Object.assign(instance, {
             contractId,
             clusterId: this.clusterId,
-            
-            // todo ld 2023-08-10 01:11:22
-            // sidevmQuery: phala.sidevmQuery,
         });
         
         return <any>instance;

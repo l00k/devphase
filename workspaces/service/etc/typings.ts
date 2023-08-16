@@ -206,7 +206,4 @@ export declare class Contract
     public get query () : MapMessageQuery;
     public get tx () : MapMessageTx;
     
-    // todo ld 2023-08-10 01:12:10 - to remove?
-    //public sidevmQuery : PhalaSdk.SidevmQuery;
-    
 }
