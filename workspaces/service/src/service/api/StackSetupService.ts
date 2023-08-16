@@ -597,7 +597,7 @@ export class StackSetupService
         
         instantiateOpts = {
             asAccount: this._suAccount,
-            // todo ld 2023-08-15 09:32:55
+            // todo ld 2023-08-15 09:32: - temporarly disable
             // gasLimit: instantiationEst.gasRequired.refTime.toNumber(),
             // storageDepositLimit: instantiationEst.storageDeposit.isCharge
             //     ? (instantiationEst.storageDeposit.asCharge.toNumber() ?? 0)
