@@ -21,8 +21,6 @@ describe('Command ' + chalk.cyan('stack run'), () => {
             { timeout: 20_000 },
         );
         
-        console.log(stdout);
-        
         expect(stdout).to.include('Starting stack');
         expect(stdout).to.include('Start node component [completed]');
         expect(stdout).to.include('Start pRuntime component [completed]');
