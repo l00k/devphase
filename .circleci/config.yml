@@ -6,19 +6,19 @@ orbs:
 jobs:
     build_and_test:
         docker:
-            - image: cimg/rust:1.68.2-node
+            - image: cimg/rust:1.71.1-node
         steps:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
             - restore_cache:
-                key: &deps1-cache deps1-{{ .Branch }}-4
+                key: &deps1-cache deps1-{{ .Branch }}-5
             - run:
                 name: Install cargo contract
                 command: |
                     cargo install cargo-contract
                     rustup target add wasm32-unknown-unknown
-                    rustup component add rust-src --toolchain 1.68.2-x86_64-unknown-linux-gnu
+                    rustup component add rust-src --toolchain 1.71.1-x86_64-unknown-linux-gnu
             - save_cache:
                 key: *deps1-cache
                 paths:
@@ -37,6 +37,11 @@ jobs:
             - run:
                 name: Reinstall all dependencies
                 command: ./reinstall.sh
+            - run:
+                name: Install libs
+                command: |
+                    wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
+                    sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.19_amd64.deb
             - run:
                 name: Run tests
                 command: |
