@@ -6,24 +6,24 @@ orbs:
 jobs:
     build_and_test:
         docker:
-            - image: cimg/rust:1.68.2-node
+            - image: cimg/rust:1.71.1-node
         steps:
             - checkout
             - node/install-packages:
                 pkg-manager: yarn
             - restore_cache:
-                key: &deps1-cache deps1-{{ .Branch }}-6
+                key: &deps1-cache deps1-{{ .Branch }}-7
             - run:
                 name: Install cargo contract
                 command: |
                     cargo install cargo-contract
                     rustup target add wasm32-unknown-unknown
-                    rustup component add rust-src --toolchain 1.68.2-x86_64-unknown-linux-gnu
+                    rustup component add rust-src --toolchain 1.71.1-x86_64-unknown-linux-gnu
             - save_cache:
                 key: *deps1-cache
                 paths:
-                    - "~/.cargo"
-                    - "~/.rustup"
+                    - "/home/circleci/.cargo"
+                    - "/home/circleci/.rustup"
             - run:
                 name: Build @devphase/service
                 command: |
