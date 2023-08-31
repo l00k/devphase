@@ -1,5 +1,5 @@
 import type { Accounts, AccountsConfig, NetworkConfig } from '@/def';
-import { ContractType, StackSetupOptions, SystemContract, SystemContractFileMap } from '@/def';
+import { ContractType, StackSetupMode, StackSetupOptions, SystemContract, SystemContractFileMap } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
 import { PRuntimeApi } from '@/service/api/PRuntimeApi';
@@ -11,14 +11,13 @@ import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { replaceRecursive } from '@/utils/replaceRecursive';
 import * as PhalaSdk from '@phala/sdk';
+import { types as PhalaSDKTypes } from '@phala/sdk';
+import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
-import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { types as PhalaSDKTypes } from '@phala/sdk';
-import { khalaDev as KhalaTypes } from '@phala/typedefs';
 
 
 type DevPhaseProps = {
@@ -172,6 +171,10 @@ export class DevPhase
                 'Stack setup is not possible out of runtime context',
                 1668741635272
             );
+        }
+        
+        if (options.mode == StackSetupMode.None) {
+            return;
         }
         
         const stackSetupService = new StackSetupService(this);

@@ -16,7 +16,6 @@ import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Contract, ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { Logger } from '@/utils/Logger';
-import { sleep } from '@/utils/sleep';
 import { waitFor, WaitForOptions } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { ApiPromise } from '@polkadot/api';
@@ -98,6 +97,10 @@ export class StackSetupService
     {
         this._api = this._devPhase.api;
         this._txQueue = new TxQueue(this._api);
+        
+        if (options.mode == StackSetupMode.None) {
+            return { clusterId: null };
+        }
         
         this._suAccountCert = await PhalaSdk.signCertificate({ pair: this._suAccount });
         

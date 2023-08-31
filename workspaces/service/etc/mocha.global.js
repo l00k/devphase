@@ -1,4 +1,4 @@
-const { DevPhase, Logger, RunMode, RuntimeContext, StackManager } = require('@devphase/service');
+const { DevPhase, Logger, RunMode, RuntimeContext, StackManager, StackSetupMode } = require('@devphase/service');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
@@ -40,7 +40,7 @@ before(async function() {
     if (setup.custom) {
         await setup.custom(this.devPhase);
     }
-    else {
+    else if (testingConfig.stackSetupMode >= StackSetupMode.None) {
         // run default
         await this.devPhase.stackSetup({ mode: testingConfig.stackSetupMode });
     }
