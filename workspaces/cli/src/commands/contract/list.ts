@@ -23,7 +23,7 @@ export class ContractListCommand
         
         const contractManager = new ContractManager(this.runtimeContext);
         
-        let contractDefinitions : ContractManager.ContractDefinition[] = await contractManager.loadContractsDefFromStorageFile();
+        let contractDefinitions = await contractManager.loadContractsDefFromStorageFile();
         contractDefinitions = sortBy(contractDefinitions, [ 'type', 'network', 'name' ]);
         
         const contractsOutput = Object.values(contractDefinitions)

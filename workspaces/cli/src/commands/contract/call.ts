@@ -32,7 +32,9 @@ export class ContractCallCommand
         accessor: Flags.string({
             summary: 'Method type: transaction or query',
             char: 'a',
+            // @ts-ignore
             default: ContractManager.ContractCallType.Query,
+            // @ts-ignore
             options: Object.values(ContractManager.ContractCallType)
         }),
         method: Flags.string({
