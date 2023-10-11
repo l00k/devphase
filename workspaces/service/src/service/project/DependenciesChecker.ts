@@ -71,7 +71,7 @@ export class DependenciesChecker
             result.contract.version = await this._exec('cargo contract --version');
             const match = result.contract.version.match(/^cargo-contract-contract ([0-9]+\.[0-9]+\.[0-9]+)/);
             if (match) {
-                result.contract.valid = compareVersions(match[1], '2.0.0') >= 0;
+                result.contract.valid = compareVersions(match[1], '3.2.0') >= 0;
             }
         }
         
