@@ -287,6 +287,7 @@ export class StackManager
         ;
         
         let settled : boolean = false;
+        let lastOutputLines : string[] = [];
         
         await timeout(() => {
             return new Promise((resolve, reject) => {
@@ -312,6 +313,9 @@ export class StackManager
                 
                 const watchFn = (chunk) => {
                     const text = chunk.toString();
+                    
+                    lastOutputLines.push(...text.split('\n'))
+                    lastOutputLines = lastOutputLines.slice(-10);
                     
                     if (displayLogs) {
                         console.log(chalk.blueBright(`[${binaryName}]`));
@@ -344,6 +348,18 @@ export class StackManager
                 
                 stdout.on('data', watchFn);
                 stderr.on('data', watchFn);
+                
+                child.on('close', (code, signal) => {
+                    if (!settled) {
+                        // closing before settlement means some error occured
+                        reject(
+                            new Exception(
+                                `Failed to start ${binaryName} component.\n` + lastOutputLines.join('\n'),
+                                1698329819579
+                            )
+                        );
+                    }
+                });
             });
         }, componentOptions.timeout);
         

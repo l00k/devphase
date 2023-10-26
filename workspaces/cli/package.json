@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.6.2",
+    "version": "0.6.3",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -26,7 +26,7 @@
         "@oclif/plugin-help": "^5.2.14",
         "@oclif/plugin-plugins": "^2.4.7",
         "@oclif/plugin-not-found": "^2.3.34",
-        "@devphase/service": "^0.6.2",
+        "@devphase/service": "^0.6.3",
         "chalk": "^4.1.2",
         "listr": "^0.14.3",
         "lodash": "^4.17.21"
