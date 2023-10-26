@@ -84,7 +84,10 @@ export class MultiContractExecutor
     
     public matchContracts (contractName? : string) : string[]
     {
-        const allContracts = glob.sync('*', { cwd: this.runtimeContext.paths.contracts });
+        const allContracts = glob
+            .sync('*/Cargo.toml', { cwd: this.runtimeContext.paths.contracts })
+            .map(tomlFile => path.dirname(tomlFile))
+            ;
         
         if (contractName) {
             return allContracts.filter(contract => contract.toLowerCase() === contractName.toLowerCase());

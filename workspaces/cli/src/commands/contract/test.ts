@@ -37,7 +37,10 @@ export class ContractTestCommand
     {
         await this.runtimeContext.initContext(RunMode.Testing);
         await this.runtimeContext.requestProjectDirectory();
-        await this.runtimeContext.requestStackBinaries();
+        
+        if (!this.flags.externalStack) {
+            await this.runtimeContext.requestStackBinaries();
+        }
         
         const tester = new Tester(this.runtimeContext);
         return tester.runTests({
