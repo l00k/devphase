@@ -258,11 +258,22 @@ export class StackManager
         
         // spawn child process
         const serializedArgs = serializeProcessArgs(componentOptions.args);
-        const child = childProcess.spawn(
-            binaryPath,
-            serializedArgs,
-            spawnOptions
-        );
+        
+        let child : childProcess.ChildProcess;
+        try {
+            child = childProcess.spawn(
+                binaryPath,
+                serializedArgs,
+                spawnOptions
+            );
+        }
+        catch (e) {
+            throw new Exception(
+                'Failed to spawn process',
+                1698444058865,
+                e
+            );
+        }
         
         const [ stdin, stdout, stderr ] = child.stdio;
         stdout.setEncoding('utf-8');
