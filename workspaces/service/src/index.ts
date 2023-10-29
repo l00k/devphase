@@ -2,10 +2,13 @@ export * from '@/typings';
 export * from '@/def';
 
 export * from '@/utils/Logger';
+export * from '@/utils/sleep';
+export * from '@/utils/waitFor';
 
 export * from '@/service/api/ContractFactory';
 export * from '@/service/api/DevPhase';
 export * from '@/service/api/EventQueue';
+export * from '@/service/api/PinkLogger';
 export * from '@/service/api/PRuntimeApi';
 export * from '@/service/api/StackSetupService';
 export * from '@/service/api/TxHandler';
