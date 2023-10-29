@@ -7,15 +7,17 @@ import '@polkadot/api-base/types/calls';
 
 import type { ApiTypes, AugmentedCall, DecoratedCallBase } from '@polkadot/api-base/types';
 import type { Bytes, Null, Option, Vec, u32 } from '@polkadot/types-codec';
-import type { AnyNumber, ITuple } from '@polkadot/types-codec/types';
+import type { AnyNumber, IMethod, ITuple } from '@polkadot/types-codec/types';
+import type { BabeEquivocationProof, BabeGenesisConfiguration, Epoch, OpaqueKeyOwnershipProof } from '@polkadot/types/interfaces/babe';
 import type { CheckInherentsResult, InherentData } from '@polkadot/types/interfaces/blockbuilder';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import type { AuthorityId } from '@polkadot/types/interfaces/consensus';
-import type { CollationInfo } from '@polkadot/types/interfaces/cumulus';
 import type { Extrinsic } from '@polkadot/types/interfaces/extrinsics';
+import type { AuthorityList, GrandpaEquivocationProof, SetId } from '@polkadot/types/interfaces/grandpa';
 import type { OpaqueMetadata } from '@polkadot/types/interfaces/metadata';
+import type { NpPoolId } from '@polkadot/types/interfaces/nompools';
 import type { FeeDetails, RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment';
-import type { AccountId, Block, Header, Index, KeyTypeId, SlotDuration } from '@polkadot/types/interfaces/runtime';
+import type { AccountId, Balance, Block, Call, Header, Index, KeyTypeId, Slot, Weight } from '@polkadot/types/interfaces/runtime';
 import type { RuntimeVersion } from '@polkadot/types/interfaces/state';
 import type { ApplyExtrinsicResult } from '@polkadot/types/interfaces/system';
 import type { TransactionSource, TransactionValidity } from '@polkadot/types/interfaces/txqueue';
@@ -37,16 +39,43 @@ declare module '@polkadot/api-base/types/calls' {
        **/
       [key: string]: DecoratedCallBase<ApiType>;
     };
-    /** 0xdd718d5cc53262d4/1 */
-    auraApi: {
+    /** 0x687ad44ad37f03c2/1 */
+    authorityDiscoveryApi: {
       /**
-       * Return the current set of authorities.
+       * Retrieve authority identifiers of the current and next authority set.
        **/
       authorities: AugmentedCall<ApiType, () => Observable<Vec<AuthorityId>>>;
       /**
-       * Returns the slot duration for Aura.
+       * Generic call
        **/
-      slotDuration: AugmentedCall<ApiType, () => Observable<SlotDuration>>;
+      [key: string]: DecoratedCallBase<ApiType>;
+    };
+    /** 0xcbca25e39f142387/2 */
+    babeApi: {
+      /**
+       * Return the genesis configuration for BABE. The configuration is only read on genesis.
+       **/
+      configuration: AugmentedCall<ApiType, () => Observable<BabeGenesisConfiguration>>;
+      /**
+       * Returns information regarding the current epoch.
+       **/
+      currentEpoch: AugmentedCall<ApiType, () => Observable<Epoch>>;
+      /**
+       * Returns the slot that started the current epoch.
+       **/
+      currentEpochStart: AugmentedCall<ApiType, () => Observable<Slot>>;
+      /**
+       * Generates a proof of key ownership for the given authority in the current epoch.
+       **/
+      generateKeyOwnershipProof: AugmentedCall<ApiType, (slot: Slot | AnyNumber | Uint8Array, authorityId: AuthorityId | string | Uint8Array) => Observable<Option<OpaqueKeyOwnershipProof>>>;
+      /**
+       * Returns information regarding the next epoch (which was already previously announced).
+       **/
+      nextEpoch: AugmentedCall<ApiType, () => Observable<Epoch>>;
+      /**
+       * Submits an unsigned extrinsic to report an equivocation.
+       **/
+      submitReportEquivocationUnsignedExtrinsic: AugmentedCall<ApiType, (equivocationProof: BabeEquivocationProof | { offender?: any; slotNumber?: any; firstHeader?: any; secondHeader?: any } | string | Uint8Array, keyOwnerProof: OpaqueKeyOwnershipProof | string | Uint8Array) => Observable<Option<Null>>>;
       /**
        * Generic call
        **/
@@ -75,17 +104,6 @@ declare module '@polkadot/api-base/types/calls' {
        **/
       [key: string]: DecoratedCallBase<ApiType>;
     };
-    /** 0xea93e3f16f3d6962/2 */
-    collectCollationInfo: {
-      /**
-       * Collect information about a collation.
-       **/
-      collectCollationInfo: AugmentedCall<ApiType, (header: Header | { parentHash?: any; number?: any; stateRoot?: any; extrinsicsRoot?: any; digest?: any } | string | Uint8Array) => Observable<CollationInfo>>;
-      /**
-       * Generic call
-       **/
-      [key: string]: DecoratedCallBase<ApiType>;
-    };
     /** 0xdf6acb689907609b/4 */
     core: {
       /**
@@ -105,12 +123,62 @@ declare module '@polkadot/api-base/types/calls' {
        **/
       [key: string]: DecoratedCallBase<ApiType>;
     };
-    /** 0x37e397fc7c91f5e4/1 */
+    /** 0xed99c5acb25eedf5/3 */
+    grandpaApi: {
+      /**
+       * Get current GRANDPA authority set id.
+       **/
+      currentSetId: AugmentedCall<ApiType, () => Observable<SetId>>;
+      /**
+       * Generates a proof of key ownership for the given authority in the given set.
+       **/
+      generateKeyOwnershipProof: AugmentedCall<ApiType, (setId: SetId | AnyNumber | Uint8Array, authorityId: AuthorityId | string | Uint8Array) => Observable<Option<OpaqueKeyOwnershipProof>>>;
+      /**
+       * Get the current GRANDPA authorities and weights. This should not change except for when changes are scheduled and the corresponding delay has passed.
+       **/
+      grandpaAuthorities: AugmentedCall<ApiType, () => Observable<AuthorityList>>;
+      /**
+       * Submits an unsigned extrinsic to report an equivocation.
+       **/
+      submitReportEquivocationUnsignedExtrinsic: AugmentedCall<ApiType, (equivocationProof: GrandpaEquivocationProof | { setId?: any; equivocation?: any } | string | Uint8Array, keyOwnerProof: OpaqueKeyOwnershipProof | string | Uint8Array) => Observable<Option<Null>>>;
+      /**
+       * Generic call
+       **/
+      [key: string]: DecoratedCallBase<ApiType>;
+    };
+    /** 0x37e397fc7c91f5e4/2 */
     metadata: {
       /**
        * Returns the metadata of a runtime
        **/
       metadata: AugmentedCall<ApiType, () => Observable<OpaqueMetadata>>;
+      /**
+       * Returns the metadata at a given version.
+       **/
+      metadataAtVersion: AugmentedCall<ApiType, (version: u32 | AnyNumber | Uint8Array) => Observable<Option<OpaqueMetadata>>>;
+      /**
+       * Returns the supported metadata versions.
+       **/
+      metadataVersions: AugmentedCall<ApiType, () => Observable<Vec<u32>>>;
+      /**
+       * Generic call
+       **/
+      [key: string]: DecoratedCallBase<ApiType>;
+    };
+    /** 0x17a6bc0d0062aeb3/1 */
+    nominationPoolsApi: {
+      /**
+       * Returns the equivalent points of `new_funds` for a given pool.
+       **/
+      balanceToPoints: AugmentedCall<ApiType, (poolId: NpPoolId | AnyNumber | Uint8Array, newFunds: Balance | AnyNumber | Uint8Array) => Observable<Balance>>;
+      /**
+       * Returns the pending rewards for the given member.
+       **/
+      pendingRewards: AugmentedCall<ApiType, (member: AccountId | string | Uint8Array) => Observable<Balance>>;
+      /**
+       * Returns the equivalent balance of `points` for a given pool.
+       **/
+      pointsToBalance: AugmentedCall<ApiType, (poolId: NpPoolId | AnyNumber | Uint8Array, points: Balance | AnyNumber | Uint8Array) => Observable<Balance>>;
       /**
        * Generic call
        **/
@@ -153,7 +221,7 @@ declare module '@polkadot/api-base/types/calls' {
        **/
       [key: string]: DecoratedCallBase<ApiType>;
     };
-    /** 0x37c8bb1350a9a2a8/2 */
+    /** 0x37c8bb1350a9a2a8/4 */
     transactionPaymentApi: {
       /**
        * The transaction fee details
@@ -163,6 +231,37 @@ declare module '@polkadot/api-base/types/calls' {
        * The transaction info
        **/
       queryInfo: AugmentedCall<ApiType, (uxt: Extrinsic | IExtrinsic | string | Uint8Array, len: u32 | AnyNumber | Uint8Array) => Observable<RuntimeDispatchInfo>>;
+      /**
+       * Query the output of the current LengthToFee given some input
+       **/
+      queryLengthToFee: AugmentedCall<ApiType, (length: u32 | AnyNumber | Uint8Array) => Observable<Balance>>;
+      /**
+       * Query the output of the current WeightToFee given some input
+       **/
+      queryWeightToFee: AugmentedCall<ApiType, (weight: Weight | { refTime?: any; proofSize?: any } | string | Uint8Array) => Observable<Balance>>;
+      /**
+       * Generic call
+       **/
+      [key: string]: DecoratedCallBase<ApiType>;
+    };
+    /** 0xf3ff14d5ab527059/3 */
+    transactionPaymentCallApi: {
+      /**
+       * The call fee details
+       **/
+      queryCallFeeDetails: AugmentedCall<ApiType, (call: Call | IMethod | string | Uint8Array, len: u32 | AnyNumber | Uint8Array) => Observable<FeeDetails>>;
+      /**
+       * The call info
+       **/
+      queryCallInfo: AugmentedCall<ApiType, (call: Call | IMethod | string | Uint8Array, len: u32 | AnyNumber | Uint8Array) => Observable<RuntimeDispatchInfo>>;
+      /**
+       * Query the output of the current LengthToFee given some input
+       **/
+      queryLengthToFee: AugmentedCall<ApiType, (length: u32 | AnyNumber | Uint8Array) => Observable<Balance>>;
+      /**
+       * Query the output of the current WeightToFee given some input
+       **/
+      queryWeightToFee: AugmentedCall<ApiType, (weight: Weight | { refTime?: any; proofSize?: any } | string | Uint8Array) => Observable<Balance>>;
       /**
        * Generic call
        **/

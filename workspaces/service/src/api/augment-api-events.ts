@@ -6,10 +6,10 @@
 import '@polkadot/api-base/types/events';
 
 import type { ApiTypes, AugmentedEvent } from '@polkadot/api-base/types';
-import type { Bytes, Null, Option, Result, U256, U8aFixed, Vec, bool, u128, u16, u32, u64, u8 } from '@polkadot/types-codec';
+import type { Bytes, Null, Option, Result, U8aFixed, Vec, bool, u128, u16, u32, u64, u8 } from '@polkadot/types-codec';
 import type { ITuple } from '@polkadot/types-codec/types';
-import type { AccountId32, H256 } from '@polkadot/types/interfaces/runtime';
-import type { FrameSupportDispatchDispatchInfo, FrameSupportTokensMiscBalanceStatus, KhalaParachainRuntimeProxyType, PalletDemocracyVoteAccountVote, PalletDemocracyVoteThreshold, PalletMultisigTimepoint, PalletPhalaWorldCareerType, PalletPhalaWorldNftSaleType, PalletPhalaWorldRaceType, PalletPhalaWorldRarityType, PalletPhalaWorldShellParts, PhalaTypesAttestationProvider, RmrkTraitsNftAccountIdOrCollectionNftTuple, RmrkTraitsNftRoyaltyInfo, SpCoreSr25519Public, SpRuntimeDispatchError, SpWeightsWeightV2Weight, XcmV1MultiAsset, XcmV1MultiLocation, XcmV2Response, XcmV2TraitsError, XcmV2TraitsOutcome, XcmV2Xcm, XcmVersionedMultiAssets, XcmVersionedMultiLocation } from '@polkadot/types/lookup';
+import type { AccountId32, H256, Perbill } from '@polkadot/types/interfaces/runtime';
+import type { FrameSupportDispatchDispatchInfo, FrameSupportDispatchPostDispatchInfo, FrameSupportTokensMiscBalanceStatus, PalletDemocracyMetadataOwner, PalletDemocracyVoteAccountVote, PalletDemocracyVoteThreshold, PalletElectionProviderMultiPhaseElectionCompute, PalletElectionProviderMultiPhasePhase, PalletImOnlineSr25519AppSr25519Public, PalletMultisigTimepoint, PalletNominationPoolsCommissionChangeRate, PalletNominationPoolsPoolState, PalletSocietyGroupParams, PalletStakingExposure, PalletStakingForcing, PalletStakingRewardDestination, PalletStakingValidatorPrefs, PhalaNodeRuntimeProxyType, PhalaTypesAttestationProvider, RmrkTraitsNftAccountIdOrCollectionNftTuple, SpConsensusGrandpaAppPublic, SpCoreSr25519Public, SpNposElectionsElectionScore, SpRuntimeDispatchError, SpRuntimeDispatchErrorWithPostInfo } from '@polkadot/types/lookup';
 
 export type __AugmentedEvent<ApiType extends ApiTypes> = AugmentedEvent<ApiType>;
 
@@ -37,6 +37,10 @@ declare module '@polkadot/api-base/types/events' {
        **/
       AssetFrozen: AugmentedEvent<ApiType, [assetId: u32], { assetId: u32 }>;
       /**
+       * The min_balance of an asset has been updated by the asset owner.
+       **/
+      AssetMinBalanceChanged: AugmentedEvent<ApiType, [assetId: u32, newMinBalance: u128], { assetId: u32, newMinBalance: u128 }>;
+      /**
        * An asset has had its attributes changed by the `Force` origin.
        **/
       AssetStatusChanged: AugmentedEvent<ApiType, [assetId: u32], { assetId: u32 }>;
@@ -44,6 +48,10 @@ declare module '@polkadot/api-base/types/events' {
        * Some asset `asset_id` was thawed.
        **/
       AssetThawed: AugmentedEvent<ApiType, [assetId: u32], { assetId: u32 }>;
+      /**
+       * Some account `who` was blocked.
+       **/
+      Blocked: AugmentedEvent<ApiType, [assetId: u32, who: AccountId32], { assetId: u32, who: AccountId32 }>;
       /**
        * Some assets were destroyed.
        **/
@@ -71,7 +79,7 @@ declare module '@polkadot/api-base/types/events' {
       /**
        * Some assets were issued.
        **/
-      Issued: AugmentedEvent<ApiType, [assetId: u32, owner: AccountId32, totalSupply: u128], { assetId: u32, owner: AccountId32, totalSupply: u128 }>;
+      Issued: AugmentedEvent<ApiType, [assetId: u32, owner: AccountId32, amount: u128], { assetId: u32, owner: AccountId32, amount: u128 }>;
       /**
        * Metadata has been cleared for an asset.
        **/
@@ -93,6 +101,10 @@ declare module '@polkadot/api-base/types/events' {
        **/
       Thawed: AugmentedEvent<ApiType, [assetId: u32, who: AccountId32], { assetId: u32, who: AccountId32 }>;
       /**
+       * Some account `who` was created with a deposit from `depositor`.
+       **/
+      Touched: AugmentedEvent<ApiType, [assetId: u32, who: AccountId32, depositor: AccountId32], { assetId: u32, who: AccountId32, depositor: AccountId32 }>;
+      /**
        * Some assets were transferred.
        **/
       Transferred: AugmentedEvent<ApiType, [assetId: u32, from: AccountId32, to: AccountId32, amount: u128], { assetId: u32, from: AccountId32, to: AccountId32, amount: u128 }>;
@@ -106,41 +118,15 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    assetsRegistry: {
-      /**
-       * Asset is registerd.
-       **/
-      AssetRegistered: AugmentedEvent<ApiType, [assetId: u32, location: XcmV1MultiLocation], { assetId: u32, location: XcmV1MultiLocation }>;
-      /**
-       * Asset is unregisterd.
-       **/
-      AssetUnregistered: AugmentedEvent<ApiType, [assetId: u32, location: XcmV1MultiLocation], { assetId: u32, location: XcmV1MultiLocation }>;
-      /**
-       * Asset disabled chainbridge.
-       **/
-      ChainbridgeDisabled: AugmentedEvent<ApiType, [assetId: u32, chainId: u8, resourceId: U8aFixed], { assetId: u32, chainId: u8, resourceId: U8aFixed }>;
-      /**
-       * Asset enabled chainbridge.
-       **/
-      ChainbridgeEnabled: AugmentedEvent<ApiType, [assetId: u32, chainId: u8, resourceId: U8aFixed], { assetId: u32, chainId: u8, resourceId: U8aFixed }>;
-      /**
-       * Force burn asset from an certain account.
-       **/
-      ForceBurnt: AugmentedEvent<ApiType, [assetId: u32, who: AccountId32, amount: u128], { assetId: u32, who: AccountId32, amount: u128 }>;
-      /**
-       * Force mint asset to an certain account.
-       **/
-      ForceMinted: AugmentedEvent<ApiType, [assetId: u32, beneficiary: AccountId32, amount: u128], { assetId: u32, beneficiary: AccountId32, amount: u128 }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
     balances: {
       /**
        * A balance was set by root.
        **/
-      BalanceSet: AugmentedEvent<ApiType, [who: AccountId32, free: u128, reserved: u128], { who: AccountId32, free: u128, reserved: u128 }>;
+      BalanceSet: AugmentedEvent<ApiType, [who: AccountId32, free: u128], { who: AccountId32, free: u128 }>;
+      /**
+       * Some amount was burned from an account.
+       **/
+      Burned: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
       /**
        * Some amount was deposited (e.g. for transaction fees).
        **/
@@ -155,6 +141,26 @@ declare module '@polkadot/api-base/types/events' {
        **/
       Endowed: AugmentedEvent<ApiType, [account: AccountId32, freeBalance: u128], { account: AccountId32, freeBalance: u128 }>;
       /**
+       * Some balance was frozen.
+       **/
+      Frozen: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * Total issuance was increased by `amount`, creating a credit to be balanced.
+       **/
+      Issued: AugmentedEvent<ApiType, [amount: u128], { amount: u128 }>;
+      /**
+       * Some balance was locked.
+       **/
+      Locked: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * Some amount was minted into an account.
+       **/
+      Minted: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * Total issuance was decreased by `amount`, creating a debt to be balanced.
+       **/
+      Rescinded: AugmentedEvent<ApiType, [amount: u128], { amount: u128 }>;
+      /**
        * Some balance was reserved (moved from free to reserved).
        **/
       Reserved: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
@@ -164,17 +170,37 @@ declare module '@polkadot/api-base/types/events' {
        **/
       ReserveRepatriated: AugmentedEvent<ApiType, [from: AccountId32, to: AccountId32, amount: u128, destinationStatus: FrameSupportTokensMiscBalanceStatus], { from: AccountId32, to: AccountId32, amount: u128, destinationStatus: FrameSupportTokensMiscBalanceStatus }>;
       /**
+       * Some amount was restored into an account.
+       **/
+      Restored: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
        * Some amount was removed from the account (e.g. for misbehavior).
        **/
       Slashed: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * Some amount was suspended from an account (it can be restored later).
+       **/
+      Suspended: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * Some balance was thawed.
+       **/
+      Thawed: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
       /**
        * Transfer succeeded.
        **/
       Transfer: AugmentedEvent<ApiType, [from: AccountId32, to: AccountId32, amount: u128], { from: AccountId32, to: AccountId32, amount: u128 }>;
       /**
+       * Some balance was unlocked.
+       **/
+      Unlocked: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
        * Some balance was unreserved (moved from reserved to free).
        **/
       Unreserved: AugmentedEvent<ApiType, [who: AccountId32, amount: u128], { who: AccountId32, amount: u128 }>;
+      /**
+       * An account was upgraded.
+       **/
+      Upgraded: AugmentedEvent<ApiType, [who: AccountId32], { who: AccountId32 }>;
       /**
        * Some amount was withdrawn from the account (e.g. for transaction fees).
        **/
@@ -218,65 +244,6 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    chainBridge: {
-      /**
-       * Chain now available for transfers (chain_id)
-       **/
-      ChainWhitelisted: AugmentedEvent<ApiType, [u8]>;
-      FeeUpdated: AugmentedEvent<ApiType, [destId: u8, fee: u128], { destId: u8, fee: u128 }>;
-      /**
-       * FungibleTransfer is for relaying fungibles (dest_id, nonce, resource_id, amount, recipient)
-       **/
-      FungibleTransfer: AugmentedEvent<ApiType, [u8, u64, U8aFixed, U256, Bytes]>;
-      /**
-       * GenericTransfer is for a generic data payload (dest_id, nonce, resource_id, metadata)
-       **/
-      GenericTransfer: AugmentedEvent<ApiType, [u8, u64, U8aFixed, Bytes]>;
-      /**
-       * NonFungibleTransfer is for relaying NFTs (dest_id, nonce, resource_id, token_id, recipient, metadata)
-       **/
-      NonFungibleTransfer: AugmentedEvent<ApiType, [u8, u64, U8aFixed, Bytes, Bytes, Bytes]>;
-      /**
-       * Voting successful for a proposal
-       **/
-      ProposalApproved: AugmentedEvent<ApiType, [u8, u64]>;
-      /**
-       * Execution of call failed
-       **/
-      ProposalFailed: AugmentedEvent<ApiType, [u8, u64]>;
-      /**
-       * Voting rejected a proposal
-       **/
-      ProposalRejected: AugmentedEvent<ApiType, [u8, u64]>;
-      /**
-       * Execution of call succeeded
-       **/
-      ProposalSucceeded: AugmentedEvent<ApiType, [u8, u64]>;
-      /**
-       * Relayer added to set
-       **/
-      RelayerAdded: AugmentedEvent<ApiType, [AccountId32]>;
-      /**
-       * Relayer removed from set
-       **/
-      RelayerRemoved: AugmentedEvent<ApiType, [AccountId32]>;
-      /**
-       * Vote threshold has changed (new_threshold)
-       **/
-      RelayerThresholdChanged: AugmentedEvent<ApiType, [u32]>;
-      /**
-       * Vot submitted against proposal
-       **/
-      VoteAgainst: AugmentedEvent<ApiType, [u8, u64, AccountId32]>;
-      /**
-       * Vote submitted in favour of proposal
-       **/
-      VoteFor: AugmentedEvent<ApiType, [u8, u64, AccountId32]>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
     childBounties: {
       /**
        * A child-bounty is added.
@@ -294,17 +261,6 @@ declare module '@polkadot/api-base/types/events' {
        * A child-bounty is claimed by beneficiary.
        **/
       Claimed: AugmentedEvent<ApiType, [index: u32, childIndex: u32, payout: u128, beneficiary: AccountId32], { index: u32, childIndex: u32, payout: u128, beneficiary: AccountId32 }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    collatorSelection: {
-      CandidateAdded: AugmentedEvent<ApiType, [accountId: AccountId32, deposit: u128], { accountId: AccountId32, deposit: u128 }>;
-      CandidateRemoved: AugmentedEvent<ApiType, [accountId: AccountId32], { accountId: AccountId32 }>;
-      NewCandidacyBond: AugmentedEvent<ApiType, [bondAmount: u128], { bondAmount: u128 }>;
-      NewDesiredCandidates: AugmentedEvent<ApiType, [desiredCandidates: u32], { desiredCandidates: u32 }>;
-      NewInvulnerables: AugmentedEvent<ApiType, [invulnerables: Vec<AccountId32>], { invulnerables: Vec<AccountId32> }>;
       /**
        * Generic event
        **/
@@ -346,27 +302,6 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    cumulusXcm: {
-      /**
-       * Downward message executed with the given outcome.
-       * \[ id, outcome \]
-       **/
-      ExecutedDownward: AugmentedEvent<ApiType, [U8aFixed, XcmV2TraitsOutcome]>;
-      /**
-       * Downward message is invalid XCM.
-       * \[ id \]
-       **/
-      InvalidFormat: AugmentedEvent<ApiType, [U8aFixed]>;
-      /**
-       * Downward message is unsupported version of XCM.
-       * \[ id \]
-       **/
-      UnsupportedVersion: AugmentedEvent<ApiType, [U8aFixed]>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
     democracy: {
       /**
        * A proposal_hash has been blacklisted permanently.
@@ -384,6 +319,18 @@ declare module '@polkadot/api-base/types/events' {
        * An external proposal has been tabled.
        **/
       ExternalTabled: AugmentedEvent<ApiType, []>;
+      /**
+       * Metadata for a proposal or a referendum has been cleared.
+       **/
+      MetadataCleared: AugmentedEvent<ApiType, [owner: PalletDemocracyMetadataOwner, hash_: H256], { owner: PalletDemocracyMetadataOwner, hash_: H256 }>;
+      /**
+       * Metadata for a proposal or a referendum has been set.
+       **/
+      MetadataSet: AugmentedEvent<ApiType, [owner: PalletDemocracyMetadataOwner, hash_: H256], { owner: PalletDemocracyMetadataOwner, hash_: H256 }>;
+      /**
+       * Metadata has been transferred to new owner.
+       **/
+      MetadataTransferred: AugmentedEvent<ApiType, [prevOwner: PalletDemocracyMetadataOwner, owner: PalletDemocracyMetadataOwner, hash_: H256], { prevOwner: PalletDemocracyMetadataOwner, owner: PalletDemocracyMetadataOwner, hash_: H256 }>;
       /**
        * A proposal has been rejected by referendum.
        **/
@@ -429,31 +376,138 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    dmpQueue: {
+    electionProviderMultiPhase: {
       /**
-       * Downward message executed with the given outcome.
+       * An election failed.
+       * 
+       * Not much can be said about which computes failed in the process.
        **/
-      ExecutedDownward: AugmentedEvent<ApiType, [messageId: U8aFixed, outcome: XcmV2TraitsOutcome], { messageId: U8aFixed, outcome: XcmV2TraitsOutcome }>;
+      ElectionFailed: AugmentedEvent<ApiType, []>;
       /**
-       * Downward message is invalid XCM.
+       * The election has been finalized, with the given computation and score.
        **/
-      InvalidFormat: AugmentedEvent<ApiType, [messageId: U8aFixed], { messageId: U8aFixed }>;
+      ElectionFinalized: AugmentedEvent<ApiType, [compute: PalletElectionProviderMultiPhaseElectionCompute, score: SpNposElectionsElectionScore], { compute: PalletElectionProviderMultiPhaseElectionCompute, score: SpNposElectionsElectionScore }>;
       /**
-       * Downward message is overweight and was placed in the overweight queue.
+       * There was a phase transition in a given round.
        **/
-      OverweightEnqueued: AugmentedEvent<ApiType, [messageId: U8aFixed, overweightIndex: u64, requiredWeight: SpWeightsWeightV2Weight], { messageId: U8aFixed, overweightIndex: u64, requiredWeight: SpWeightsWeightV2Weight }>;
+      PhaseTransitioned: AugmentedEvent<ApiType, [from: PalletElectionProviderMultiPhasePhase, to: PalletElectionProviderMultiPhasePhase, round: u32], { from: PalletElectionProviderMultiPhasePhase, to: PalletElectionProviderMultiPhasePhase, round: u32 }>;
       /**
-       * Downward message from the overweight queue was executed.
+       * An account has been rewarded for their signed submission being finalized.
        **/
-      OverweightServiced: AugmentedEvent<ApiType, [overweightIndex: u64, weightUsed: SpWeightsWeightV2Weight], { overweightIndex: u64, weightUsed: SpWeightsWeightV2Weight }>;
+      Rewarded: AugmentedEvent<ApiType, [account: AccountId32, value: u128], { account: AccountId32, value: u128 }>;
       /**
-       * Downward message is unsupported version of XCM.
+       * An account has been slashed for submitting an invalid signed submission.
        **/
-      UnsupportedVersion: AugmentedEvent<ApiType, [messageId: U8aFixed], { messageId: U8aFixed }>;
+      Slashed: AugmentedEvent<ApiType, [account: AccountId32, value: u128], { account: AccountId32, value: u128 }>;
       /**
-       * The weight limit for handling downward messages was reached.
+       * A solution was stored with the given compute.
+       * 
+       * The `origin` indicates the origin of the solution. If `origin` is `Some(AccountId)`,
+       * the stored solution was submited in the signed phase by a miner with the `AccountId`.
+       * Otherwise, the solution was stored either during the unsigned phase or by
+       * `T::ForceOrigin`. The `bool` is `true` when a previous solution was ejected to make
+       * room for this one.
        **/
-      WeightExhausted: AugmentedEvent<ApiType, [messageId: U8aFixed, remainingWeight: SpWeightsWeightV2Weight, requiredWeight: SpWeightsWeightV2Weight], { messageId: U8aFixed, remainingWeight: SpWeightsWeightV2Weight, requiredWeight: SpWeightsWeightV2Weight }>;
+      SolutionStored: AugmentedEvent<ApiType, [compute: PalletElectionProviderMultiPhaseElectionCompute, origin: Option<AccountId32>, prevEjected: bool], { compute: PalletElectionProviderMultiPhaseElectionCompute, origin: Option<AccountId32>, prevEjected: bool }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    elections: {
+      /**
+       * A candidate was slashed by amount due to failing to obtain a seat as member or
+       * runner-up.
+       * 
+       * Note that old members and runners-up are also candidates.
+       **/
+      CandidateSlashed: AugmentedEvent<ApiType, [candidate: AccountId32, amount: u128], { candidate: AccountId32, amount: u128 }>;
+      /**
+       * Internal error happened while trying to perform election.
+       **/
+      ElectionError: AugmentedEvent<ApiType, []>;
+      /**
+       * No (or not enough) candidates existed for this round. This is different from
+       * `NewTerm(\[\])`. See the description of `NewTerm`.
+       **/
+      EmptyTerm: AugmentedEvent<ApiType, []>;
+      /**
+       * A member has been removed. This should always be followed by either `NewTerm` or
+       * `EmptyTerm`.
+       **/
+      MemberKicked: AugmentedEvent<ApiType, [member: AccountId32], { member: AccountId32 }>;
+      /**
+       * A new term with new_members. This indicates that enough candidates existed to run
+       * the election, not that enough have has been elected. The inner value must be examined
+       * for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
+       * slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
+       * begin with.
+       **/
+      NewTerm: AugmentedEvent<ApiType, [newMembers: Vec<ITuple<[AccountId32, u128]>>], { newMembers: Vec<ITuple<[AccountId32, u128]>> }>;
+      /**
+       * Someone has renounced their candidacy.
+       **/
+      Renounced: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
+      /**
+       * A seat holder was slashed by amount by being forcefully removed from the set.
+       **/
+      SeatHolderSlashed: AugmentedEvent<ApiType, [seatHolder: AccountId32, amount: u128], { seatHolder: AccountId32, amount: u128 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    evmAccountMapping: {
+      CallDone: AugmentedEvent<ApiType, [who: AccountId32, callResult: Result<FrameSupportDispatchPostDispatchInfo, SpRuntimeDispatchErrorWithPostInfo>], { who: AccountId32, callResult: Result<FrameSupportDispatchPostDispatchInfo, SpRuntimeDispatchErrorWithPostInfo> }>;
+      ServiceFeePaid: AugmentedEvent<ApiType, [who: AccountId32, actualFee: u128, expectedFee: u128], { who: AccountId32, actualFee: u128, expectedFee: u128 }>;
+      TransactionFeePaid: AugmentedEvent<ApiType, [who: AccountId32, actualFee: u128, tip: u128], { who: AccountId32, actualFee: u128, tip: u128 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    fastUnstake: {
+      /**
+       * A batch was partially checked for the given eras, but the process did not finish.
+       **/
+      BatchChecked: AugmentedEvent<ApiType, [eras: Vec<u32>], { eras: Vec<u32> }>;
+      /**
+       * A batch of a given size was terminated.
+       * 
+       * This is always follows by a number of `Unstaked` or `Slashed` events, marking the end
+       * of the batch. A new batch will be created upon next block.
+       **/
+      BatchFinished: AugmentedEvent<ApiType, [size_: u32], { size_: u32 }>;
+      /**
+       * An internal error happened. Operations will be paused now.
+       **/
+      InternalError: AugmentedEvent<ApiType, []>;
+      /**
+       * A staker was slashed for requesting fast-unstake whilst being exposed.
+       **/
+      Slashed: AugmentedEvent<ApiType, [stash: AccountId32, amount: u128], { stash: AccountId32, amount: u128 }>;
+      /**
+       * A staker was unstaked.
+       **/
+      Unstaked: AugmentedEvent<ApiType, [stash: AccountId32, result: Result<Null, SpRuntimeDispatchError>], { stash: AccountId32, result: Result<Null, SpRuntimeDispatchError> }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    grandpa: {
+      /**
+       * New authority set has been applied.
+       **/
+      NewAuthorities: AugmentedEvent<ApiType, [authoritySet: Vec<ITuple<[SpConsensusGrandpaAppPublic, u64]>>], { authoritySet: Vec<ITuple<[SpConsensusGrandpaAppPublic, u64]>> }>;
+      /**
+       * Current authority set has been paused.
+       **/
+      Paused: AugmentedEvent<ApiType, []>;
+      /**
+       * Current authority set has been resumed.
+       **/
+      Resumed: AugmentedEvent<ApiType, []>;
       /**
        * Generic event
        **/
@@ -506,6 +560,42 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
+    imOnline: {
+      /**
+       * At the end of the session, no offence was committed.
+       **/
+      AllGood: AugmentedEvent<ApiType, []>;
+      /**
+       * A new heartbeat was received from `AuthorityId`.
+       **/
+      HeartbeatReceived: AugmentedEvent<ApiType, [authorityId: PalletImOnlineSr25519AppSr25519Public], { authorityId: PalletImOnlineSr25519AppSr25519Public }>;
+      /**
+       * At the end of the session, at least one validator was found to be offline.
+       **/
+      SomeOffline: AugmentedEvent<ApiType, [offline: Vec<ITuple<[AccountId32, PalletStakingExposure]>>], { offline: Vec<ITuple<[AccountId32, PalletStakingExposure]>> }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    indices: {
+      /**
+       * A account index was assigned.
+       **/
+      IndexAssigned: AugmentedEvent<ApiType, [who: AccountId32, index: u32], { who: AccountId32, index: u32 }>;
+      /**
+       * A account index has been freed up (unassigned).
+       **/
+      IndexFreed: AugmentedEvent<ApiType, [index: u32], { index: u32 }>;
+      /**
+       * A account index has been frozen to its current account ID.
+       **/
+      IndexFrozen: AugmentedEvent<ApiType, [index: u32, who: AccountId32], { index: u32, who: AccountId32 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
     lottery: {
       /**
        * A new set of calls have been set!
@@ -550,31 +640,97 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    parachainSystem: {
+    nominationPools: {
       /**
-       * Downward messages were processed using the given weight.
+       * A member has became bonded in a pool.
        **/
-      DownwardMessagesProcessed: AugmentedEvent<ApiType, [weightUsed: SpWeightsWeightV2Weight, dmqHead: H256], { weightUsed: SpWeightsWeightV2Weight, dmqHead: H256 }>;
+      Bonded: AugmentedEvent<ApiType, [member: AccountId32, poolId: u32, bonded: u128, joined: bool], { member: AccountId32, poolId: u32, bonded: u128, joined: bool }>;
       /**
-       * Some downward messages have been received and will be processed.
+       * A pool has been created.
        **/
-      DownwardMessagesReceived: AugmentedEvent<ApiType, [count: u32], { count: u32 }>;
+      Created: AugmentedEvent<ApiType, [depositor: AccountId32, poolId: u32], { depositor: AccountId32, poolId: u32 }>;
       /**
-       * An upgrade has been authorized.
+       * A pool has been destroyed.
        **/
-      UpgradeAuthorized: AugmentedEvent<ApiType, [codeHash: H256], { codeHash: H256 }>;
+      Destroyed: AugmentedEvent<ApiType, [poolId: u32], { poolId: u32 }>;
       /**
-       * The validation function was applied as of the contained relay chain block number.
+       * A member has been removed from a pool.
+       * 
+       * The removal can be voluntary (withdrawn all unbonded funds) or involuntary (kicked).
        **/
-      ValidationFunctionApplied: AugmentedEvent<ApiType, [relayChainBlockNum: u32], { relayChainBlockNum: u32 }>;
+      MemberRemoved: AugmentedEvent<ApiType, [poolId: u32, member: AccountId32], { poolId: u32, member: AccountId32 }>;
       /**
-       * The relay-chain aborted the upgrade process.
+       * A payout has been made to a member.
        **/
-      ValidationFunctionDiscarded: AugmentedEvent<ApiType, []>;
+      PaidOut: AugmentedEvent<ApiType, [member: AccountId32, poolId: u32, payout: u128], { member: AccountId32, poolId: u32, payout: u128 }>;
       /**
-       * The validation function has been scheduled to apply.
+       * A pool's commission `change_rate` has been changed.
        **/
-      ValidationFunctionStored: AugmentedEvent<ApiType, []>;
+      PoolCommissionChangeRateUpdated: AugmentedEvent<ApiType, [poolId: u32, changeRate: PalletNominationPoolsCommissionChangeRate], { poolId: u32, changeRate: PalletNominationPoolsCommissionChangeRate }>;
+      /**
+       * Pool commission has been claimed.
+       **/
+      PoolCommissionClaimed: AugmentedEvent<ApiType, [poolId: u32, commission: u128], { poolId: u32, commission: u128 }>;
+      /**
+       * A pool's commission setting has been changed.
+       **/
+      PoolCommissionUpdated: AugmentedEvent<ApiType, [poolId: u32, current: Option<ITuple<[Perbill, AccountId32]>>], { poolId: u32, current: Option<ITuple<[Perbill, AccountId32]>> }>;
+      /**
+       * A pool's maximum commission setting has been changed.
+       **/
+      PoolMaxCommissionUpdated: AugmentedEvent<ApiType, [poolId: u32, maxCommission: Perbill], { poolId: u32, maxCommission: Perbill }>;
+      /**
+       * The active balance of pool `pool_id` has been slashed to `balance`.
+       **/
+      PoolSlashed: AugmentedEvent<ApiType, [poolId: u32, balance: u128], { poolId: u32, balance: u128 }>;
+      /**
+       * The roles of a pool have been updated to the given new roles. Note that the depositor
+       * can never change.
+       **/
+      RolesUpdated: AugmentedEvent<ApiType, [root: Option<AccountId32>, bouncer: Option<AccountId32>, nominator: Option<AccountId32>], { root: Option<AccountId32>, bouncer: Option<AccountId32>, nominator: Option<AccountId32> }>;
+      /**
+       * The state of a pool has changed
+       **/
+      StateChanged: AugmentedEvent<ApiType, [poolId: u32, newState: PalletNominationPoolsPoolState], { poolId: u32, newState: PalletNominationPoolsPoolState }>;
+      /**
+       * A member has unbonded from their pool.
+       * 
+       * - `balance` is the corresponding balance of the number of points that has been
+       * requested to be unbonded (the argument of the `unbond` transaction) from the bonded
+       * pool.
+       * - `points` is the number of points that are issued as a result of `balance` being
+       * dissolved into the corresponding unbonding pool.
+       * - `era` is the era in which the balance will be unbonded.
+       * In the absence of slashing, these values will match. In the presence of slashing, the
+       * number of points that are issued in the unbonding pool will be less than the amount
+       * requested to be unbonded.
+       **/
+      Unbonded: AugmentedEvent<ApiType, [member: AccountId32, poolId: u32, balance: u128, points: u128, era: u32], { member: AccountId32, poolId: u32, balance: u128, points: u128, era: u32 }>;
+      /**
+       * The unbond pool at `era` of pool `pool_id` has been slashed to `balance`.
+       **/
+      UnbondingPoolSlashed: AugmentedEvent<ApiType, [poolId: u32, era: u32, balance: u128], { poolId: u32, era: u32, balance: u128 }>;
+      /**
+       * A member has withdrawn from their pool.
+       * 
+       * The given number of `points` have been dissolved in return of `balance`.
+       * 
+       * Similar to `Unbonded` event, in the absence of slashing, the ratio of point to balance
+       * will be 1.
+       **/
+      Withdrawn: AugmentedEvent<ApiType, [member: AccountId32, poolId: u32, balance: u128, points: u128], { member: AccountId32, poolId: u32, balance: u128, points: u128 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    offences: {
+      /**
+       * There is an offence reported of the given `kind` happened at the `session_index` and
+       * (kind-specific) time slot. This event is not deposited for duplicate slashes.
+       * \[kind, timeslot\].
+       **/
+      Offence: AugmentedEvent<ApiType, [kind: U8aFixed, timeslot: Bytes], { kind: U8aFixed, timeslot: Bytes }>;
       /**
        * Generic event
        **/
@@ -634,6 +790,7 @@ declare module '@polkadot/api-base/types/events' {
        * Benchmark Updated
        **/
       BenchmarkUpdated: AugmentedEvent<ApiType, [session: AccountId32, pInstant: u32], { session: AccountId32, pInstant: u32 }>;
+      BudgetUpdated: AugmentedEvent<ApiType, [nonce: u64, budget: u128], { nonce: u64, budget: u128 }>;
       /**
        * Cool down expiration changed (in sec).
        * 
@@ -735,11 +892,37 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
+    phalaPhatContracts: {
+      ClusterCreated: AugmentedEvent<ApiType, [cluster: H256, systemContract: H256], { cluster: H256, systemContract: H256 }>;
+      ClusterDeployed: AugmentedEvent<ApiType, [cluster: H256, pubkey: SpCoreSr25519Public, worker: SpCoreSr25519Public], { cluster: H256, pubkey: SpCoreSr25519Public, worker: SpCoreSr25519Public }>;
+      ClusterDeploymentFailed: AugmentedEvent<ApiType, [cluster: H256, worker: SpCoreSr25519Public], { cluster: H256, worker: SpCoreSr25519Public }>;
+      ClusterDestroyed: AugmentedEvent<ApiType, [cluster: H256], { cluster: H256 }>;
+      ClusterPubkeyAvailable: AugmentedEvent<ApiType, [cluster: H256, pubkey: SpCoreSr25519Public], { cluster: H256, pubkey: SpCoreSr25519Public }>;
+      ContractPubkeyAvailable: AugmentedEvent<ApiType, [contract: H256, cluster: H256, pubkey: SpCoreSr25519Public], { contract: H256, cluster: H256, pubkey: SpCoreSr25519Public }>;
+      Instantiated: AugmentedEvent<ApiType, [contract: H256, cluster: H256, deployer: H256], { contract: H256, cluster: H256, deployer: H256 }>;
+      Instantiating: AugmentedEvent<ApiType, [contract: H256, cluster: H256, deployer: AccountId32], { contract: H256, cluster: H256, deployer: AccountId32 }>;
+      Transfered: AugmentedEvent<ApiType, [cluster: H256, account: H256, amount: u128], { cluster: H256, account: H256, amount: u128 }>;
+      WorkerAddedToCluster: AugmentedEvent<ApiType, [worker: SpCoreSr25519Public, cluster: H256], { worker: SpCoreSr25519Public, cluster: H256 }>;
+      WorkerRemovedFromCluster: AugmentedEvent<ApiType, [worker: SpCoreSr25519Public, cluster: H256], { worker: SpCoreSr25519Public, cluster: H256 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    phalaPhatTokenomic: {
+      ContractDepositChanged: AugmentedEvent<ApiType, [cluster: Option<H256>, contract: H256, deposit: u128], { cluster: Option<H256>, contract: H256, deposit: u128 }>;
+      UserStakeChanged: AugmentedEvent<ApiType, [cluster: Option<H256>, account: AccountId32, contract: H256, stake: u128], { cluster: Option<H256>, account: AccountId32, contract: H256, stake: u128 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
     phalaRegistry: {
       /**
        * A new Gatekeeper is enabled on the blockchain
        **/
       GatekeeperAdded: AugmentedEvent<ApiType, [pubkey: SpCoreSr25519Public], { pubkey: SpCoreSr25519Public }>;
+      GatekeeperLaunched: AugmentedEvent<ApiType, []>;
       GatekeeperRemoved: AugmentedEvent<ApiType, [pubkey: SpCoreSr25519Public], { pubkey: SpCoreSr25519Public }>;
       InitialScoreSet: AugmentedEvent<ApiType, [pubkey: SpCoreSr25519Public, initScore: u32], { pubkey: SpCoreSr25519Public, initScore: u32 }>;
       MasterKeyRotated: AugmentedEvent<ApiType, [rotationId: u64, masterPubkey: SpCoreSr25519Public], { rotationId: u64, masterPubkey: SpCoreSr25519Public }>;
@@ -850,6 +1033,18 @@ declare module '@polkadot/api-base/types/events' {
        **/
       RewardReceived: AugmentedEvent<ApiType, [pid: u64, toOwner: u128, toStakers: u128], { pid: u64, toOwner: u128, toStakers: u128 }>;
       /**
+       * Some to-distribute reward is dismissed because the amount is too tiny (dust)
+       * 
+       * There's no affected state.
+       **/
+      RewardToDistributionDismissedDust: AugmentedEvent<ApiType, [pid: u64, amount: u128], { pid: u64, amount: u128 }>;
+      /**
+       * Some to-distribute reward is dismissed because the amount is too tiny (dust)
+       * 
+       * There's no affected state.
+       **/
+      RewardToOwnerDismissedDust: AugmentedEvent<ApiType, [pid: u64, amount: u128], { pid: u64, amount: u128 }>;
+      /**
        * Some slash is actually settled to a contributor (currently disabled)
        **/
       SlashSettled: AugmentedEvent<ApiType, [pid: u64, user: AccountId32, amount: u128], { pid: u64, user: AccountId32, amount: u128 }>;
@@ -934,172 +1129,22 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    phragmenElection: {
-      /**
-       * A candidate was slashed by amount due to failing to obtain a seat as member or
-       * runner-up.
-       * 
-       * Note that old members and runners-up are also candidates.
-       **/
-      CandidateSlashed: AugmentedEvent<ApiType, [candidate: AccountId32, amount: u128], { candidate: AccountId32, amount: u128 }>;
-      /**
-       * Internal error happened while trying to perform election.
-       **/
-      ElectionError: AugmentedEvent<ApiType, []>;
-      /**
-       * No (or not enough) candidates existed for this round. This is different from
-       * `NewTerm(\[\])`. See the description of `NewTerm`.
-       **/
-      EmptyTerm: AugmentedEvent<ApiType, []>;
-      /**
-       * A member has been removed. This should always be followed by either `NewTerm` or
-       * `EmptyTerm`.
-       **/
-      MemberKicked: AugmentedEvent<ApiType, [member: AccountId32], { member: AccountId32 }>;
-      /**
-       * A new term with new_members. This indicates that enough candidates existed to run
-       * the election, not that enough have has been elected. The inner value must be examined
-       * for this purpose. A `NewTerm(\[\])` indicates that some candidates got their bond
-       * slashed and none were elected, whilst `EmptyTerm` means that no candidates existed to
-       * begin with.
-       **/
-      NewTerm: AugmentedEvent<ApiType, [newMembers: Vec<ITuple<[AccountId32, u128]>>], { newMembers: Vec<ITuple<[AccountId32, u128]>> }>;
-      /**
-       * Someone has renounced their candidacy.
-       **/
-      Renounced: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
-      /**
-       * A seat holder was slashed by amount by being forcefully removed from the set.
-       **/
-      SeatHolderSlashed: AugmentedEvent<ApiType, [seatHolder: AccountId32, amount: u128], { seatHolder: AccountId32, amount: u128 }>;
+    phatOracle: {
+      QuoteReceived: AugmentedEvent<ApiType, [contract: H256, submitter: AccountId32, owner: AccountId32, pair: Bytes, price: u128], { contract: H256, submitter: AccountId32, owner: AccountId32, pair: Bytes, price: u128 }>;
       /**
        * Generic event
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    polkadotXcm: {
+    phatRollupAnchor: {
       /**
-       * Some assets have been claimed from an asset trap
-       * 
-       * \[ hash, origin, assets \]
+       * A name is claimed by a submitter
        **/
-      AssetsClaimed: AugmentedEvent<ApiType, [H256, XcmV1MultiLocation, XcmVersionedMultiAssets]>;
+      NameClaimed: AugmentedEvent<ApiType, [submitter: AccountId32, name: H256], { submitter: AccountId32, name: H256 }>;
       /**
-       * Some assets have been placed in an asset trap.
-       * 
-       * \[ hash, origin, assets \]
+       * A rollup transaction is executed
        **/
-      AssetsTrapped: AugmentedEvent<ApiType, [H256, XcmV1MultiLocation, XcmVersionedMultiAssets]>;
-      /**
-       * Execution of an XCM message was attempted.
-       * 
-       * \[ outcome \]
-       **/
-      Attempted: AugmentedEvent<ApiType, [XcmV2TraitsOutcome]>;
-      /**
-       * Expected query response has been received but the origin location of the response does
-       * not match that expected. The query remains registered for a later, valid, response to
-       * be received and acted upon.
-       * 
-       * \[ origin location, id, expected location \]
-       **/
-      InvalidResponder: AugmentedEvent<ApiType, [XcmV1MultiLocation, u64, Option<XcmV1MultiLocation>]>;
-      /**
-       * Expected query response has been received but the expected origin location placed in
-       * storage by this runtime previously cannot be decoded. The query remains registered.
-       * 
-       * This is unexpected (since a location placed in storage in a previously executing
-       * runtime should be readable prior to query timeout) and dangerous since the possibly
-       * valid response will be dropped. Manual governance intervention is probably going to be
-       * needed.
-       * 
-       * \[ origin location, id \]
-       **/
-      InvalidResponderVersion: AugmentedEvent<ApiType, [XcmV1MultiLocation, u64]>;
-      /**
-       * Query response has been received and query is removed. The registered notification has
-       * been dispatched and executed successfully.
-       * 
-       * \[ id, pallet index, call index \]
-       **/
-      Notified: AugmentedEvent<ApiType, [u64, u8, u8]>;
-      /**
-       * Query response has been received and query is removed. The dispatch was unable to be
-       * decoded into a `Call`; this might be due to dispatch function having a signature which
-       * is not `(origin, QueryId, Response)`.
-       * 
-       * \[ id, pallet index, call index \]
-       **/
-      NotifyDecodeFailed: AugmentedEvent<ApiType, [u64, u8, u8]>;
-      /**
-       * Query response has been received and query is removed. There was a general error with
-       * dispatching the notification call.
-       * 
-       * \[ id, pallet index, call index \]
-       **/
-      NotifyDispatchError: AugmentedEvent<ApiType, [u64, u8, u8]>;
-      /**
-       * Query response has been received and query is removed. The registered notification could
-       * not be dispatched because the dispatch weight is greater than the maximum weight
-       * originally budgeted by this runtime for the query result.
-       * 
-       * \[ id, pallet index, call index, actual weight, max budgeted weight \]
-       **/
-      NotifyOverweight: AugmentedEvent<ApiType, [u64, u8, u8, SpWeightsWeightV2Weight, SpWeightsWeightV2Weight]>;
-      /**
-       * A given location which had a version change subscription was dropped owing to an error
-       * migrating the location to our new XCM format.
-       * 
-       * \[ location, query ID \]
-       **/
-      NotifyTargetMigrationFail: AugmentedEvent<ApiType, [XcmVersionedMultiLocation, u64]>;
-      /**
-       * A given location which had a version change subscription was dropped owing to an error
-       * sending the notification to it.
-       * 
-       * \[ location, query ID, error \]
-       **/
-      NotifyTargetSendFail: AugmentedEvent<ApiType, [XcmV1MultiLocation, u64, XcmV2TraitsError]>;
-      /**
-       * Query response has been received and is ready for taking with `take_response`. There is
-       * no registered notification call.
-       * 
-       * \[ id, response \]
-       **/
-      ResponseReady: AugmentedEvent<ApiType, [u64, XcmV2Response]>;
-      /**
-       * Received query response has been read and removed.
-       * 
-       * \[ id \]
-       **/
-      ResponseTaken: AugmentedEvent<ApiType, [u64]>;
-      /**
-       * A XCM message was sent.
-       * 
-       * \[ origin, destination, message \]
-       **/
-      Sent: AugmentedEvent<ApiType, [XcmV1MultiLocation, XcmV1MultiLocation, XcmV2Xcm]>;
-      /**
-       * The supported version of a location has been changed. This might be through an
-       * automatic notification or a manual intervention.
-       * 
-       * \[ location, XCM version \]
-       **/
-      SupportedVersionChanged: AugmentedEvent<ApiType, [XcmV1MultiLocation, u32]>;
-      /**
-       * Query response received which does not match a registered query. This may be because a
-       * matching query was never registered, it may be because it is a duplicate response, or
-       * because the query timed out.
-       * 
-       * \[ origin location, id \]
-       **/
-      UnexpectedResponse: AugmentedEvent<ApiType, [XcmV1MultiLocation, u64]>;
-      /**
-       * An XCM version change notification message has been attempted to be sent.
-       * 
-       * \[ destination, result \]
-       **/
-      VersionChangeNotified: AugmentedEvent<ApiType, [XcmV1MultiLocation, u32]>;
+      RollupExecuted: AugmentedEvent<ApiType, [submitter: AccountId32, name: H256, nonce: u128], { submitter: AccountId32, name: H256, nonce: u128 }>;
       /**
        * Generic event
        **/
@@ -1131,7 +1176,7 @@ declare module '@polkadot/api-base/types/events' {
       /**
        * A proxy was added.
        **/
-      ProxyAdded: AugmentedEvent<ApiType, [delegator: AccountId32, delegatee: AccountId32, proxyType: KhalaParachainRuntimeProxyType, delay: u32], { delegator: AccountId32, delegatee: AccountId32, proxyType: KhalaParachainRuntimeProxyType, delay: u32 }>;
+      ProxyAdded: AugmentedEvent<ApiType, [delegator: AccountId32, delegatee: AccountId32, proxyType: PhalaNodeRuntimeProxyType, delay: u32], { delegator: AccountId32, delegatee: AccountId32, proxyType: PhalaNodeRuntimeProxyType, delay: u32 }>;
       /**
        * A proxy was executed correctly, with the given.
        **/
@@ -1139,155 +1184,42 @@ declare module '@polkadot/api-base/types/events' {
       /**
        * A proxy was removed.
        **/
-      ProxyRemoved: AugmentedEvent<ApiType, [delegator: AccountId32, delegatee: AccountId32, proxyType: KhalaParachainRuntimeProxyType, delay: u32], { delegator: AccountId32, delegatee: AccountId32, proxyType: KhalaParachainRuntimeProxyType, delay: u32 }>;
+      ProxyRemoved: AugmentedEvent<ApiType, [delegator: AccountId32, delegatee: AccountId32, proxyType: PhalaNodeRuntimeProxyType, delay: u32], { delegator: AccountId32, delegatee: AccountId32, proxyType: PhalaNodeRuntimeProxyType, delay: u32 }>;
       /**
        * A pure account has been created by new proxy with given
        * disambiguation index and proxy type.
        **/
-      PureCreated: AugmentedEvent<ApiType, [pure: AccountId32, who: AccountId32, proxyType: KhalaParachainRuntimeProxyType, disambiguationIndex: u16], { pure: AccountId32, who: AccountId32, proxyType: KhalaParachainRuntimeProxyType, disambiguationIndex: u16 }>;
+      PureCreated: AugmentedEvent<ApiType, [pure: AccountId32, who: AccountId32, proxyType: PhalaNodeRuntimeProxyType, disambiguationIndex: u16], { pure: AccountId32, who: AccountId32, proxyType: PhalaNodeRuntimeProxyType, disambiguationIndex: u16 }>;
       /**
        * Generic event
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    pwIncubation: {
+    recovery: {
       /**
-       * CanStartIncubation status changed and set official hatch time.
+       * Lost account has been successfully recovered by rescuer account.
        **/
-      CanStartIncubationStatusChanged: AugmentedEvent<ApiType, [status: bool, startTime: u64, officialHatchTime: u64], { status: bool, startTime: u64, officialHatchTime: u64 }>;
+      AccountRecovered: AugmentedEvent<ApiType, [lostAccount: AccountId32, rescuerAccount: AccountId32], { lostAccount: AccountId32, rescuerAccount: AccountId32 }>;
       /**
-       * Origin of Shell updated chosen parts.
+       * A recovery process for lost account by rescuer account has been closed.
        **/
-      OriginOfShellChosenPartsUpdated: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32, oldChosenParts: Option<PalletPhalaWorldShellParts>, newChosenParts: PalletPhalaWorldShellParts], { collectionId: u32, nftId: u32, oldChosenParts: Option<PalletPhalaWorldShellParts>, newChosenParts: PalletPhalaWorldShellParts }>;
+      RecoveryClosed: AugmentedEvent<ApiType, [lostAccount: AccountId32, rescuerAccount: AccountId32], { lostAccount: AccountId32, rescuerAccount: AccountId32 }>;
       /**
-       * Origin of Shell received food from an account.
+       * A recovery process has been set up for an account.
        **/
-      OriginOfShellReceivedFood: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32, sender: AccountId32, era: u64], { collectionId: u32, nftId: u32, sender: AccountId32, era: u64 }>;
+      RecoveryCreated: AugmentedEvent<ApiType, [account: AccountId32], { account: AccountId32 }>;
       /**
-       * Shell has been awakened from an origin_of_shell being hatched and burned.
+       * A recovery process has been initiated for lost account by rescuer account.
        **/
-      ShellAwakened: AugmentedEvent<ApiType, [shellCollectionId: u32, shellNftId: u32, rarity: PalletPhalaWorldRarityType, career: PalletPhalaWorldCareerType, race: PalletPhalaWorldRaceType, generationId: u32, originOfShellCollectionId: u32, originOfShellNftId: u32, owner: AccountId32], { shellCollectionId: u32, shellNftId: u32, rarity: PalletPhalaWorldRarityType, career: PalletPhalaWorldCareerType, race: PalletPhalaWorldRaceType, generationId: u32, originOfShellCollectionId: u32, originOfShellNftId: u32, owner: AccountId32 }>;
+      RecoveryInitiated: AugmentedEvent<ApiType, [lostAccount: AccountId32, rescuerAccount: AccountId32], { lostAccount: AccountId32, rescuerAccount: AccountId32 }>;
       /**
-       * Shell Collection ID is set.
+       * A recovery process has been removed for an account.
        **/
-      ShellCollectionIdSet: AugmentedEvent<ApiType, [collectionId: u32], { collectionId: u32 }>;
+      RecoveryRemoved: AugmentedEvent<ApiType, [lostAccount: AccountId32], { lostAccount: AccountId32 }>;
       /**
-       * Shell Part minted.
+       * A recovery process for lost account by rescuer account has been vouched for by sender.
        **/
-      ShellPartMinted: AugmentedEvent<ApiType, [shellPartsCollectionId: u32, shellPartNftId: u32, parentShellCollectionId: u32, parentShellNftId: u32, owner: AccountId32], { shellPartsCollectionId: u32, shellPartNftId: u32, parentShellCollectionId: u32, parentShellNftId: u32, owner: AccountId32 }>;
-      /**
-       * Shell Parts Collection ID is set.
-       **/
-      ShellPartsCollectionIdSet: AugmentedEvent<ApiType, [collectionId: u32], { collectionId: u32 }>;
-      /**
-       * Origin of Shell owner has initiated the incubation sequence.
-       **/
-      StartedIncubation: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32, owner: AccountId32, startTime: u64, hatchTime: u64], { collectionId: u32, nftId: u32, owner: AccountId32, startTime: u64, hatchTime: u64 }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    pwMarketplace: {
-      /**
-       * Marketplace owner is set.
-       **/
-      MarketplaceOwnerSet: AugmentedEvent<ApiType, [oldMarketplaceOwner: Option<AccountId32>, newMarketplaceOwner: AccountId32], { oldMarketplaceOwner: Option<AccountId32>, newMarketplaceOwner: AccountId32 }>;
-      /**
-       * RoyaltyInfo updated for a NFT.
-       **/
-      RoyaltyInfoUpdated: AugmentedEvent<ApiType, [collectionId: u32, nftId: u32, oldRoyaltyInfo: Option<RmrkTraitsNftRoyaltyInfo>, newRoyaltyInfo: RmrkTraitsNftRoyaltyInfo], { collectionId: u32, nftId: u32, oldRoyaltyInfo: Option<RmrkTraitsNftRoyaltyInfo>, newRoyaltyInfo: RmrkTraitsNftRoyaltyInfo }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    pwNftSale: {
-      /**
-       * Chosen preorder was minted to owner
-       **/
-      ChosenPreorderMinted: AugmentedEvent<ApiType, [preorderId: u32, owner: AccountId32, nftId: u32], { preorderId: u32, owner: AccountId32, nftId: u32 }>;
-      /**
-       * Spirit Claims status has changed
-       **/
-      ClaimSpiritStatusChanged: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Last Day of Sale status has changed
-       **/
-      LastDayOfSaleStatusChanged: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Start of a new era
-       **/
-      NewEra: AugmentedEvent<ApiType, [time: u64, era: u64], { time: u64, era: u64 }>;
-      /**
-       * Not chosen preorder was refunded to owner
-       **/
-      NotChosenPreorderRefunded: AugmentedEvent<ApiType, [preorderId: u32, owner: AccountId32], { preorderId: u32, owner: AccountId32 }>;
-      /**
-       * Origin of Shell collection id was set
-       **/
-      OriginOfShellCollectionIdSet: AugmentedEvent<ApiType, [collectionId: u32], { collectionId: u32 }>;
-      /**
-       * Gift a Origin of Shell for giveaway or reserved NFT to owner
-       **/
-      OriginOfShellGiftedToOwner: AugmentedEvent<ApiType, [owner: AccountId32, nftSaleType: PalletPhalaWorldNftSaleType], { owner: AccountId32, nftSaleType: PalletPhalaWorldNftSaleType }>;
-      /**
-       * Origin of Shell inventory updated
-       **/
-      OriginOfShellInventoryUpdated: AugmentedEvent<ApiType, [rarityType: PalletPhalaWorldRarityType], { rarityType: PalletPhalaWorldRarityType }>;
-      /**
-       * Origin of Shell minted from the preorder
-       **/
-      OriginOfShellMinted: AugmentedEvent<ApiType, [rarityType: PalletPhalaWorldRarityType, collectionId: u32, nftId: u32, owner: AccountId32, race: PalletPhalaWorldRaceType, career: PalletPhalaWorldCareerType, generationId: u32], { rarityType: PalletPhalaWorldRarityType, collectionId: u32, nftId: u32, owner: AccountId32, race: PalletPhalaWorldRaceType, career: PalletPhalaWorldCareerType, generationId: u32 }>;
-      /**
-       * A chance to get an Origin of Shell through preorder
-       **/
-      OriginOfShellPreordered: AugmentedEvent<ApiType, [owner: AccountId32, preorderId: u32, race: PalletPhalaWorldRaceType, career: PalletPhalaWorldCareerType], { owner: AccountId32, preorderId: u32, race: PalletPhalaWorldRaceType, career: PalletPhalaWorldCareerType }>;
-      /**
-       * Origin of Shells Inventory was set
-       **/
-      OriginOfShellsInventoryWasSet: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Origin of Shells Metadata was set
-       **/
-      OriginOfShellsMetadataSet: AugmentedEvent<ApiType, [originOfShellsMetadata: Vec<ITuple<[PalletPhalaWorldRaceType, Bytes]>>], { originOfShellsMetadata: Vec<ITuple<[PalletPhalaWorldRaceType, Bytes]>> }>;
-      OverlordChanged: AugmentedEvent<ApiType, [oldOverlord: Option<AccountId32>, newOverlord: AccountId32], { oldOverlord: Option<AccountId32>, newOverlord: AccountId32 }>;
-      /**
-       * Payee changed to new account
-       **/
-      PayeeChanged: AugmentedEvent<ApiType, [oldPayee: Option<AccountId32>, newPayee: AccountId32], { oldPayee: Option<AccountId32>, newPayee: AccountId32 }>;
-      /**
-       * Preorder Origin of Shells status has changed
-       **/
-      PreorderOriginOfShellsStatusChanged: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Purchase Prime Origin of Shells status changed
-       **/
-      PurchasePrimeOriginOfShellsStatusChanged: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Purchase Rare Origin of Shells status has changed
-       **/
-      PurchaseRareOriginOfShellsStatusChanged: AugmentedEvent<ApiType, [status: bool], { status: bool }>;
-      /**
-       * Signer changed to new account
-       **/
-      SignerChanged: AugmentedEvent<ApiType, [oldSigner: Option<AccountId32>, newSigner: AccountId32], { oldSigner: Option<AccountId32>, newSigner: AccountId32 }>;
-      /**
-       * Spirit has been claimed
-       **/
-      SpiritClaimed: AugmentedEvent<ApiType, [owner: AccountId32, collectionId: u32, nftId: u32], { owner: AccountId32, collectionId: u32, nftId: u32 }>;
-      /**
-       * Spirit collection id was set
-       **/
-      SpiritCollectionIdSet: AugmentedEvent<ApiType, [collectionId: u32], { collectionId: u32 }>;
-      /**
-       * Spirits Metadata was set
-       **/
-      SpiritsMetadataSet: AugmentedEvent<ApiType, [spiritsMetadata: Bytes], { spiritsMetadata: Bytes }>;
-      /**
-       * Phala World clock zero day started
-       **/
-      WorldClockStarted: AugmentedEvent<ApiType, [startTime: u64], { startTime: u64 }>;
+      RecoveryVouched: AugmentedEvent<ApiType, [lostAccount: AccountId32, rescuerAccount: AccountId32, sender: AccountId32], { lostAccount: AccountId32, rescuerAccount: AccountId32, sender: AccountId32 }>;
       /**
        * Generic event
        **/
@@ -1312,59 +1244,6 @@ declare module '@polkadot/api-base/types/events' {
       ResourceRemoval: AugmentedEvent<ApiType, [nftId: u32, resourceId: u32, collectionId: u32], { nftId: u32, resourceId: u32, collectionId: u32 }>;
       ResourceRemovalAccepted: AugmentedEvent<ApiType, [nftId: u32, resourceId: u32, collectionId: u32], { nftId: u32, resourceId: u32, collectionId: u32 }>;
       ResourceReplaced: AugmentedEvent<ApiType, [nftId: u32, resourceId: u32, collectionId: u32], { nftId: u32, resourceId: u32, collectionId: u32 }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    rmrkEquip: {
-      BaseCreated: AugmentedEvent<ApiType, [issuer: AccountId32, baseId: u32], { issuer: AccountId32, baseId: u32 }>;
-      BaseIssuerChanged: AugmentedEvent<ApiType, [oldIssuer: AccountId32, newIssuer: AccountId32, baseId: u32], { oldIssuer: AccountId32, newIssuer: AccountId32, baseId: u32 }>;
-      EquippablesUpdated: AugmentedEvent<ApiType, [baseId: u32, slotId: u32], { baseId: u32, slotId: u32 }>;
-      SlotEquipped: AugmentedEvent<ApiType, [itemCollection: u32, itemNft: u32, baseId: u32, slotId: u32], { itemCollection: u32, itemNft: u32, baseId: u32, slotId: u32 }>;
-      SlotUnequipped: AugmentedEvent<ApiType, [itemCollection: u32, itemNft: u32, baseId: u32, slotId: u32], { itemCollection: u32, itemNft: u32, baseId: u32, slotId: u32 }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    rmrkMarket: {
-      /**
-       * Market fee paid to marketplace owner
-       **/
-      MarketFeePaid: AugmentedEvent<ApiType, [sender: AccountId32, marketplaceOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128], { sender: AccountId32, marketplaceOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128 }>;
-      /**
-       * Offer was accepted
-       **/
-      OfferAccepted: AugmentedEvent<ApiType, [owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32], { owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32 }>;
-      /**
-       * Offer was placed on a token
-       **/
-      OfferPlaced: AugmentedEvent<ApiType, [offerer: AccountId32, collectionId: u32, nftId: u32, price: u128], { offerer: AccountId32, collectionId: u32, nftId: u32, price: u128 }>;
-      /**
-       * Offer was withdrawn
-       **/
-      OfferWithdrawn: AugmentedEvent<ApiType, [sender: AccountId32, collectionId: u32, nftId: u32], { sender: AccountId32, collectionId: u32, nftId: u32 }>;
-      /**
-       * Royalty fee paid to royalty owner
-       **/
-      RoyaltyFeePaid: AugmentedEvent<ApiType, [sender: AccountId32, royaltyOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128], { sender: AccountId32, royaltyOwner: AccountId32, collectionId: u32, nftId: u32, amount: u128 }>;
-      /**
-       * Token listed on Marketplace
-       **/
-      TokenListed: AugmentedEvent<ApiType, [owner: AccountId32, collectionId: u32, nftId: u32, price: u128], { owner: AccountId32, collectionId: u32, nftId: u32, price: u128 }>;
-      /**
-       * The price for a token was updated
-       **/
-      TokenPriceUpdated: AugmentedEvent<ApiType, [owner: AccountId32, collectionId: u32, nftId: u32, price: Option<u128>], { owner: AccountId32, collectionId: u32, nftId: u32, price: Option<u128> }>;
-      /**
-       * Token was sold to a new owner
-       **/
-      TokenSold: AugmentedEvent<ApiType, [owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32, price: u128], { owner: AccountId32, buyer: AccountId32, collectionId: u32, nftId: u32, price: u128 }>;
-      /**
-       * Token unlisted on Marketplace
-       **/
-      TokenUnlisted: AugmentedEvent<ApiType, [owner: AccountId32, collectionId: u32, nftId: u32], { owner: AccountId32, collectionId: u32, nftId: u32 }>;
       /**
        * Generic event
        **/
@@ -1406,6 +1285,182 @@ declare module '@polkadot/api-base/types/events' {
        * block number as the type might suggest.
        **/
       NewSession: AugmentedEvent<ApiType, [sessionIndex: u32], { sessionIndex: u32 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    society: {
+      /**
+       * A candidate was dropped (due to an excess of bids in the system).
+       **/
+      AutoUnbid: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
+      /**
+       * A membership bid just happened. The given account is the candidate's ID and their offer
+       * is the second.
+       **/
+      Bid: AugmentedEvent<ApiType, [candidateId: AccountId32, offer: u128], { candidateId: AccountId32, offer: u128 }>;
+      /**
+       * A candidate has been suspended
+       **/
+      CandidateSuspended: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
+      /**
+       * A member has been challenged
+       **/
+      Challenged: AugmentedEvent<ApiType, [member: AccountId32], { member: AccountId32 }>;
+      /**
+       * A vote has been placed for a defending member
+       **/
+      DefenderVote: AugmentedEvent<ApiType, [voter: AccountId32, vote: bool], { voter: AccountId32, vote: bool }>;
+      /**
+       * Some funds were deposited into the society account.
+       **/
+      Deposit: AugmentedEvent<ApiType, [value: u128], { value: u128 }>;
+      /**
+       * A \[member\] got elevated to \[rank\].
+       **/
+      Elevated: AugmentedEvent<ApiType, [member: AccountId32, rank: u32], { member: AccountId32, rank: u32 }>;
+      /**
+       * The society is founded by the given identity.
+       **/
+      Founded: AugmentedEvent<ApiType, [founder: AccountId32], { founder: AccountId32 }>;
+      /**
+       * A group of candidates have been inducted. The batch's primary is the first value, the
+       * batch in full is the second.
+       **/
+      Inducted: AugmentedEvent<ApiType, [primary: AccountId32, candidates: Vec<AccountId32>], { primary: AccountId32, candidates: Vec<AccountId32> }>;
+      /**
+       * A member has been suspended
+       **/
+      MemberSuspended: AugmentedEvent<ApiType, [member: AccountId32], { member: AccountId32 }>;
+      /**
+       * A new set of \[params\] has been set for the group.
+       **/
+      NewParams: AugmentedEvent<ApiType, [params: PalletSocietyGroupParams], { params: PalletSocietyGroupParams }>;
+      /**
+       * A suspended member has been judged.
+       **/
+      SuspendedMemberJudgement: AugmentedEvent<ApiType, [who: AccountId32, judged: bool], { who: AccountId32, judged: bool }>;
+      /**
+       * A candidate was dropped (by their request).
+       **/
+      Unbid: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
+      /**
+       * Society is unfounded.
+       **/
+      Unfounded: AugmentedEvent<ApiType, [founder: AccountId32], { founder: AccountId32 }>;
+      /**
+       * A candidate was dropped (by request of who vouched for them).
+       **/
+      Unvouch: AugmentedEvent<ApiType, [candidate: AccountId32], { candidate: AccountId32 }>;
+      /**
+       * A vote has been placed
+       **/
+      Vote: AugmentedEvent<ApiType, [candidate: AccountId32, voter: AccountId32, vote: bool], { candidate: AccountId32, voter: AccountId32, vote: bool }>;
+      /**
+       * A membership bid just happened by vouching. The given account is the candidate's ID and
+       * their offer is the second. The vouching party is the third.
+       **/
+      Vouch: AugmentedEvent<ApiType, [candidateId: AccountId32, offer: u128, vouching: AccountId32], { candidateId: AccountId32, offer: u128, vouching: AccountId32 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    staking: {
+      /**
+       * An account has bonded this amount. \[stash, amount\]
+       * 
+       * NOTE: This event is only emitted when funds are bonded via a dispatchable. Notably,
+       * it will not be emitted for staking rewards when they are added to stake.
+       **/
+      Bonded: AugmentedEvent<ApiType, [stash: AccountId32, amount: u128], { stash: AccountId32, amount: u128 }>;
+      /**
+       * An account has stopped participating as either a validator or nominator.
+       **/
+      Chilled: AugmentedEvent<ApiType, [stash: AccountId32], { stash: AccountId32 }>;
+      /**
+       * The era payout has been set; the first balance is the validator-payout; the second is
+       * the remainder from the maximum amount of reward.
+       **/
+      EraPaid: AugmentedEvent<ApiType, [eraIndex: u32, validatorPayout: u128, remainder: u128], { eraIndex: u32, validatorPayout: u128, remainder: u128 }>;
+      /**
+       * A new force era mode was set.
+       **/
+      ForceEra: AugmentedEvent<ApiType, [mode: PalletStakingForcing], { mode: PalletStakingForcing }>;
+      /**
+       * A nominator has been kicked from a validator.
+       **/
+      Kicked: AugmentedEvent<ApiType, [nominator: AccountId32, stash: AccountId32], { nominator: AccountId32, stash: AccountId32 }>;
+      /**
+       * An old slashing report from a prior era was discarded because it could
+       * not be processed.
+       **/
+      OldSlashingReportDiscarded: AugmentedEvent<ApiType, [sessionIndex: u32], { sessionIndex: u32 }>;
+      /**
+       * The stakers' rewards are getting paid.
+       **/
+      PayoutStarted: AugmentedEvent<ApiType, [eraIndex: u32, validatorStash: AccountId32], { eraIndex: u32, validatorStash: AccountId32 }>;
+      /**
+       * The nominator has been rewarded by this amount to this destination.
+       **/
+      Rewarded: AugmentedEvent<ApiType, [stash: AccountId32, dest: PalletStakingRewardDestination, amount: u128], { stash: AccountId32, dest: PalletStakingRewardDestination, amount: u128 }>;
+      /**
+       * A staker (validator or nominator) has been slashed by the given amount.
+       **/
+      Slashed: AugmentedEvent<ApiType, [staker: AccountId32, amount: u128], { staker: AccountId32, amount: u128 }>;
+      /**
+       * A slash for the given validator, for the given percentage of their stake, at the given
+       * era as been reported.
+       **/
+      SlashReported: AugmentedEvent<ApiType, [validator: AccountId32, fraction: Perbill, slashEra: u32], { validator: AccountId32, fraction: Perbill, slashEra: u32 }>;
+      /**
+       * Targets size limit reached.
+       **/
+      SnapshotTargetsSizeExceeded: AugmentedEvent<ApiType, [size_: u32], { size_: u32 }>;
+      /**
+       * Voters size limit reached.
+       **/
+      SnapshotVotersSizeExceeded: AugmentedEvent<ApiType, [size_: u32], { size_: u32 }>;
+      /**
+       * A new set of stakers was elected.
+       **/
+      StakersElected: AugmentedEvent<ApiType, []>;
+      /**
+       * The election failed. No new era is planned.
+       **/
+      StakingElectionFailed: AugmentedEvent<ApiType, []>;
+      /**
+       * An account has unbonded this amount.
+       **/
+      Unbonded: AugmentedEvent<ApiType, [stash: AccountId32, amount: u128], { stash: AccountId32, amount: u128 }>;
+      /**
+       * A validator has set their preferences.
+       **/
+      ValidatorPrefsSet: AugmentedEvent<ApiType, [stash: AccountId32, prefs: PalletStakingValidatorPrefs], { stash: AccountId32, prefs: PalletStakingValidatorPrefs }>;
+      /**
+       * An account has called `withdraw_unbonded` and removed unbonding chunks worth `Balance`
+       * from the unlocking queue.
+       **/
+      Withdrawn: AugmentedEvent<ApiType, [stash: AccountId32, amount: u128], { stash: AccountId32, amount: u128 }>;
+      /**
+       * Generic event
+       **/
+      [key: string]: AugmentedEvent<ApiType>;
+    };
+    sudo: {
+      /**
+       * The sudo key has been updated.
+       **/
+      KeyChanged: AugmentedEvent<ApiType, [oldSudoer: Option<AccountId32>], { oldSudoer: Option<AccountId32> }>;
+      /**
+       * A sudo call just took place.
+       **/
+      Sudid: AugmentedEvent<ApiType, [sudoResult: Result<Null, SpRuntimeDispatchError>], { sudoResult: Result<Null, SpRuntimeDispatchError> }>;
+      /**
+       * A [sudo_as](Pallet::sudo_as) call just took place.
+       **/
+      SudoAsDone: AugmentedEvent<ApiType, [sudoResult: Result<Null, SpRuntimeDispatchError>], { sudoResult: Result<Null, SpRuntimeDispatchError> }>;
       /**
        * Generic event
        **/
@@ -1748,67 +1803,15 @@ declare module '@polkadot/api-base/types/events' {
        **/
       [key: string]: AugmentedEvent<ApiType>;
     };
-    xcmBridge: {
+    voterList: {
       /**
-       * Assets sent to parachain or relaychain.
+       * Moved an account from one bag to another.
        **/
-      AssetTransfered: AugmentedEvent<ApiType, [asset: XcmV1MultiAsset, origin: XcmV1MultiLocation, dest: XcmV1MultiLocation], { asset: XcmV1MultiAsset, origin: XcmV1MultiLocation, dest: XcmV1MultiLocation }>;
+      Rebagged: AugmentedEvent<ApiType, [who: AccountId32, from: u64, to: u64], { who: AccountId32, from: u64, to: u64 }>;
       /**
-       * Generic event
+       * Updated the score of some account to the given amount.
        **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    xcmpQueue: {
-      /**
-       * Bad XCM format used.
-       **/
-      BadFormat: AugmentedEvent<ApiType, [messageHash: Option<H256>], { messageHash: Option<H256> }>;
-      /**
-       * Bad XCM version used.
-       **/
-      BadVersion: AugmentedEvent<ApiType, [messageHash: Option<H256>], { messageHash: Option<H256> }>;
-      /**
-       * Some XCM failed.
-       **/
-      Fail: AugmentedEvent<ApiType, [messageHash: Option<H256>, error: XcmV2TraitsError, weight: SpWeightsWeightV2Weight], { messageHash: Option<H256>, error: XcmV2TraitsError, weight: SpWeightsWeightV2Weight }>;
-      /**
-       * An XCM exceeded the individual message weight budget.
-       **/
-      OverweightEnqueued: AugmentedEvent<ApiType, [sender: u32, sentAt: u32, index: u64, required: SpWeightsWeightV2Weight], { sender: u32, sentAt: u32, index: u64, required: SpWeightsWeightV2Weight }>;
-      /**
-       * An XCM from the overweight queue was executed with the given actual weight used.
-       **/
-      OverweightServiced: AugmentedEvent<ApiType, [index: u64, used: SpWeightsWeightV2Weight], { index: u64, used: SpWeightsWeightV2Weight }>;
-      /**
-       * Some XCM was executed ok.
-       **/
-      Success: AugmentedEvent<ApiType, [messageHash: Option<H256>, weight: SpWeightsWeightV2Weight], { messageHash: Option<H256>, weight: SpWeightsWeightV2Weight }>;
-      /**
-       * An upward message was sent to the relay chain.
-       **/
-      UpwardMessageSent: AugmentedEvent<ApiType, [messageHash: Option<H256>], { messageHash: Option<H256> }>;
-      /**
-       * An HRMP message was sent to a sibling parachain.
-       **/
-      XcmpMessageSent: AugmentedEvent<ApiType, [messageHash: Option<H256>], { messageHash: Option<H256> }>;
-      /**
-       * Generic event
-       **/
-      [key: string]: AugmentedEvent<ApiType>;
-    };
-    xTransfer: {
-      /**
-       * Assets being deposited to somewhere.
-       **/
-      Deposited: AugmentedEvent<ApiType, [what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes], { what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes }>;
-      /**
-       * Assets being forwarded to somewhere.
-       **/
-      Forwarded: AugmentedEvent<ApiType, [what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes], { what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes }>;
-      /**
-       * Assets being withdrawn from somewhere.
-       **/
-      Withdrawn: AugmentedEvent<ApiType, [what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes], { what: XcmV1MultiAsset, who: XcmV1MultiLocation, memo: Bytes }>;
+      ScoreUpdated: AugmentedEvent<ApiType, [who: AccountId32, newScore: u64], { who: AccountId32, newScore: u64 }>;
       /**
        * Generic event
        **/
