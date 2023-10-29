@@ -1,3 +1,4 @@
+import { SystemContract } from '@/def';
 import { DevPhase } from '@/service/api/DevPhase';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import { Exception } from '@/utils/Exception';
@@ -24,7 +25,7 @@ export class PinkLogger
         3: chalk.cyan('info'),
         4: chalk.magenta('debug'),
         5: chalk.gray('trace'),
-    }
+    };
     
     protected _devPhase : DevPhase;
     protected _context : RuntimeContext;
@@ -60,7 +61,18 @@ export class PinkLogger
         instance._api = await devPhase.api;
         instance._phatRegistry = await devPhase.getPhatRegistry({ clusterId });
         
-        if (!instance._phatRegistry.loggerContract) {
+        const systemContract = await devPhase.getSystemContract(clusterId);
+        const account = devPhase.suAccount;
+        const cert = devPhase.suAccountCert;
+        
+        const result = await systemContract.query['system::getDriver'](
+            account.address,
+            { cert },
+            SystemContract.PinkLogger
+        );
+        const output = result.output.toJSON();
+        
+        if (!output.ok) {
             throw new Exception(
                 'Logger not available',
                 1698446165946
@@ -172,7 +184,8 @@ export namespace PinkLogger
         MessageOutput = 'MessageOutput',
     }
     
-    export enum ExecMode {
+    export enum ExecMode
+    {
         Transaction = 'transaction',
         Estimating = 'estimating',
         Query = 'query',
