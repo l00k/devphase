@@ -339,7 +339,7 @@ export class StackSetupService
         // register worker
         const result = await this._txQueue.submit(
             this._api.tx.sudo.sudo(
-                this._api.tx.phalaRegistry.forceRegisterWorker(
+                <any> this._api.tx.phalaRegistry.forceRegisterWorker(
                     this._workerInfo.publicKey,
                     this._workerInfo.ecdhPublicKey,
                     null
@@ -371,7 +371,7 @@ export class StackSetupService
             // register gatekeeper
             const result = await this._txQueue.submit(
                 this._api.tx.sudo.sudo(
-                    this._api.tx.phalaRegistry.registerGatekeeper(
+                    <any> this._api.tx.phalaRegistry.registerGatekeeper(
                         this._workerInfo.publicKey
                     )
                 ),
@@ -439,7 +439,7 @@ export class StackSetupService
         
         const result = await this._txQueue.submit(
             this._api.tx.sudo.sudo(
-                this._api.tx.phalaPhatContracts.setPinkSystemCode(systemCode)
+                <any>this._api.tx.phalaPhatContracts.setPinkSystemCode(systemCode)
             ),
             this._suAccount
         );
@@ -457,7 +457,7 @@ export class StackSetupService
     {
         // create cluster
         const tx = this._api.tx.sudo.sudo(
-            this._api.tx.phalaPhatContracts.addCluster(
+            <any> this._api.tx.phalaPhatContracts.addCluster(
                 this._accounts.alice.address,   // owner
                 { Public: null },               // access rights
                 [ this._workerInfo.publicKey ], // workers keys
