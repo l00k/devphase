@@ -185,14 +185,17 @@ export class StackBinaryDownloader
                                         task.title = title + ` [${progress}%]`;
                                     })
                                 
-                                    data.pipe(fs.createWriteStream(filePath, { encoding: 'binary' }))
+                                    const stream = fs.createWriteStream(filePath, { encoding: 'binary' });
+                                    data.pipe(stream);
                                     
                                     data.on('end', () => {
                                         if (isBinary) {
                                             fs.chmodSync(filePath, 0o755);
                                         }
                                         
-                                        resolve(true);
+                                        stream.close(() => {
+                                            resolve(true);
+                                        });
                                     });
                                 }
                                 catch (e) {
