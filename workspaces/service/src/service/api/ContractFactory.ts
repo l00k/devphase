@@ -49,6 +49,7 @@ export class ContractFactory<T extends Contract = Contract>
         [ContractType.IndeterministicInkCode]: 'Ink',
     };
     
+    public readonly isSystemContractFactory : boolean;
     public readonly contractType : string;
     public readonly metadata : ContractMetadata.Metadata;
     public readonly clusterId : string;
@@ -93,48 +94,28 @@ export class ContractFactory<T extends Contract = Contract>
         }
         
         Object.assign(instance, {
+            isSystemContractFactory: options.systemContract,
             metadata,
             contractType: options.contractType,
             clusterId: options.clusterId,
         });
         
-        await instance._init(!options.systemContract);
+        await instance._init();
         
         return <any>instance;
     }
     
-    protected async _init (
-        loadSystemContract : boolean = false
-    )
+    protected async _init ()
     {
         await this._eventQueue.init(this._devPhase.api);
         
-        // create registry
-        const clusterInfo : any = (
-            await this.api.query.phalaPhatContracts.clusters(this.clusterId)
-        ).toJSON();
-        
-        this._phatRegistry = await PhalaSdk.OnChainRegistry.create(
-            this.api,
-            {
-                clusterId: this.clusterId,
-                pruntimeURL: this._devPhase.workerUrl,
-                workerId: this._devPhase.workerInfo.publicKey,
-                systemContractId: this._systemContract?.contractId,
-                autoConnect: true,
-                skipCheck: true, // todo ld 2023-08-10 23:45:02 - dirty hack!
-            }
-        );
-        // todo ld 2023-08-15 06:07:03 - dirty hack!
-        this._phatRegistry.clusterInfo = {
-            ...clusterInfo,
-            gasPrice: new BN(1)
-        };
-        
-        // load system contract
-        if (loadSystemContract) {
+        if (!this.isSystemContractFactory) {
             this._systemContract = await this._devPhase.getSystemContract(this.clusterId);
         }
+        
+        this._phatRegistry = await this._devPhase.getPhatRegistry({
+            clusterId: this.clusterId
+        }, this.isSystemContractFactory);
     }
     
     
@@ -194,7 +175,7 @@ export class ContractFactory<T extends Contract = Contract>
         await TxHandler.handle(
             this.api.tx.phalaPhatContracts.clusterUploadResource(
                 this.clusterId,
-                this.contractType,
+                <any> this.contractType,
                 this.metadata.source.wasm
             ),
             keyringPair

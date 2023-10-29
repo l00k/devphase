@@ -2,6 +2,7 @@ import type { Accounts, AccountsConfig, NetworkConfig } from '@/def';
 import { ContractType, StackSetupMode, StackSetupOptions, SystemContract, SystemContractFileMap } from '@/def';
 import { ContractFactory } from '@/service/api/ContractFactory';
 import { EventQueue } from '@/service/api/EventQueue';
+import { PinkLogger } from '@/service/api/PinkLogger';
 import { PRuntimeApi } from '@/service/api/PRuntimeApi';
 import { StackSetupService } from '@/service/api/StackSetupService';
 import { AccountManager } from '@/service/project/AccountManager';
@@ -16,12 +17,13 @@ import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
+import { BN } from '@polkadot/util';
 import fs from 'fs';
 import path from 'path';
 
 
 type DevPhaseProps = {
-    -readonly [K in keyof DevPhase]?: DevPhase[K]
+    -readonly [K in keyof DevPhase]? : DevPhase[K]
 }
 
 type WorkerInfo = {
@@ -34,6 +36,15 @@ export type GetFactoryOptions = {
     clusterId? : string,
     contractType? : ContractType,
     systemContract? : boolean,
+}
+
+export type GetPhatRegistryOptions = {
+    autoConnect? : boolean,
+    clusterId? : string,
+    workerId? : string,
+    pruntimeURL? : string,
+    systemContractId? : string,
+    skipCheck? : boolean,
 }
 
 
@@ -91,7 +102,7 @@ export class DevPhase
         
         const blockTime = networkConfig.blockTime
             ?? runtimeContext.config.stack.blockTime
-            ;
+        ;
         
         const instanceProps : DevPhaseProps = {
             blockTime,
@@ -146,6 +157,7 @@ export class DevPhase
     
     public async createApiPromise () : Promise<ApiPromise>
     {
+        // @ts-ignore
         const options : ApiOptions = replaceRecursive({
             provider: this._apiProvider,
             noInitWarn: true,
@@ -160,7 +172,7 @@ export class DevPhase
                 }
             }
         }, this._apiOptions);
-    
+        
         return ApiPromise.create(options);
     }
     
@@ -220,7 +232,6 @@ export class DevPhase
         
         return workerInfo;
     }
-    
     
     public async getFactory<T extends Contract> (
         artifactPathOrName : string,
@@ -295,21 +306,21 @@ export class DevPhase
                         const { output } = await systemContract.query['system::getDriver'](
                             this.suAccount.address,
                             { cert: this.suAccountCert },
-                            name
+                            driverName
                         );
                         
-                        if (output.isEmpty) {
+                        if (output?.isEmpty || !output.isOk) {
                             throw new Exception(
                                 'Driver contract is not ready',
                                 1675762897876
                             );
                         }
                         
-                        const contractId = '0x' + Buffer.from(output.unwrap()).toString('hex');
+                        const contractId = output.asOk.toHex();
                         
                         const driverContractPath = path.join(
                             this.runtimeContext.paths.currentStack,
-                            SystemContractFileMap[driverName]
+                            SystemContractFileMap[driverName] + '.contract'
                         );
                         
                         const driverContractFactory = await this.getFactory(
@@ -378,6 +389,52 @@ export class DevPhase
         }
         
         return this._systemContracts[clusterId];
+    }
+    
+    public async getPhatRegistry (
+        options : GetPhatRegistryOptions = {},
+        forSystemContract : boolean = false,
+    ) : Promise<PhalaSdk.OnChainRegistry>
+    {
+        const clusterId = options.clusterId ?? this.mainClusterId;
+        
+        const systemContract = forSystemContract
+            ? undefined
+            : await this.getSystemContract(clusterId)
+        ;
+        
+        options = {
+            clusterId,
+            pruntimeURL: this.workerUrl,
+            workerId: this.workerInfo.publicKey,
+            systemContractId: systemContract?.contractId,
+            autoConnect: true,
+            skipCheck: true, // todo ld 2023-08-10 23:45:02 - dirty hack!
+            
+            ...options,
+        };
+        
+        const phatRegistry = await PhalaSdk.OnChainRegistry.create(this.api, options);
+        
+        // todo ld 2023-08-15 06:07:03 - dirty hack!
+        const clusterInfo : any = (
+            await this.api.query.phalaPhatContracts.clusters(clusterId)
+        ).toJSON();
+        
+        phatRegistry.clusterInfo = {
+            ...clusterInfo,
+            gasPrice: new BN(1)
+        };
+        
+        return phatRegistry;
+    }
+    
+    public async getPinkLogger (
+        clusterId? : string
+    ) : Promise<PinkLogger>
+    {
+        clusterId = clusterId ?? this.mainClusterId;
+        return PinkLogger.create(this, clusterId);
     }
     
 }
