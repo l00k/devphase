@@ -99,7 +99,8 @@ export class StackSetupService
         this._txQueue = new TxQueue(this._api);
         
         if (options.mode == StackSetupMode.None) {
-            return { clusterId: null };
+            const clusterId = await this.getFirstClusterId();
+            return { clusterId };
         }
         
         this._suAccountCert = await PhalaSdk.signCertificate({ pair: this._suAccount });
@@ -322,10 +323,21 @@ export class StackSetupService
     }
     
     
+    public async getFirstClusterId () : Promise<string>
+    {
+        const onChainClusterInfos : any = (
+            await this._api.query
+                .phalaPhatContracts.clusters
+                .entries()
+        )[0];
+        
+        return onChainClusterInfos[0].toHuman()[0];
+    }
+    
     public async getWorkerInfoEx (workerUrl : string) : Promise<WorkerInfoEx>
     {
         const workerInfo = await DevPhase.getWorkerInfo(workerUrl);
-    
+        
         return {
             workerUrl,
             api: axios.create({ baseURL: workerUrl }),
@@ -339,7 +351,7 @@ export class StackSetupService
         // register worker
         const result = await this._txQueue.submit(
             this._api.tx.sudo.sudo(
-                <any> this._api.tx.phalaRegistry.forceRegisterWorker(
+                <any>this._api.tx.phalaRegistry.forceRegisterWorker(
                     this._workerInfo.publicKey,
                     this._workerInfo.ecdhPublicKey,
                     null
@@ -371,7 +383,7 @@ export class StackSetupService
             // register gatekeeper
             const result = await this._txQueue.submit(
                 this._api.tx.sudo.sudo(
-                    <any> this._api.tx.phalaRegistry.registerGatekeeper(
+                    <any>this._api.tx.phalaRegistry.registerGatekeeper(
                         this._workerInfo.publicKey
                     )
                 ),
@@ -457,7 +469,7 @@ export class StackSetupService
     {
         // create cluster
         const tx = this._api.tx.sudo.sudo(
-            <any> this._api.tx.phalaPhatContracts.addCluster(
+            <any>this._api.tx.phalaPhatContracts.addCluster(
                 this._accounts.alice.address,   // owner
                 { Public: null },               // access rights
                 [ this._workerInfo.publicKey ], // workers keys
@@ -596,11 +608,11 @@ export class StackSetupService
         // set driver
         const { gasRequired, storageDeposit } = await this._systemContract.query
             ['system::setDriver'](
-                this._suAccount.address,
-                { cert: this._suAccountCert},
-                name,
-                instance.contractId
-            );
+            this._suAccount.address,
+            { cert: this._suAccountCert },
+            name,
+            instance.contractId
+        );
         
         const options = {
             value: 0,
@@ -650,10 +662,10 @@ export class StackSetupService
         await this._waitFor(async() => {
             const result = await this._driverContracts.SidevmOperation.query
                 ['sidevmOperation::canDeploy'](
-                    this._suAccount.address,
-                    { cert: this._suAccountCert },
-                    this._loggerId
-                );
+                this._suAccount.address,
+                { cert: this._suAccountCert },
+                this._loggerId
+            );
             const output = result.output.toJSON();
             return output?.ok;
         }, this._waitTime);

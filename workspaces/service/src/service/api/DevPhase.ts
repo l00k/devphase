@@ -186,6 +186,9 @@ export class DevPhase
         }
         
         if (options.mode == StackSetupMode.None) {
+            const mainClusterId = await this.getFirstClusterId();
+            Object.assign(this, { mainClusterId });
+            
             return;
         }
         
@@ -210,6 +213,17 @@ export class DevPhase
         await this.api.disconnect();
     }
     
+    
+    public async getFirstClusterId () : Promise<string>
+    {
+        const onChainClusterInfos : any = (
+            await this.api.query
+                .phalaPhatContracts.clusters
+                .entries()
+        )[0];
+        
+        return onChainClusterInfos[0].toHuman()[0];
+    }
     
     public static async getWorkerInfo (workerUrl : string) : Promise<WorkerInfo>
     {

@@ -40,7 +40,7 @@ before(async function() {
     if (setup.custom) {
         await setup.custom(this.devPhase);
     }
-    else if (testingConfig.stackSetupMode >= StackSetupMode.None) {
+    else {
         // run default
         await this.devPhase.stackSetup({ mode: testingConfig.stackSetupMode });
     }
