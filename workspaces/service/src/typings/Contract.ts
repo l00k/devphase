@@ -1,9 +1,9 @@
 import type * as PhalaSdk from '@phala/sdk';
 import type { ApiPromise } from '@polkadot/api';
-import type { Abi, ContractPromise } from '@polkadot/api-contract';
-import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types';
+import type { Abi } from '@polkadot/api-contract';
 import type * as PACBT from '@polkadot/api-contract/base/types';
 import type * as PACT from '@polkadot/api-contract/types';
+import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types';
 import type { ApiBase } from '@polkadot/api/base';
 import type * as Submittable from '@polkadot/api/submittable/types';
 import type { DecorateMethod } from '@polkadot/api/types';
@@ -202,7 +202,6 @@ export declare class Contract
         decorateMethod : DecorateMethod<'promise'>
     );
     
-    // @ts-ignore
     public get query () : MapMessageQuery;
     public get tx () : MapMessageTx;
     
