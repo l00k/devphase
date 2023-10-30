@@ -13,13 +13,6 @@ describe('Flipper', () => {
     before(async function() {
         signer = this.devPhase.accounts.bob;
         cert = await PhalaSdk.signCertificate({ pair: signer });
-    });
-    
-    beforeEach(async function() {
-        factory = await this.devPhase.getFactory(
-            'flipper',
-            { contractType: ContractType.InkCode }
-        );
         
         await TxHandler.handle(
             this.api.tx
@@ -30,6 +23,13 @@ describe('Flipper', () => {
                 ),
             signer,
             true
+        );
+    });
+    
+    beforeEach(async function() {
+        factory = await this.devPhase.getFactory(
+            'flipper',
+            { contractType: ContractType.InkCode }
         );
         
         await factory.deploy({ asAccount: signer });
