@@ -1,0 +1,22 @@
+[package]
+name = "logging"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ink = { version = "4.2", default-features = false }
+pink = { package = "pink-extension", version = "0.4", default-features = false }
+pink_macro = { package = "pink-extension-macro", version = "0.4", default-features = false }
+scale = { package = "parity-scale-codec", version = "3", default-features = false }
+scale-info = { version = "2.9", default-features = false }
+
+[lib]
+name = "logging"
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "pink/std"
+]

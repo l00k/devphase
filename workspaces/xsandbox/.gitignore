@@ -1,5 +1,6 @@
 /.devphase
-/artifacts
+/artifacts/*
+!/artifacts/qjs
 /contracts/*/target
 /logs
 /stacks
