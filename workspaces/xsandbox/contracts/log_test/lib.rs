@@ -3,13 +3,13 @@
 use ink;
 
 #[ink::contract]
-mod logtest {
+mod log_test {
     #[ink(storage)]
-    pub struct Logtest {
+    pub struct LogTest {
         value: bool,
     }
 
-    impl Logtest {
+    impl LogTest {
         #[ink(constructor)]
         pub fn new(init_value: bool) -> Self {
             Self {

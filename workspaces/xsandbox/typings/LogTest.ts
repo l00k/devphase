@@ -40,7 +40,7 @@ export namespace InkEnv {
     }
 }
 
-export namespace Logtest {
+export namespace LogTest {
     /** */
     /** Queries */
     /** */
