@@ -20,7 +20,7 @@ mod qjs_test {
         #[ink(message)]
         pub fn run(&self) -> bool {
             let script = include_str!("./js/dist/index.js");
-            js::eval(script, &[String::new()])
+            js::eval(script, &[String::from("test")])
                 .log_err("Failed to run script")
                 .is_ok()
         }
