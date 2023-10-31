@@ -73,7 +73,11 @@ export class StackManager
             pherry: null,
         };
         
-        this._logger.log('Starting stack');
+        const version = this._context.config.stack.version;
+        this._logger.log(
+            'Starting stack',
+            chalk.cyan(version)
+        );
         
         const listr = new Listr([
             {

@@ -225,7 +225,11 @@ export class StackBinaryDownloader
         });
         
         if (execute) {
-            this._logger.log('Preparing Phala stack release');
+            const version = this._context.config.stack.version;
+            this._logger.log(
+                'Preparing Phala stack release',
+                chalk.cyan(version)
+            );
             await listr.run();
             
             return listr;
