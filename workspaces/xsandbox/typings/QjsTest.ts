@@ -49,9 +49,10 @@ export namespace QjsTest {
             (
                 origin: DPT.ContractCallOrigin,
                 options: DPT.ContractCallOptions,
+                actions: string | PT.Text,
             ): DPT.CallReturn<
                 DPT.Result$.Codec<
-                    PT.Bool,
+                    PT.Text,
                     InkPrimitives.LangError$.Codec
                 >
             >;

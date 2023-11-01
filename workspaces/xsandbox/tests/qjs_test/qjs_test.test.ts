@@ -81,8 +81,10 @@ describe('QjsTest', () => {
         });
 
         it('Should be able to run JS', async function() {
-            const response = await testContract.query.run(userKey.address, { cert: userCert });
-            expect(response.output.toJSON()).to.be.eql({ ok: true });
+            const { output } = await testContract.query.run(userKey.address, { cert: userCert }, 'foobar');
+            
+            const result = JSON.parse(output.asOk.toString());
+            expect(result).to.be.eql([ 'example_result', [ 'foobar' ] ]);
         });
     });
     
