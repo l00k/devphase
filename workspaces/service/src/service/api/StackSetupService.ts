@@ -155,17 +155,7 @@ export class StackSetupService
                         
                         const workers = await this._api.query
                             .phalaRegistry.workers(this._workerInfo.ecdhPublicKey);
-                        if (workers.isEmpty) {
-                            return false;
-                        }
-                        
-                        const endpoints : { v1: string[] } = <any> (
-                            await this._api.query
-                                .phalaRegistry.endpoints(this._workerInfo.ecdhPublicKey)
-                        ).toJSON();
-                        return endpoints
-                            && endpoints.v1.includes(this._workerInfo.workerUrl)
-                        ;
+                        return !workers.isEmpty;
                     },
                     task: () => this.registerWorker(),
                 },
@@ -234,7 +224,20 @@ export class StackSetupService
                     task: async() => {
                         this._clusterInfo = await this.createCluster();
                     }
-                }
+                },
+                {
+                    title: 'Add worker endpoint',
+                    skip: async() => {
+                        const endpoints : { v1: string[] } = <any> (
+                            await this._api.query
+                                .phalaRegistry.endpoints(this._workerInfo.ecdhPublicKey)
+                        ).toJSON();
+                        return endpoints
+                            && endpoints.v1.includes(this._workerInfo.workerUrl)
+                        ;
+                    },
+                    task: () => this.addWorkerEndpoint(),
+                },
             );
         }
         
@@ -358,7 +361,6 @@ export class StackSetupService
     
     public async registerWorker ()
     {
-        // register worker
         const result = await this._txQueue.submit(
             this._api.tx.sudo.sudo(
                 <any>this._api.tx.phalaRegistry.forceRegisterWorker(
@@ -379,8 +381,10 @@ export class StackSetupService
             },
             this._waitTime
         );
-        
-        // register endpoints
+    }
+    
+    public async addWorkerEndpoint ()
+    {
         const { status, data } = await this._workerInfo.rpc.addEndpoint({
             encodedEndpointType: [1],
             endpoint: this._workerInfo.workerUrl
