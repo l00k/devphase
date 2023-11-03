@@ -422,23 +422,26 @@ export class DevPhase
             pruntimeURL: this.workerUrl,
             workerId: this.workerInfo.publicKey,
             systemContractId: systemContract?.contractId,
-            autoConnect: true,
-            skipCheck: true, // todo ld 2023-08-10 23:45:02 - dirty hack!
+            
+            autoConnect: false,
+            skipCheck: false,
             
             ...options,
         };
         
         const phatRegistry = await PhalaSdk.OnChainRegistry.create(this.api, options);
         
-        // todo ld 2023-08-15 06:07:03 - dirty hack!
-        const clusterInfo : any = (
-            await this.api.query.phalaPhatContracts.clusters(clusterId)
-        ).toJSON();
-        
-        phatRegistry.clusterInfo = {
-            ...clusterInfo,
-            gasPrice: new BN(1)
-        };
+        // pick worker
+        const clusterWorkers = await phatRegistry.getClusterWorkers(clusterId);
+
+        if (!options.workerId) {
+            const clusterWorkersIds = clusterWorkers.map(worker => worker.pubkey);
+            const random = Math.floor(Math.random() * clusterWorkersIds.length);
+            options.workerId = clusterWorkersIds[random % clusterWorkersIds.length];
+        }
+
+        const targetWorker = clusterWorkers.find(worker => worker.pubkey == options.workerId);
+        await phatRegistry.connect(targetWorker);
         
         return phatRegistry;
     }

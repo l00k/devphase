@@ -26,29 +26,29 @@ export class PRuntimeApi
         });
     }
     
-    async getInfo ()
+    public async getInfo ()
     {
         return await this.rpc.getInfo({});
     }
     
-    async getContractInfo (contractId)
+    public async getContractInfo (contractId)
     {
         const contractIds = [ contractId ];
         const { contracts } = await this.rpc.getContractInfo({ contractIds });
         return contracts[0];
     }
     
-    async uploadSidevmCode (contract, code)
+    public async uploadSidevmCode (contract, code)
     {
         return await this.rpc.uploadSidevmCode({ contract, code });
     }
     
-    async calculateContractId (args)
+    public async calculateContractId (args)
     {
         return await this.rpc.calculateContractId(args);
     }
     
-    async addEndpoint (endpoint)
+    public async addEndpoint (endpoint)
     {
         return await this.rpc.addEndpoint(endpoint);
     }

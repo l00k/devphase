@@ -153,9 +153,19 @@ export class StackSetupService
                             return false;
                         }
                         
-                        const onChainInfo = await this._api.query
+                        const workers = await this._api.query
                             .phalaRegistry.workers(this._workerInfo.ecdhPublicKey);
-                        return !onChainInfo.isEmpty;
+                        if (workers.isEmpty) {
+                            return false;
+                        }
+                        
+                        const endpoints : { v1: string[] } = <any> (
+                            await this._api.query
+                                .phalaRegistry.endpoints(this._workerInfo.ecdhPublicKey)
+                        ).toJSON();
+                        return endpoints
+                            && endpoints.v1.includes(this._workerInfo.workerUrl)
+                        ;
                     },
                     task: () => this.registerWorker(),
                 },
@@ -366,6 +376,25 @@ export class StackSetupService
                     await this._api.query
                         .phalaRegistry.workers(this._workerInfo.ecdhPublicKey)
                 ).toJSON();
+            },
+            this._waitTime
+        );
+        
+        // register endpoints
+        const { status, data } = await this._workerInfo.rpc.addEndpoint({
+            encodedEndpointType: [1],
+            endpoint: this._workerInfo.workerUrl
+        });
+        
+        await this._waitFor(
+            async() => {
+                const endpoints : { v1: string[] } = <any> (
+                    await this._api.query
+                        .phalaRegistry.endpoints(this._workerInfo.ecdhPublicKey)
+                ).toJSON();
+                return endpoints
+                    && !!endpoints?.v1.includes(this._workerInfo.workerUrl)
+                    ;
             },
             this._waitTime
         );
