@@ -14,7 +14,7 @@ import type * as PTT from '@polkadot/types/types';
 
 export type ToAnyJson<T> = T extends Object
     ? {
-        [P in keyof T] : ToAnyJson<T[P]>
+        [P in keyof T as string] : ToAnyJson<T[P]>
     }
     : T
     ;
@@ -24,27 +24,9 @@ export interface Json<N extends any, H extends any>
     extends PT.Json
 {
     toHuman (isExtended? : boolean) : ToAnyJson<H>;
-    
     toJSON () : ToAnyJson<N>;
-    
     toPrimitive () : ToAnyJson<N>;
 }
-
-
-export interface Enum<T extends string, N extends any, H extends any, C extends PTT.Codec>
-    extends PT.Enum
-{
-    type : T;
-    inner : C;
-    value : C;
-    
-    toHuman (isExtended? : boolean) : ToAnyJson<H>;
-    
-    toJSON () : ToAnyJson<N>;
-    
-    toPrimitive () : ToAnyJson<N>;
-}
-
 
 export interface Result<O extends Object, E extends Object>
 {
@@ -67,9 +49,12 @@ export namespace Result$
     export interface Codec<O extends PTT.Codec, E extends PTT.Codec>
         extends PT.Result<O, E>
     {
-        toHuman () : Result<ReturnType<O['toHuman']>, ReturnType<E['toHuman']>>;
+        asOk : O;
+        asErr : E;
+    
+        toHuman () : Result$.Human<ReturnType<O['toHuman']>, ReturnType<E['toHuman']>>;
         
-        toJSON () : Result$.Human<ReturnType<O['toJSON']>, ReturnType<E['toJSON']>>;
+        toJSON () : Result<ReturnType<O['toJSON']>, ReturnType<E['toJSON']>>;
         
         toPrimitive () : Result<ReturnType<O['toPrimitive']>, ReturnType<E['toPrimitive']>>;
     }
@@ -97,9 +82,9 @@ export namespace Option$
     export interface Codec<T extends PTT.Codec>
         extends PT.Option<T>
     {
-        toHuman () : Option<ReturnType<T['toHuman']>>;
+        toHuman () : Option$.Human<ReturnType<T['toHuman']>>;
         
-        toJSON () : Option$.Human<ReturnType<T['toJSON']>>;
+        toJSON () : Option<ReturnType<T['toJSON']>>;
         
         toPrimitive () : Option<ReturnType<T['toPrimitive']>>;
     }

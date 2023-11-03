@@ -2,6 +2,7 @@ import { ContractMetadata } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import camelCase from 'lodash/camelCase';
 import upperFirst from 'lodash/upperFirst';
+import uniq from 'lodash/uniq';
 import * as TsMorph from 'ts-morph';
 import { StructureKind } from 'ts-morph';
 
@@ -745,27 +746,33 @@ export class StructTypeBuilder
                 isExported: true,
                 kind: TsMorph.StructureKind.Interface,
                 name: structureName,
-                properties: possibleVariants.map(variantName => {
-                    const builtTypes = valuedVariants[variantName];
-                    const type = builtTypes === undefined
-                        ? 'null'
-                        : this._buildTupleOrDirectUsage(builtTypes, typeStatementType)
-                    ;
-                    
-                    return {
-                        kind: TsMorph.StructureKind.PropertySignature,
-                        name: camelCase(variantName),
-                        hasQuestionToken: true,
-                        type,
-                    };
-                }),
+                properties: [
+                    ...possibleVariants.map(variantName => {
+                        const builtTypes = valuedVariants[variantName];
+                        const type = builtTypes === undefined
+                            ? 'null'
+                            : this._buildTupleOrDirectUsage(builtTypes, typeStatementType)
+                        ;
+                        
+                        return {
+                            kind: TsMorph.StructureKind.PropertySignature,
+                            name: camelCase(variantName),
+                            hasQuestionToken: true,
+                            type,
+                        };
+                    }),
+                    {
+                        name: '[index: string]',
+                        type: 'any'
+                    }
+                ],
             };
         }
         else if (typeStatementType == TypeStatementType.Human) {
             const typeVariantsAlt = [
                 ...possibleVariants
                     .filter(variantName => !valuedVariants[variantName])
-                    .map(variantName => `${refName}$.Enum.${variantName}`),
+                    .map(variantName => `${refName}$.Enum.${variantName} & { [index: string]: any }`),
             ];
             
             if (Object.values(valuedVariants).length > 0) {
@@ -774,6 +781,7 @@ export class StructTypeBuilder
                         .map(([ variantName, variantType ]) => {
                             return variantName + '?: ' + this._buildTupleOrDirectUsage(variantType, typeStatementType);
                         })
+                        .join(',\n')
                     + '\n}';
                 typeVariantsAlt.push(valuedVariantsStruct);
             }
@@ -786,25 +794,45 @@ export class StructTypeBuilder
             };
         }
         else if (typeStatementType == TypeStatementType.Codec) {
-            const typeVariantsAlt = possibleVariants.map(variantName => {
-                const variantValues = valuedVariants[variantName];
-                const nativeVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Native);
-                const humanVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Human);
-                const codecVariantValue = this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Codec);
-            
-                return 'DPT.Enum<'
-                    + `${refName}$.Enum.${variantName}`
-                    + ', ' + nativeVariantValue
-                    + ', ' + humanVariantValue
-                    + ', ' + codecVariantValue
-                    + '>'
-            });
+            const codecVariants : string[] = uniq(
+                possibleVariants
+                    .map(variantName => {
+                        const variantValues = valuedVariants[variantName];
+                        return this._buildTupleOrDirectUsage(variantValues, TypeStatementType.Codec);
+                    })
+            );
         
-            declaration = <TsMorph.TypeAliasDeclarationStructure>{
+            declaration = <TsMorph.InterfaceDeclarationStructure>{
                 isExported: true,
-                kind: TsMorph.StructureKind.TypeAlias,
+                kind: TsMorph.StructureKind.Interface,
                 name: structureName,
-                type: typeVariantsAlt.join('\n| ')
+                extends: [ 'PT.Enum' ],
+                properties: [
+                    { name: 'type', type: 'Enum' },
+                    { name: 'inner', type: codecVariants.join(' | ') },
+                    { name: 'value', type: codecVariants.join(' | ') }
+                ],
+                methods: [
+                    {
+                        name: 'toHuman',
+                        parameters: [
+                            {
+                                name: 'isExtended',
+                                hasQuestionToken: true,
+                                type: 'boolean'
+                            }
+                        ],
+                        returnType: 'Human',
+                    },
+                    {
+                        name: 'toJSON',
+                        returnType: name,
+                    },
+                    {
+                        name: 'toPrimitive',
+                        returnType: name,
+                    },
+                ]
             };
         }
         
