@@ -1,12 +1,12 @@
 import { QjsTest } from '@/typings/QjsTest';
-import { Contract, ContractFactory, ContractType, TxHandler, waitFor } from '@devphase/service';
+import { ContractFactory, ContractType, TxHandler, waitFor } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 
 
 describe('QjsTest', () => {
     let qjsFactory : ContractFactory;
-
+    
     let testFactory : QjsTest.Factory;
     let testContract : QjsTest.Contract;
     
@@ -38,10 +38,10 @@ describe('QjsTest', () => {
         await TxHandler.handle(
             this.api.tx
                 .phalaPhatContracts.transferToCluster(
-                    100e12,
-                    this.devPhase.mainClusterId,
-                    userKey.address
-                ),
+                100e12,
+                this.devPhase.mainClusterId,
+                userKey.address
+            ),
             userKey,
             true
         );
@@ -79,12 +79,14 @@ describe('QjsTest', () => {
         beforeEach(async function() {
             testContract = await testFactory.instantiate('default', [], { asAccount: userKey });
         });
-
+        
         it('Should be able to run JS', async function() {
-            const { output } = await testContract.query.run(userKey.address, { cert: userCert }, 'foobar');
+            const { output } = await testContract.query.run(userKey.address, { cert: userCert }, [ 'foobar' ]);
             
-            const result = JSON.parse(output.asOk.toString());
-            expect(result).to.be.eql([ 'example_result', [ 'foobar' ] ]);
+            const _enum = output.asOk.toJSON();
+            const _inner = JSON.parse(_enum.string);
+            
+            expect(_inner).to.be.eql([ 'foobar' ]);
         });
     });
     

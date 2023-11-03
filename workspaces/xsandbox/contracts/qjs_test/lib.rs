@@ -4,9 +4,9 @@ extern crate alloc;
 
 #[ink::contract(env = pink::PinkEnvironment)]
 mod qjs_test {
-    use logging::ResultExt;
-    use phat_js::{GenericValue};
     use alloc::string::String;
+    use alloc::vec::Vec;
+    use phat_js::{GenericValue};
 
     #[ink(storage)]
     pub struct QjsTest {}
@@ -18,21 +18,15 @@ mod qjs_test {
         }
 
         #[ink(message)]
-        pub fn run(&self, actions: String) -> String {
+        pub fn run(&self, args: Vec<String>) -> phat_js::Output {
             let script = include_str!("./js/dist/index.js");
-            let result = phat_js::eval(script, &[actions])
-                .log_err("Failed to run script");
+            let result = phat_js::eval(script, &args);
 
             if let Ok(ok_result) = result {
-                if let GenericValue::String(value) = ok_result {
-                    return value;
-                }
-                else {
-                    return String::from("{\"error\":\"Could not be handled\",\"code\":1698804286430}");
-                }
+                return ok_result;
             }
             else {
-                return String::from("{\"error\":\"Error while executing JS\",\"code\":1698804330957}");
+                return GenericValue::Undefined;
             }
         }
     }
