@@ -225,6 +225,18 @@ export class StackSetupService
                         this._clusterInfo = await this.createCluster();
                     }
                 },
+            );
+        }
+        
+        tasks.push(
+            {
+                title: 'Wait for cluster to be ready',
+                task: () => this.waitForClusterReady()
+            },
+        );
+        
+        if (options.mode >= StackSetupMode.Minimal) {
+            tasks.push(
                 {
                     title: 'Add worker endpoint',
                     skip: async() => {
@@ -242,10 +254,6 @@ export class StackSetupService
         }
         
         tasks.push(
-            {
-                title: 'Wait for cluster to be ready',
-                task: () => this.waitForClusterReady()
-            },
             {
                 title: 'Create system contract API',
                 task: async() => {
