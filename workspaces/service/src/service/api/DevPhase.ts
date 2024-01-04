@@ -17,7 +17,6 @@ import { khalaDev as KhalaTypes } from '@phala/typedefs';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import type { ApiOptions } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
-import { BN } from '@polkadot/util';
 import fs from 'fs';
 import path from 'path';
 
@@ -433,13 +432,13 @@ export class DevPhase
         
         // pick worker
         const clusterWorkers = await phatRegistry.getClusterWorkers(clusterId);
-
+        
         if (!options.workerId) {
             const clusterWorkersIds = clusterWorkers.map(worker => worker.pubkey);
             const random = Math.floor(Math.random() * clusterWorkersIds.length);
             options.workerId = clusterWorkersIds[random % clusterWorkersIds.length];
         }
-
+        
         const targetWorker = clusterWorkers.find(worker => worker.pubkey == options.workerId);
         await phatRegistry.connect(targetWorker);
         

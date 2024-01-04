@@ -1,17 +1,12 @@
 # devPHAse
 Development tool for Phala Phat contracts.
 
-<!--
-![](https://img.shields.io/badge/Coverage-97%25-83A603.svg?prefix=$coverage$)
--->
-
 *Tests for both latest devPHAse and Phala Blockchain release:*  
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/l00k/devphase/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/l00k/devphase/tree/master)
 
 
-## Release notes
-- In the latest release (`^0.5.0`) type generation was sightly improved - take a look on [sandbox examples](./workspaces/xsandbox/typings) . 
-Now types are reusable (you can import them). Type generation covers native types `toJSON()`, human version `toHuman()` and of course codec types. 
+## Usage examples
+Check [usage examples](workspaces/xexamples/docs/index.md)
 
 
 ## Type generation

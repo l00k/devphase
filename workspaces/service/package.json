@@ -1,6 +1,6 @@
 {
     "name": "@devphase/service",
-    "version": "0.6.7",
+    "version": "0.6.8",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -42,8 +42,7 @@
         "lodash": "^4.17.21",
         "mocha": "^10.2.0",
         "prompts": "^2.4.2",
-        "ts-morph": "^16.0.0",
-        "tsconfig-paths": "^4.2.0"
+        "ts-morph": "^16.0.0"
     },
     "peerDependencies": {
         "@polkadot/api": "^9.8.1",
@@ -64,6 +63,7 @@
         "ts-mocha": "^10.0.0",
         "ts-node": "^10.9.1",
         "ts-patch": "^3.0.2",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.1.6",
         "typescript-transform-paths": "^3.4.6"
     },

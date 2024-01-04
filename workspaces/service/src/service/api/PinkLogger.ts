@@ -113,11 +113,14 @@ export class PinkLogger
     
     
     public async getNewLogs (
-        contract? : string
+        contract? : string,
+        pointer? : number
     ) : Promise<PinkLogger.LogRecord[]>
     {
         const pointerKey = contract ?? '$';
-        const pointer = this._pointers[pointerKey] ?? this._initialPointer;
+        if (!pointer) {
+            pointer = this._pointers[pointerKey] ?? this._initialPointer;
+        }
         
         const { records, next } = await this._contract.getLog(
             contract,

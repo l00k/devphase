@@ -24,7 +24,7 @@ export class ContractDeployCommand
             default: ContractType.InkCode,
             options: Object.values(ContractType)
         }),
-        constructor: Flags.string({
+        ctor: Flags.string({
             summary: 'Contract constructor to call (name)',
             char: 'o',
             required: true,
@@ -62,7 +62,7 @@ export class ContractDeployCommand
         
         const instance = await contractManager.deploy(
             this.flags.contract,
-            this.flags.constructor,
+            this.flags.ctor,
             this.argsRaw,
             {
                 contractType: <any>this.flags.type,

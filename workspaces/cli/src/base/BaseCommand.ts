@@ -78,10 +78,10 @@ export abstract class BaseCommand<T extends typeof Command>
         ;
         
         let verbosity = VerbosityLevel.Default;
-        if (this.flags.verbose) {
+        if (this.flags?.verbose) {
             verbosity = VerbosityLevel.Verbose;
         }
-        else if (this.flags.silent) {
+        else if (this.flags?.silent) {
             verbosity = VerbosityLevel.Silent;
         }
         
@@ -104,7 +104,7 @@ export abstract class BaseCommand<T extends typeof Command>
     
     public async catch (error)
     {
-        if (this.flags.verbose) {
+        if (this.flags?.verbose) {
             console.trace(error);
         }
     

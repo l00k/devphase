@@ -314,9 +314,19 @@ export class RuntimeContext
                     nodeApiOptions: {},
                     workerUrl: 'http://localhost:{{stack.pruntime.port}}',
                 },
+                phala: {
+                    nodeUrl: 'wss://api.phala.network/ws',
+                    workerUrl: 'https://phat-cluster-ca.phala.network/pruntime/0x4e4e139e',
+                    defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000001',
+                },
                 poc5: {
                     nodeUrl: 'wss://poc5.phala.network/ws',
                     workerUrl: 'https://poc5.phala.network/tee-api-1',
+                    defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000001',
+                },
+                poc6: {
+                    nodeUrl: 'wss://poc6.phala.network/ws',
+                    workerUrl: 'https://poc6.phala.network/pruntime/0x923462b4',
                     defaultClusterId: '0x0000000000000000000000000000000000000000000000000000000000000001',
                 }
             },
