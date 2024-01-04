@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "commonjs",
+        "lib": ["esnext"],
+        "moduleResolution": "node",
+        
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+
+        "strict": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+        
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [ "./*", ]
+        }
+    },
+    "include": [
+        "./**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

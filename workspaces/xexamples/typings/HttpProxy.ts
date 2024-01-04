@@ -2,6 +2,7 @@ import type * as PhalaSdk from "@phala/sdk";
 import type * as DevPhase from "@devphase/service";
 import type { ContractCallResult, ContractQuery } from "@polkadot/api-contract/base/types";
 import type { ContractCallOutcome, ContractOptions } from "@polkadot/api-contract/types";
+import type { ContractExecResult } from "@polkadot/types/interfaces/contracts";
 import type * as DPT from "@devphase/service/etc/typings";
 import type * as PT from "@polkadot/types";
 import type * as PTI from "@polkadot/types/interfaces";
@@ -15,6 +16,7 @@ import type * as PTT from "@polkadot/types/types";
 export namespace InkPrimitives {
     export interface LangError {
         couldNotReadInput?: null;
+        [index: string]: any;
     }
 
     export namespace LangError$ {
@@ -22,8 +24,16 @@ export namespace InkPrimitives {
             CouldNotReadInput = "CouldNotReadInput"
         }
 
-        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput;
-        export type Codec = DPT.Enum<InkPrimitives.LangError$.Enum.CouldNotReadInput, never, never, PTT.Codec>;
+        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput & { [index: string]: any };
+
+        export interface Codec extends PT.Enum {
+            type: Enum;
+            inner: PTT.Codec;
+            value: PTT.Codec;
+            toHuman(isExtended?: boolean): Human;
+            toJSON(): LangError;
+            toPrimitive(): LangError;
+        }
     }
 }
 
@@ -86,8 +96,8 @@ export namespace HttpProxy {
     namespace ContractQuery {
         export interface Request extends DPT.ContractQuery {
             (
-                certificateData: PhalaSdk.CertificateData,
-                options: ContractOptions,
+                origin: DPT.ContractCallOrigin,
+                options: DPT.ContractCallOptions,
                 request: PinkExtension.ChainExtension.HttpRequest.HttpRequest | PinkExtension.ChainExtension.HttpRequest.HttpRequest$.Codec,
             ): DPT.CallReturn<
                 DPT.Result$.Codec<

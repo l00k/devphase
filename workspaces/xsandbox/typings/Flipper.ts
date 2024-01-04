@@ -16,6 +16,7 @@ import type * as PTT from "@polkadot/types/types";
 export namespace InkPrimitives {
     export interface LangError {
         couldNotReadInput?: null;
+        [index: string]: any;
     }
 
     export namespace LangError$ {
@@ -23,8 +24,16 @@ export namespace InkPrimitives {
             CouldNotReadInput = "CouldNotReadInput"
         }
 
-        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput;
-        export type Codec = DPT.Enum<InkPrimitives.LangError$.Enum.CouldNotReadInput, never, never, PTT.Codec>;
+        export type Human = InkPrimitives.LangError$.Enum.CouldNotReadInput & { [index: string]: any };
+
+        export interface Codec extends PT.Enum {
+            type: Enum;
+            inner: PTT.Codec;
+            value: PTT.Codec;
+            toHuman(isExtended?: boolean): Human;
+            toJSON(): LangError;
+            toPrimitive(): LangError;
+        }
     }
 }
 

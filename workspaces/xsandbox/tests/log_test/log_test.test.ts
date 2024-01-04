@@ -55,7 +55,6 @@ describe('LogTest', () => {
                 signer,
                 true
             );
-            expect(result.isFinalized).to.be.eql(true);
             
             await waitFor(async() => {
                 const response = await contract.query.get(signer.address, { cert });

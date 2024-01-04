@@ -1,0 +1,8 @@
+/.devphase
+/artifacts/*
+/contracts/*/target
+/logs
+/stacks
+
+/accounts.json
+/contracts.json
