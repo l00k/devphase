@@ -1,6 +1,5 @@
 import { getClassesFromChain } from '@/utils/getClassesFromChain';
-import { Logger } from '@/utils/Logger';
-import { RuntimeContext, VerbosityLevel } from '@devphase/service';
+import { Logger, RuntimeContext, VerbosityLevel } from '@devphase/service';
 import { Args, Command, Config, Flags, Interfaces, ux } from '@oclif/core';
 import { FlagProps } from '@oclif/core/lib/interfaces/parser';
 
@@ -79,6 +78,7 @@ export abstract class BaseCommand<T extends typeof Command>
         
         let verbosity = VerbosityLevel.Default;
         if (this.flags?.verbose) {
+            console.log('Running in verbose mode');
             verbosity = VerbosityLevel.Verbose;
         }
         else if (this.flags?.silent) {
@@ -107,7 +107,7 @@ export abstract class BaseCommand<T extends typeof Command>
         if (this.flags?.verbose) {
             console.trace(error);
         }
-    
+        
         throw error;
     }
     

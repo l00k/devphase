@@ -1,5 +1,5 @@
 /standalone/*
-/workspaces/phat-bricks
+/workspaces/xplayground
 
 **/*.rs.bk
 Cargo.lock

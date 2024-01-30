@@ -74,7 +74,7 @@ export class Logger
     public debug (...args : any[])
     {
         return this._log(
-            VerbosityLevel.Default,
+            VerbosityLevel.Verbose,
             'gray',
             ...args
         );
@@ -83,7 +83,7 @@ export class Logger
     public debugDir (object : any, options? : any)
     {
         return this._log(
-            VerbosityLevel.Default,
+            VerbosityLevel.Verbose,
             'gray',
             object,
             options

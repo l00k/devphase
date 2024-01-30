@@ -99,6 +99,9 @@ export class DevPhase
         const api = await instance.createApiPromise();
         await instance._eventQueue.init(api);
         
+        Object.assign(instance, { api });
+        
+        // define props
         const blockTime = networkConfig.blockTime
             ?? runtimeContext.config.stack.blockTime
         ;
@@ -108,11 +111,16 @@ export class DevPhase
             networkConfig,
             runtimeContext,
             workerUrl: networkConfig.workerUrl,
-            api,
             ...options,
         };
         if (networkConfig.defaultClusterId) {
             instanceProps.mainClusterId = networkConfig.defaultClusterId;
+        }
+        else {
+            const mainClusterId = await instance.getFirstClusterId();
+            if (mainClusterId) {
+                instanceProps.mainClusterId = mainClusterId;
+            }
         }
         
         instanceProps.workerInfo = await DevPhase.getWorkerInfo(networkConfig.workerUrl);
@@ -252,9 +260,9 @@ export class DevPhase
     ) : Promise<ContractFactory<T>>
     {
         options = {
-            clusterId: this.mainClusterId,
             systemContract: false,
-            ...options
+            ...options,
+            clusterId: options.clusterId ?? this.mainClusterId,
         };
         
         // get artifact path

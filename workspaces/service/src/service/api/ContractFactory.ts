@@ -12,7 +12,6 @@ import { ApiPromise } from '@polkadot/api';
 import { Abi } from '@polkadot/api-contract';
 import { KeyringPair } from '@polkadot/keyring/types';
 import type { ContractInstantiateResult } from '@polkadot/types/interfaces/contracts';
-import { BN } from '@polkadot/util/bn';
 
 
 export type CreateOptions = {
@@ -22,6 +21,7 @@ export type CreateOptions = {
 }
 
 export type DeployOptions = {
+    autoDeposit? : boolean,
     forceUpload? : boolean,
     asAccount? : AccountKey | KeyringPair,
     waitReady? : boolean,
@@ -127,11 +127,15 @@ export class ContractFactory<T extends Contract = Contract>
     ) : Promise<void>
     {
         options = {
+            autoDeposit: false,
             forceUpload: false,
             asAccount: 'alice',
             waitReady: true,
             ...options
         };
+        
+        this._logger.debug('Deploying contract');
+        this._logger.debug(options);
         
         const keyringPair : KeyringPair = <any>(
             typeof options.asAccount === 'string'
@@ -149,6 +153,60 @@ export class ContractFactory<T extends Contract = Contract>
             );
         }
         
+        const checkCodeReady : () => Promise<boolean> = async() => {
+            const { output } = await this._systemContract.query['system::codeExists'](
+                keyringPair.address,
+                { cert },
+                this.metadata.source.hash,
+                codeType
+            );
+            
+            const codeExists = output.toJSON();
+            return !!codeExists?.ok;
+        }
+        
+        // verify funds in cluster
+        const { output: totalBalanceOutput } = await this._systemContract.query['system::totalBalanceOf'](
+            keyringPair.address,
+            { cert },
+            keyringPair.address
+        );
+        const { output: freeBalanceOutput } = await this._systemContract.query['system::freeBalanceOf'](
+            keyringPair.address,
+            { cert },
+            keyringPair.address
+        );
+        
+        const totalBalance = totalBalanceOutput.asOk.toPrimitive() / 1e12;
+        const freeBalance = freeBalanceOutput.asOk.toPrimitive() / 1e12;
+    
+        this._logger.debug('Account funds in cluster');
+        this._logger.debug({
+            totalBalance,
+            freeBalance
+        });
+        
+        if (freeBalance < 10) {
+            this._logger.debug('Low amount of funds in cluster');
+        
+            if (options.autoDeposit) {
+                const delta = 20 - freeBalance;
+                const deltaRaw = (delta * 1e12).toFixed(0);
+                
+                this._logger.debug('Auto deposit funds to cluster');
+                this._logger.debug(delta);
+                
+                const result = await TxHandler.handle(
+                    this.api.tx.phalaPhatContracts.transferToCluster(
+                        deltaRaw,
+                        this.clusterId,
+                        keyringPair.address
+                    ),
+                    keyringPair
+                );
+            }
+        }
+        
         // verify is it required to upload resource
         if (!options.forceUpload) {
             if (!this._systemContract) {
@@ -158,40 +216,39 @@ export class ContractFactory<T extends Contract = Contract>
                 );
             }
             
-            const { output } = await this._systemContract.query['system::codeExists'](
-                keyringPair.address,
-                { cert },
-                this.metadata.source.hash,
-                codeType
-            );
-            
-            const codeExists = output.toJSON();
-            if (codeExists?.ok) {
+            const codeReady = await checkCodeReady();
+            if (codeReady) {
+                this._logger.debug('Code already exist - skip uploading');
                 // already uploaded
                 return;
             }
         }
+        else {
+            this._logger.debug('Forced code upload');
+        }
         
-        await TxHandler.handle(
+        this._logger.debug(
+            'Uploading contract', this.metadata.contract.name,
+            `(type: ${this.contractType})`,
+            'resource to cluster', this.clusterId
+        );
+        
+        const result = await TxHandler.handle(
             this.api.tx.phalaPhatContracts.clusterUploadResource(
                 this.clusterId,
-                <any> this.contractType,
+                <any>this.contractType,
                 this.metadata.source.wasm
             ),
             keyringPair
         );
         
-        await this._waitFor(async() => {
-            const { output } = await this._systemContract.query['system::codeExists'](
-                keyringPair.address,
-                { cert },
-                this.metadata.source.hash,
-                codeType
-            );
-            
-            const codeExists = output.toJSON();
-            return codeExists?.ok;
-        }, this._waitTime);
+        this._logger.debug(
+            result.status.toHuman()
+        );
+        
+        this._logger.debug('Waiting for contract code resource to appear onchain');
+        
+        await this._waitFor(() => checkCodeReady(), this._waitTime);
     }
     
     
@@ -232,7 +289,7 @@ export class ContractFactory<T extends Contract = Contract>
                     ? (estimation.storageDeposit.asCharge.toNumber() ?? 0)
                     : 0,
                 ...options,
-            }
+            };
         }
         else {
             options = {
@@ -241,6 +298,9 @@ export class ContractFactory<T extends Contract = Contract>
                 ...options,
             };
         }
+        
+        this._logger.debug('Instantiate contract');
+        this._logger.debug(options);
         
         const abi = new Abi(this.metadata);
         const callData = abi.findConstructor(constructor).toU8a(params);
@@ -280,7 +340,9 @@ export class ContractFactory<T extends Contract = Contract>
         
         const contractId = instantiateEvent.event.data[0].toString();
         
-        // wait for instantation
+        // wait for instantiation
+        this._logger.debug('Waiting for instantiation');
+        
         try {
             await this._waitFor(
                 async() => {
@@ -301,6 +363,8 @@ export class ContractFactory<T extends Contract = Contract>
         
         // transfer funds to cluster if specified
         if (options.transferToCluster) {
+            this._logger.debug('Transfering funds to cluster');
+            
             const result = await TxHandler.handle(
                 this.api.tx.phalaPhatContracts.transferToCluster(
                     options.transferToCluster,
@@ -313,6 +377,8 @@ export class ContractFactory<T extends Contract = Contract>
         
         // adjust stake if specified
         if (options.adjustStake) {
+            this._logger.debug('Adjusting contract stake');
+        
             const result = await TxHandler.handle(
                 this.api.tx.phalaPhatTokenomic.adjustStake(
                     contractId,
@@ -335,8 +401,8 @@ export class ContractFactory<T extends Contract = Contract>
         options = {
             asAccount: 'alice',
             ...options
-        }
-    
+        };
+        
         const systemContract = await this._devPhase.getSystemContract(this.clusterId);
         
         const abi = new Abi(this.metadata);
