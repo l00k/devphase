@@ -227,9 +227,9 @@ export class DevPhase
             await this.api.query
                 .phalaPhatContracts.clusters
                 .entries()
-        )[0];
+        )?.[0];
         
-        return onChainClusterInfos[0].toHuman()[0];
+        return onChainClusterInfos?.[0].toHuman()?.[0];
     }
     
     public static async getWorkerInfo (workerUrl : string) : Promise<WorkerInfo>
