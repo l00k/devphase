@@ -365,7 +365,7 @@ export class ContractFactory<T extends Contract = Contract>
         if (options.transferToCluster) {
             this._logger.debug('Transfering funds to cluster');
             
-            const result = await TxHandler.handle(
+            await TxHandler.handle(
                 this.api.tx.phalaPhatContracts.transferToCluster(
                     options.transferToCluster,
                     this.clusterId,
@@ -379,7 +379,7 @@ export class ContractFactory<T extends Contract = Contract>
         if (options.adjustStake) {
             this._logger.debug('Adjusting contract stake');
         
-            const result = await TxHandler.handle(
+            await TxHandler.handle(
                 this.api.tx.phalaPhatTokenomic.adjustStake(
                     contractId,
                     options.adjustStake
