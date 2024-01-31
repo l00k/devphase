@@ -8,10 +8,10 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/l00k/devphase.git"
+        "url": "git+https://github.com/l00k/devphase.git"
     },
     "bin": {
-        "devphase": "./dist/index.js"
+        "devphase": "dist/index.js"
     },
     "files": [
         "dist"
