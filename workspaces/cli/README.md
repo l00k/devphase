@@ -1,18 +1,30 @@
 # devPHAse
-Development tool for Phala Phat contracts.
+Development tool for Phala Phat contracts.  
 
 *Tests for both latest devPHAse and Phala Blockchain release:*  
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/l00k/devphase/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/l00k/devphase/tree/master)
 
-
+<!--
 ## Usage examples
 Check [usage examples](workspaces/xexamples/docs/index.md)
+-->
 
+## Features
 
-## Type generation
-devPHAse generates type bindings for all types used in contract, so all types and props should be suggested by your IDE.  
-If any error / edge case occur please create issue.
+Tool is heavily inspired on Hardhat (EVM devs should be familiar with it).  
+I tried to provide as much similar features as possible.
 
+- **Up to date Phala binaries**  
+By default on each start devPHAse will pull latest Phala binaries (the latest release from official Phala's repo).
+
+- **E2E testing**  
+Using internally Phala stack (prepared on start) you can test e2e your contracts with minimal cost.
+
+- **Scripting**  
+Using all devPHAse API you can prepare scripts for common actions like: contract deployment, management, monitoring etc. 
+
+- **Type generation**  
+devPHAse generates type bindings for all structures used in contract, so autosuggestions should be provided by your IDE.  
 
 ## Requirements
 
@@ -48,15 +60,18 @@ npm install -g typescript ts-node # required peer dependencies
 npx @devphase/cli [command]
 ```
 
-## Sandbox
+## Sandbox & Examples
 In directory `workspaces/xsandbox` there is a template of devphase project.  
 You can try building and testing contracts.  
-More info [here](./workspaces/xsandbox)
+[workspaces/xsandbox](./workspaces/xsandbox)
+
+Check also `workspaces/xexamples` for more examples.  
+[workspaces/xexamples](./workspaces/xexamples)
 
 ## Commands
 
 I strongly recommned using scripts instead of CLI commands.  
-[CLI commands index](./docs/cli-commands)
+[CLI commands index](./docs/cli-commands.md)
 
 
 ## Configuration
