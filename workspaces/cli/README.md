@@ -11,7 +11,7 @@ Check [usage examples](workspaces/xexamples/docs/index.md)
 
 ## Features
 
-Tool is heavily inspired on Hardhat (EVM devs should be familiar with it).  
+Tool is heavily inspired by Hardhat (EVM devs should be familiar with it).  
 I tried to provide as much similar features as possible.
 
 - **Up to date Phala binaries**  

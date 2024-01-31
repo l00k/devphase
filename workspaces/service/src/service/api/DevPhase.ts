@@ -279,7 +279,7 @@ export class DevPhase
         
         if (!fs.existsSync(artifactPath)) {
             throw new Exception(
-                'Contract artifact file not found',
+                `Contract artifact file not found "${artifactPath}"`,
                 1665238985042
             );
         }
