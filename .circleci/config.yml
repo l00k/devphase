@@ -12,7 +12,7 @@ jobs:
             - node/install-packages:
                 pkg-manager: yarn
             - restore_cache:
-                key: &deps1-cache deps1-{{ .Branch }}-7
+                key: &deps1-cache deps1-{{ .Branch }}-8
             - run:
                 name: Install cargo contract
                 command: |
