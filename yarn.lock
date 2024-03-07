@@ -241,10 +241,10 @@
   resolved "https://registry.yarnpkg.com/@phala/ink-validator/-/ink-validator-0.1.0.tgz#c8e550bc366c60567e935c88eafedbe8c6af313a"
   integrity sha512-COEsHwHdPFnJQQFgoBFj/HPpATBz19cYb3QHd8YRfvJChCKGjyKeuepjX+O7+BHPe4wGIaaIPQoQovhvwIAltg==
 
-"@phala/sdk@^0.5.4-nightly-20231101-1":
-  version "0.5.4-nightly-20231101-1"
-  resolved "https://registry.yarnpkg.com/@phala/sdk/-/sdk-0.5.4-nightly-20231101-1.tgz#a2580e53a4563978fea552f7efb2cdf491b516d3"
-  integrity sha512-PG8IW//MzBQ2xyByuz5yucpTDkzya01SzEybUQRTNOEJPAILhzcrxwBpFuwQlBUh1AffGnTmb8mdEp3J9HlCMQ==
+"@phala/sdk@^0.5.10":
+  version "0.5.10"
+  resolved "https://registry.yarnpkg.com/@phala/sdk/-/sdk-0.5.10.tgz#dd4b143778d2f3f32d3d7231522ec9a963189393"
+  integrity sha512-pXZgDNBY9Tx5zwjE5sDrNIHuBeAcEw4jvQQj5G0MQY7avZ3QYsp5azATvEd2Kl84rH/dh69VzgZCWjOYJl6Ctg==
   dependencies:
     "@polkadot/api" "^10.9.1"
     "@polkadot/api-contract" "^10.9.1"
@@ -3382,6 +3382,11 @@ typescript@^5.3.3:
   version "5.3.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.3.3.tgz#b3ce6ba258e72e6305ba66f5c9b452aaee3ffe37"
   integrity sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==
+
+typescript@^5.4.2:
+  version "5.4.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.2.tgz#0ae9cebcfae970718474fe0da2c090cad6577372"
+  integrity sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ==
 
 universalify@^2.0.0:
   version "2.0.0"

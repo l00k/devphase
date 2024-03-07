@@ -118,7 +118,7 @@ export class PinkLogger
     ) : Promise<PinkLogger.LogRecord[]>
     {
         const pointerKey = contract ?? '$';
-        if (!pointer) {
+        if (arguments.length <= 1) {
             pointer = this._pointers[pointerKey] ?? this._initialPointer;
         }
         

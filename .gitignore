@@ -1,5 +1,5 @@
 /standalone/*
-/workspaces/xplayground
+/workspaces/xplayground*
 
 **/*.rs.bk
 Cargo.lock

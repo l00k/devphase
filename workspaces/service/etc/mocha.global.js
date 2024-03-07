@@ -47,7 +47,6 @@ before(async function() {
     
     try {
         this.pinkLogger = await this.devPhase.getPinkLogger();
-        await this.pinkLogger.initPointer();
     }
     catch (e) {
         // logger not available? ignore

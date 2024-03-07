@@ -60,6 +60,12 @@ npm install -g typescript ts-node # required peer dependencies
 npx @devphase/cli [command]
 ```
 
+## Usage
+Detailed usage described here  
+[USAGE](./docs/usage.md)  
+Must read :)  
+
+
 ## Sandbox & Examples
 In directory `workspaces/xsandbox` there is a template of devphase project.  
 You can try building and testing contracts.  

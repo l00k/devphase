@@ -1,6 +1,6 @@
 {
     "name": "@devphase/service",
-    "version": "0.6.12",
+    "version": "0.6.13",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -26,7 +26,7 @@
     },
     "dependencies": {
         "@phala/ink-validator": "^0.1.0",
-        "@phala/sdk": "^0.5.4-nightly-20231101-1",
+        "@phala/sdk": "^0.5.10",
         "@phala/typedefs": "^0.2.33",
         "@types/chai": "^4.3.5",
         "@types/mocha": "^10.0.1",

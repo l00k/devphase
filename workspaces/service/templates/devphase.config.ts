@@ -3,7 +3,7 @@ import type { ProjectConfigOptions } from '@devphase/service';
 const config : ProjectConfigOptions = {
     stack: {
         version: 'latest', // version which you want to pull from official repository (tag name) or "latest" one
-        blockTime: 6000, // default block time for running local stack
+        blockTime: 250, // default block time for running local stack
     },
     testing: {
         mocha: {}, // custom mocha configuration

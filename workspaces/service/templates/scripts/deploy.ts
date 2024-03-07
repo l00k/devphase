@@ -65,6 +65,6 @@ export default async function(
             console.log(result);
             
             return result.Ok;
-        }, devPhase.blockTime);
+        }, 10 * devPhase.blockTime);
     }
 }

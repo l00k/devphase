@@ -1,5 +1,5 @@
 import { BaseCommand } from '@/base/BaseCommand';
-import { DevPhase, RunMode, RuntimeContext } from '@devphase/service';
+import { DevPhase, PinkLogger, RunMode, RuntimeContext, StackSetupMode } from '@devphase/service';
 import { Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
 import path from 'path';
@@ -37,7 +37,19 @@ export class ScriptCommand
             { network: this.flags.network }
         );
         
+        // prepare
+        await devPhase.stackSetup({ mode: StackSetupMode.None });
         
+        let pinkLogger : PinkLogger;
+        
+        try {
+            pinkLogger = await devPhase.getPinkLogger();
+        }
+        catch (e) {
+            // logger not available? ignore
+        }
+        
+        // run scripts
         let result : Record<string, any> = {};
         
         for (const scriptRelPath of this.argsRaw) {
@@ -53,6 +65,11 @@ export class ScriptCommand
                 this.runtimeContext,
                 devPhase
             );
+        }
+        
+        // teardown
+        if (pinkLogger) {
+            await pinkLogger.saveLogs();
         }
         
         await devPhase.cleanup();

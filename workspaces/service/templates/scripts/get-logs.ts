@@ -7,11 +7,12 @@ export default async function(
     const pinkLogger = await devPhase.getPinkLogger();
     
     const contractIds = [
-        '0x0be1422cabcab1e36c7b9be02bf7ebea8dc43bb8c6905b86c9e3977b50f02c78',
+        '0x4de5d5ea9bf4d0a432bab890e0b401ea789abaeb4870edafd2f08e026acb4bf9',
     ];
     
     for (const contractId of contractIds) {
         const logs = await pinkLogger.getNewLogs(contractId, 0);
+        console.log(contractId);
         console.dir(logs, { depth: 10 });
     }
 }
