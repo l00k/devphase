@@ -1,4 +1,24 @@
+# Usage
+
+<!-- toc -->
+
+- [1. Install devPHAse and requried libs](#1-install-devphase-and-requried-libs)
+- [2. Init project](#2-init-project)
+- [3. Prepare environment](#3-prepare-environment)
+- [4. Compile contract](#4-compile-contract)
+- [5. Run tests](#5-run-tests)
+- [6. Long-running local environment](#6-long-running-local-environment)
+- [7. Configure network](#7-configure-network)
+- [8. Run tests using long-running stack](#8-run-tests-using-long-running-stack)
+- [9. Running scripts](#9-running-scripts)
+  * [9.1. Deploy contract](#91-deploy-contract)
+  * [9.2. Get logs](#92-get-logs)
+- [10. Run devPHAse on testnet / mainnet](#10-run-devphase-on-testnet--mainnet)
+
+<!-- tocstop -->
+
 ### 1. Install devPHAse and requried libs
+
 ```bash
 yarn init
 yarn add -D typescript ts-node
@@ -373,4 +393,4 @@ $ (...)/node_modules/.bin/devphase script scripts/get-logs.ts
 
 ### 10. Run devPHAse on testnet / mainnet
 You can specify to run commands on any network - including testnet or mainnet.  
-Check commands help for further details.  
+Check commands help for further details.
