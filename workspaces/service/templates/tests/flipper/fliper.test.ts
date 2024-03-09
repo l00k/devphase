@@ -11,9 +11,13 @@ describe('Flipper', () => {
     let cert : PhalaSdk.CertificateData;
     
     before(async function() {
+        // pick any account with high enough PHA balance
         signer = this.devPhase.accounts.bob;
+        
+        // sign cert for picked user
         cert = await PhalaSdk.signCertificate({ pair: signer });
         
+        // deposit funds to cluster
         await TxHandler.handle(
             this.api.tx
                 .phalaPhatContracts.transferToCluster(
@@ -24,39 +28,59 @@ describe('Flipper', () => {
             signer,
             true
         );
+        
+        const systemContract = await this.devPhase.getSystemContract();
+        
+        // wait for cluster balance update
+        await waitFor(async() => {
+            const { output: freeBalanceOutput } = await systemContract.query['system::freeBalanceOf'](
+                signer.address,
+                { cert },
+                signer.address
+            );
+            const freeBalance = freeBalanceOutput.asOk.toPrimitive() / 1e12;
+            return freeBalance >= 1;
+        }, 10 * this.devPhase.blockTime);
     });
     
     beforeEach(async function() {
+        // create contract factory
         factory = await this.devPhase.getFactory(
             'flipper',
             { contractType: ContractType.InkCode }
         );
         
+        // deploy using picked account
         await factory.deploy({ asAccount: signer });
     });
     
     describe('default constructor', () => {
         beforeEach(async function() {
+            // each time instantiate new instance
             contract = await factory.instantiate('default', [], { asAccount: signer });
         });
         
         it('Should be created with proper intial value', async function() {
+            // query current value
             const response = await contract.query.get(signer.address, { cert });
             expect(response.output.toJSON()).to.be.eql({ ok: false });
         });
         
         it('Should be able to flip value', async function() {
+            // prepare flip transaction
             const tx = contract.tx.flip({
                 gasLimit: 10e12
             });
             
+            // submit and wait for finalization
             const result = await TxHandler.handle(
                 tx,
                 signer,
                 true
             );
-            expect(result.isFinalized).to.be.eql(true);
             
+            // wait for actual state change
+            // it is delayed because worker need to process state change submitted onchain
             await waitFor(async() => {
                 const response = await contract.query.get(signer.address, { cert });
                 const output = response.output.toJSON();

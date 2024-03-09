@@ -143,6 +143,10 @@ export class StackManager
         force : boolean = false
     )
     {
+        if (this._killFlag) {
+            return;
+        }
+    
         this._killFlag = true;
         
         if (!this._processes) {
@@ -374,6 +378,15 @@ export class StackManager
                             )
                         );
                     }
+                });
+                
+                child.on('exit', () => {
+                    this._logger.error(
+                        componentName,
+                        'exited'
+                    );
+                    
+                    this.stopStack(true);
                 });
             });
         }, componentOptions.timeout);
