@@ -20,6 +20,12 @@ export class ContractCreateCommand
             char: 't',
             options: [
                 'flipper',
+                'http_client',
+                'phat_hello',
+                'phat_storage',
+                'signing',
+                'use_cache',
+                'vrf'
             ],
             default: 'flipper',
         })
