@@ -1,19 +1,19 @@
-import { PhatHello } from '@/typings/PhatHello';
+import { {{ContractName}} } from '@/typings/{{ContractName}}';
 import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { stringToHex } from '@polkadot/util';
 
 
-describe('PhatHello', () => {
-    let factory : PhatHello.Factory;
-    let contract : PhatHello.Contract;
+describe('{{ContractName}}', () => {
+    let factory : {{ContractName}}.Factory;
+    let contract : {{ContractName}}.Contract;
     let signer : KeyringPair;
     let cert : PhalaSdk.CertificateData;
 
     before(async function() {
         factory = await this.devPhase.getFactory(
-            'phat_hello',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 

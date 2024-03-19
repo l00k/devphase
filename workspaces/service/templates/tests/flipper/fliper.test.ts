@@ -1,12 +1,12 @@
-import { Flipper } from '@/typings/Flipper';
+import { {{ContractName}} } from '@/typings/{{ContractName}}';
 import { ContractType, TxHandler, waitFor } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 
 
-describe('Flipper', () => {
-    let factory : Flipper.Factory;
-    let contract : Flipper.Contract;
+describe('{{ContractName}}', () => {
+    let factory : {{ContractName}}.Factory;
+    let contract : {{ContractName}}.Contract;
     let signer : KeyringPair;
     let cert : PhalaSdk.CertificateData;
     
@@ -46,7 +46,7 @@ describe('Flipper', () => {
     beforeEach(async function() {
         // create contract factory
         factory = await this.devPhase.getFactory(
-            'flipper',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
         

@@ -2,27 +2,24 @@ import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { stringToHex } from '@polkadot/util';
-import { HttpClient } from "@/typings/HttpClient";
+import { {{ContractName}} } from "@/typings/{{ContractName}}";
 
-describe("HttpClient test", () => {
-    let factory: HttpClient.Factory;
-    let contract: HttpClient.Contract;
+describe('{{ContractName}}', () => {
+    let factory: {{ContractName}}.Factory;
+    let contract: {{ContractName}}.Contract;
     let signer: KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
 
     before(async function setup(): Promise<void> {
         factory = await this.devPhase.getFactory(
-            './contracts/http_client/target/ink/http_client.contract',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 
         await factory.deploy();
 
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
 
     describe('default constructor', () => {
@@ -31,7 +28,7 @@ describe("HttpClient test", () => {
         });
 
         it('Should be able...', async function() {
-            const response = await contract.query.proxy(certificate, {}, 'https://wttr.in/berlin?ATm');
+            const response = await contract.query.proxy(signer.address, { cert }, 'https://wttr.in/berlin?ATm');
             console.log(response.output.toJSON());
         });
     });

@@ -2,27 +2,24 @@ import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { stringToHex } from '@polkadot/util';
-import { Signing } from "@/typings/Signing";
+import { {{ContractName}} } from "@/typings/{{ContractName}}";
 
-describe("Signing test", () => {
-    let factory: Signing.Factory;
-    let contract: Signing.Contract;
+describe("{{ContractName}}", () => {
+    let factory: {{ContractName}}.Factory;
+    let contract: {{ContractName}}.Contract;
     let signer: KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
 
     before(async function() {
         factory = await this.devPhase.getFactory(
-            './contracts/signing/target/ink/signing.contract',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 
         await factory.deploy();
 
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
 
     describe('new constructor', () => {
@@ -32,15 +29,15 @@ describe("Signing test", () => {
         const message = 'hi, how are ya?';
 
         it('Should be able derive keypair & sign/verify messages', async function() {
-            const response = await contract.query.test(certificate, {});
+            const response = await contract.query.test(signer.address, { cert });
             console.log(response.output.toJSON());
         });
 
         it('Should be able derive keypair & sign/verify messages', async function() {
-            const signResponse = await contract.query.sign(certificate, {}, message);
+            const signResponse = await contract.query.sign(signer.address, { cert }, message);
             const signMessage = signResponse.output.toJSON().ok;
             console.log(signResponse.output.toJSON());
-            const verifyResponse = await contract.query.verify(certificate, {}, signMessage);
+            const verifyResponse = await contract.query.verify(signer.address, { cert }, signMessage);
             expect(verifyResponse.output.toJSON()).to.be.eql({ok: true});
         });
     });

@@ -2,27 +2,24 @@ import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { stringToHex } from '@polkadot/util';
-import { Vrf } from "@/typings/Vrf";
+import { {{ContractName}} } from "@/typings/{{ContractName}}";
 
-describe("Vrf test", () => {
-    let factory: Vrf.Factory;
-    let contract: Vrf.Contract;
+describe("{{ContractName}}", () => {
+    let factory: {{ContractName}}.Factory;
+    let contract: {{ContractName}}.Contract;
     let signer: KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
 
     before(async function setup(): Promise<void> {
         factory = await this.devPhase.getFactory(
-            './contracts/vrf/target/ink/vrf.contract',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 
         await factory.deploy();
 
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
 
     describe('default constructor', () => {
@@ -32,7 +29,7 @@ describe("Vrf test", () => {
         const salt = 'hi, how are ya?';
 
         it('Should be able to add and get cache', async function() {
-            const response = await contract.query.getRandomness(certificate, {}, salt);
+            const response = await contract.query.getRandomness(signer.address, { cert }, salt);
             console.log(response.output.toJSON());
         });
     });

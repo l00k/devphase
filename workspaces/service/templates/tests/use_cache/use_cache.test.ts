@@ -2,27 +2,24 @@ import { ContractType } from '@devphase/service';
 import * as PhalaSdk from '@phala/sdk';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import { stringToHex } from '@polkadot/util';
-import { UseCache } from "@/typings/UseCache";
+import { {{ContractName}} } from "@/typings/{{ContractName}}";
 
-describe("UseCache test", () => {
-    let factory: UseCache.Factory;
-    let contract: UseCache.Contract;
+describe("{{ContractName}}", () => {
+    let factory: {{ContractName}}.Factory;
+    let contract: {{ContractName}}.Contract;
     let signer: KeyringPair;
-    let certificate : PhalaSdk.CertificateData;
+    let cert : PhalaSdk.CertificateData;
 
     before(async function setup(): Promise<void> {
         factory = await this.devPhase.getFactory(
-            './contracts/use_cache/target/ink/use_cache.contract',
+            '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 
         await factory.deploy();
 
         signer = this.devPhase.accounts.bob;
-        certificate = await PhalaSdk.signCertificate({
-            api: this.api,
-            pair: signer,
-        });
+        cert = await PhalaSdk.signCertificate({ pair: signer });
     });
 
     describe('default constructor', () => {
@@ -32,9 +29,9 @@ describe("UseCache test", () => {
         const message = 'hi, how are ya?';
 
         it('Should be able to add and get cache', async function() {
-            const response = await contract.query.setKeyValue(certificate, {}, message);
+            const response = await contract.query.setKeyValue(signer.address, { cert }, message);
             console.log(response.output.toJSON());
-            const getResponse = await contract.query.getKeyValue(certificate, {});
+            const getResponse = await contract.query.getKeyValue(signer.address, { cert });
             console.log(getResponse.output.toJSON());
         });
     });
