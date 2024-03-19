@@ -1,6 +1,6 @@
 {
     "name": "@devphase/service",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -51,10 +51,7 @@
         "@polkadot/types": "^10.9.1",
         "@polkadot/types-augment": "^10.9.1",
         "@polkadot/util": "^12.3.2",
-        "@polkadot/util-crypto": "^12.3.2",
-        "@polkadot/wasm-crypto": "^6.3.1",
-        "ts-node": "^10.9.1",
-        "typescript": "^5.4.2"
+        "@polkadot/util-crypto": "^12.3.2"
     },
     "devDependencies": {
         "@types/glob": "^8.1.0",

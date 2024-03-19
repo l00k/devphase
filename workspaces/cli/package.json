@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -26,12 +26,12 @@
         "@oclif/plugin-help": "^5.2.20",
         "@oclif/plugin-plugins": "^2.4.7",
         "@oclif/plugin-not-found": "^2.4.3",
-        "@devphase/service": "^0.7.0",
         "chalk": "^4.1.2",
         "listr": "^0.14.3",
         "lodash": "^4.17.21"
     },
     "peerDependencies": {
+        "@devphase/service": "^0.7.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.2"
     },
