@@ -158,6 +158,14 @@ export type GeneralConfig = {
 };
 
 
+export enum ProjectComponent {
+    Artifacts = 'artifacts',
+    Contracts = 'contracts',
+    Scripts = 'scripts',
+    Tests = 'tests',
+    Typings = 'typings',
+}
+
 export type ProjectConfig = {
     general : GeneralConfig,
     directories : {

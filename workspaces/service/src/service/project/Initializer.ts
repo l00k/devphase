@@ -15,11 +15,11 @@ export class Initializer
         'devphase.config.ts': 'devphase.config.ts',
         'accounts.json': 'accounts.json',
         'scripts': 'scripts',
-        'tests': 'tests',
     };
     
     protected _directories : string[] = [
         'contracts',
+        'tests',
     ];
     
     protected _logger : Logger = new Logger('Initializer');

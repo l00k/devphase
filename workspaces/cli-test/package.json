@@ -9,6 +9,7 @@
     "dependencies": {},
     "devDependencies": {
         "@devphase/cli": "*",
+        "@types/node": ">=16.18.90",
         "@types/mocha": "^10.0.1",
         "chai": "^4.3.7",
         "chai-as-promised": "^7.1.1",

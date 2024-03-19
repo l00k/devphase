@@ -1,4 +1,4 @@
-import { ContractType } from '@/def';
+import { ContractType, ProjectComponent } from '@/def';
 import { DeployOptions, InstantiateOptions } from '@/service/api/ContractFactory';
 import { CompilationResult, Compiler } from '@/service/project/contract/Compiler';
 import { TypeBinder } from '@/service/project/contract/TypeBinder';
@@ -14,15 +14,12 @@ import fs from 'fs';
 import Listr from 'listr';
 import _ from 'lodash';
 import path from 'path';
+import glob from 'glob';
+import { Project } from 'ts-morph';
 
 
 export class ContractManager
 {
-    
-    protected static readonly TEMPLATE_FILES : string[] = [
-        'Cargo.toml',
-        'lib.rs'
-    ];
     
     protected _logger : Logger = new Logger('ContractManager');
     
@@ -91,7 +88,7 @@ export class ContractManager
     
     public async createNew (
         options : ContractManager.ContractCreateNewOptions
-    )
+    ) : Promise<any>
     {
         const contractNameValidator = value => /^[a-z][a-z0-9_]+$/.test(value);
         if (!contractNameValidator(options.name)) {
@@ -101,68 +98,88 @@ export class ContractManager
             );
         }
         
-        const templatePath = path.join(
-            this._runtimeContext.paths.templates,
-            'contracts',
-            options.template
-        );
-        if (!fs.existsSync(templatePath)) {
-            throw new Exception(
-                `Template ${options.template} does not exist`,
-                1679837411410
-            );
-        }
-        
-        const targetContractPath = path.join(
-            this._runtimeContext.paths.contracts,
-            options.name,
-        );
-        
-        // check it already exists
-        if (fs.existsSync(targetContractPath)) {
-            throw new Exception(
-                'Contract already exists',
-                1673534385418
-            );
-        }
-        
-        // copy template
-        fs.cpSync(
-            templatePath,
-            targetContractPath,
-            { recursive: true }
-        );
-        
-        // replace placeholders
-        const nameSnakeCase = options.name;
+        // prepare placeholders values
+        const nameSnakeCase = _.snakeCase(options.name);
         const namePascalCase = _.startCase(_.camelCase(options.name)).replaceAll(' ', '');
         
-        const placeholders = {
-            '{{contract_name}}': nameSnakeCase,
-            '{{ContractName}}': namePascalCase
-        };
+        const components = [
+            'contracts',
+            'tests',
+        ];
         
-        for (const file of ContractManager.TEMPLATE_FILES) {
-            const filePath = path.join(
-                targetContractPath,
-                file
+        const targetPaths : Record<ProjectComponent, string> = <any> {};
+        
+        for (const component of components) {
+            const templateDirPath = path.join(
+                this._runtimeContext.paths.templates,
+                component,
+                options.template
+            );
+            if (!fs.existsSync(templateDirPath)) {
+                throw new Exception(
+                    `Component ${component} for template ${options.template} does not exist`,
+                    1679837411410
+                );
+            }
+            
+            const targetDirPath = path.join(
+                this._runtimeContext.paths[component],
+                nameSnakeCase,
             );
             
-            await this._replacePlaceholdersInFile(
-                filePath,
-                placeholders
+            // check it already exists
+            if (fs.existsSync(targetDirPath)) {
+                throw new Exception(
+                    `Contract files for ${options.name} already exists`,
+                    1673534385418
+                );
+            }
+            
+            // copy template
+            fs.cpSync(
+                templateDirPath,
+                targetDirPath,
+                { recursive: true }
             );
-        }
+            
+            // replace placeholders
+            const placeholders = {
+                '{{contract_name}}': nameSnakeCase,
+                '{{ContractName}}': namePascalCase
+            };
+            
+            const templateFiles = glob.sync('*', {
+                cwd: targetDirPath,
+                nodir: true,
+            });
+            
+            for (const templateFile of templateFiles) {
+                const filePath = path.join(
+                    targetDirPath,
+                    templateFile
+                );
+                
+                await this._replacePlaceholdersInFile(
+                    filePath,
+                    placeholders
+                );
+            }
         
-        this._logger.info(chalk.green('Contract created in:'));
-        this._logger.log(targetContractPath);
+            const ucComponent = _.startCase(component);
+            this._logger.info(
+                chalk.green(`${ucComponent} created in:`),
+                targetDirPath
+            );
+            
+            targetPaths[component] = targetDirPath;
+        }
         
         return {
             name: {
                 snakeCase: nameSnakeCase,
                 pascalCase: namePascalCase,
             },
-            path: targetContractPath,
+            paths: targetPaths,
         };
     }
     
