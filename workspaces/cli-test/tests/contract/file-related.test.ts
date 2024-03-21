@@ -32,7 +32,7 @@ describe('File related ' + chalk.cyan('contract') + ' commands', () => {
             { timeout: 5_000 },
         );
         
-        expect(stdout).to.include('Contract created in');
+        expect(stdout).to.include('Contracts created in');
         
         // check contract directory
         const contractDirPath = path.resolve(
