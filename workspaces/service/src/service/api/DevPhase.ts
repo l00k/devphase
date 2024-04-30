@@ -5,12 +5,14 @@ import { EventQueue } from '@/service/api/EventQueue';
 import { PinkLogger } from '@/service/api/PinkLogger';
 import { PRuntimeApi } from '@/service/api/PRuntimeApi';
 import { StackSetupService } from '@/service/api/StackSetupService';
+import { TxHandler } from '@/service/api/TxHandler';
 import { AccountManager } from '@/service/project/AccountManager';
 import { RuntimeContext } from '@/service/project/RuntimeContext';
 import type { ContractMetadata } from '@/typings';
 import { Contract } from '@/typings';
 import { Exception } from '@/utils/Exception';
 import { replaceRecursive } from '@/utils/replaceRecursive';
+import { waitFor } from '@/utils/waitFor';
 import * as PhalaSdk from '@phala/sdk';
 import { types as PhalaSDKTypes } from '@phala/sdk';
 import { khalaDev as KhalaTypes } from '@phala/typedefs';
@@ -54,6 +56,7 @@ export class DevPhase
     public readonly network : string;
     public readonly networkConfig : NetworkConfig;
     public readonly blockTime : number;
+    public readonly waitTime : number;
     public readonly workerUrl : string;
     
     public readonly accounts : Accounts = {};
@@ -106,8 +109,11 @@ export class DevPhase
             ?? runtimeContext.config.stack.blockTime
         ;
         
+        const waitTime = Math.max(5_000, blockTime);
+        
         const instanceProps : DevPhaseProps = {
             blockTime,
+            waitTime,
             networkConfig,
             runtimeContext,
             workerUrl: networkConfig.workerUrl,
@@ -459,6 +465,56 @@ export class DevPhase
     {
         clusterId = clusterId ?? this.mainClusterId;
         return PinkLogger.create(this, clusterId);
+    }
+    
+    public async ensureFundsInCluster (
+        signer : KeyringPair,
+        clusterId? : string,
+        minimalDeposit : number = 10
+    ) : Promise<void>
+    {
+        clusterId = clusterId ?? this.mainClusterId;
+        
+        const cert = await PhalaSdk.signCertificate({ pair: signer });
+        
+        const systemContract = await this.getSystemContract(clusterId);
+        
+        const _getAccountClusterFunds = async (
+            address : string,
+            cert : PhalaSdk.CertificateData
+        ) => {
+            const systemContract = await this.getSystemContract();
+            const { output: freeBalanceOutput } = await systemContract.query['system::freeBalanceOf'](
+                address,
+                { cert },
+                address
+            );
+            return freeBalanceOutput.asOk.toPrimitive() / 1e12;
+        }
+        
+        const freeBalance = await _getAccountClusterFunds(signer.address, cert);
+        if (freeBalance >= minimalDeposit) {
+            return;
+        }
+        
+        // deposit funds to cluster
+        await TxHandler.handle(
+            this.api.tx
+                .phalaPhatContracts.transferToCluster(
+                    minimalDeposit * 1e12,
+                    clusterId,
+                    signer.address
+                ),
+            signer,
+            true
+        );
+        
+        
+        // wait for cluster balance update
+        await waitFor(async() => {
+            const freeBalance = await _getAccountClusterFunds(signer.address, cert);
+            return freeBalance >= minimalDeposit;
+        }, this.waitTime);
     }
     
 }

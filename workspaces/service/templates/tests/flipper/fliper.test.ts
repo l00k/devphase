@@ -17,30 +17,8 @@ describe('{{ContractName}}', () => {
         // sign cert for picked user
         cert = await PhalaSdk.signCertificate({ pair: signer });
         
-        // deposit funds to cluster
-        await TxHandler.handle(
-            this.api.tx
-                .phalaPhatContracts.transferToCluster(
-                    100e12,
-                    this.devPhase.mainClusterId,
-                    signer.address
-                ),
-            signer,
-            true
-        );
-        
-        const systemContract = await this.devPhase.getSystemContract();
-        
-        // wait for cluster balance update
-        await waitFor(async() => {
-            const { output: freeBalanceOutput } = await systemContract.query['system::freeBalanceOf'](
-                signer.address,
-                { cert },
-                signer.address
-            );
-            const freeBalance = freeBalanceOutput.asOk.toPrimitive() / 1e12;
-            return freeBalance >= 1;
-        }, 10 * this.devPhase.blockTime);
+        // ensure there is enough funds in cluster
+        await this.devPhase.ensureFundsInCluster(signer);
     });
     
     beforeEach(async function() {

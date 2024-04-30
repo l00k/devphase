@@ -381,12 +381,14 @@ export class StackManager
                 });
                 
                 child.on('exit', () => {
-                    this._logger.error(
-                        componentName,
-                        'exited'
-                    );
-                    
-                    this.stopStack(true);
+                    if (!this._killFlag) {
+                        this._logger.error(
+                            componentName,
+                            'exited'
+                        );
+                        
+                        this.stopStack(true);
+                    }
                 });
             });
         }, componentOptions.timeout);

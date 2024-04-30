@@ -12,15 +12,17 @@ describe('{{ContractName}}', () => {
     let cert : PhalaSdk.CertificateData;
 
     before(async function() {
+        signer = this.devPhase.accounts.bob;
+        cert = await PhalaSdk.signCertificate({ pair: signer });
+        
         factory = await this.devPhase.getFactory(
             '{{contract_name}}',
             { contractType: ContractType.InkCode }
         );
 
         await factory.deploy();
-
-        signer = this.devPhase.accounts.bob;
-        cert = await PhalaSdk.signCertificate({ pair: signer });
+        
+        await this.devPhase.ensureFundsInCluster(signer);
     });
 
     describe('new constructor', () => {
