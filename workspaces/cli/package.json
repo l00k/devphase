@@ -1,6 +1,6 @@
 {
     "name": "@devphase/cli",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "license": "MIT",
     "author": {
         "name": "l00k",
@@ -31,7 +31,7 @@
         "lodash": "^4.17.21"
     },
     "peerDependencies": {
-        "@devphase/service": "^0.7.1",
+        "@devphase/service": "^0.7.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.2"
     },
